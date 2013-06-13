@@ -1,0 +1,44 @@
+p.warning {
+  margin-bottom: 10px !important;
+  padding: 3px 5px;
+  border: solid 1px #e6db55;
+  background-color: lightYellow;
+  -moz-border-radius: 4px;
+  -webkit-border-radius: 4px;
+  border-radius: 4px;
+  /* future proofing */
+  -khtml-border-radius: 4px;
+  /* for old Konqueror browsers */ }
+
+p.forgetmenot {
+  margin-top: 5px !important; }
+
+#forgot-password {
+  margin-bottom: 10px !important; }
+#input-preferred p {
+  margin: 10px 0; }
+#input-preferred p.fineprint {
+  margin-bottom: 10px !important; }
+#input-preferred p.fineprint label {
+  font-size: 12px; }
+#input-preferred label {
+  color: #333; }
+#input-preferred input {
+  margin: 0 !important;
+  vertical-align: baseline; }
+
+input.busy {
+  color: #66aabb !important;
+  padding-left: 30px !important;
+  background-image: url("/wp-content/plugins/cbox-auth/resources/loading.gif") !important;
+  background-position: 6px center !important;
+  background-repeat: no-repeat !important; }
+
+input.busy:hover {
+  background-color: #21759b !important;
+  text-shadow: none !important;
+  cursor: default !important;
+  padding-left: 30px !important;
+  background-image: url("/wp-content/plugins/cbox-auth/resources/loading.gif") !important;
+  background-position: 6px center !important;
+  background-repeat: no-repeat !important; }

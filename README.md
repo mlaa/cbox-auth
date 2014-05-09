@@ -8,8 +8,9 @@ within the group.
 ### Installation
 
 1. Move this directory to wp-content/plugins.
-2. Add this to wp-config.php: `define('AUTHENTICATION_SECRET_TOKEN', '<secret_token_here>');`
-3. Network-activate the plugin.
+2. Add this to wp-config.php: `define('CBOX_AUTH_SECRET_TOKEN', '<secret_token_here>');`
+3. And this: `define('CBOX_AUTH_GROUPS_SECRET_TOKEN', '<secret_token_here>');`
+4. Network-activate the plugin.
 
 ### Debugging
 
@@ -19,11 +20,11 @@ To turn on debugging of the plugin you can add and customize the following lines
 /**
  * Debugging
  *
- * AUTHENTICATION_DEBUG => true or false
- * AUTHENTICATION_DEBUG_LOG => false or '/log/file/location/...', %t = timestamp, %r = random number, %h = hash of message
+ * CBOX_AUTH_DEBUG => true or false
+ * CBOX_AUTH_DEBUG_LOG => false or '/log/file/location/...', %t = timestamp, %r = random number, %h = hash of message
  */
-define('AUTHENTICATION_DEBUG', true);
-define('AUTHENTICATION_DEBUG_LOG', '/log/file/location/username_%t.log');
+define('CBOX_AUTH_DEBUG', true);
+define('CBOX_AUTH_DEBUG_LOG', '/log/file/location/username_%t.log');
 ```
 
 ### License

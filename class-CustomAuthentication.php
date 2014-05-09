@@ -1,12 +1,18 @@
 <?php
-class CustomAuthtentication {
+class CustomAuthentication {
 
 	// Seconds before curl times out
 	protected $curlTimeout = 10;
 
-	// The base url to the authentication API
-	protected $apiUrl = 'https://www.example.com/users/';
+	// The base url to the membership API
+	protected $apiMembersUrl = 'https://www.mla.org/api/1/members/';
+	protected $apiGroupsUrl = 'https://www.mla.org/api/1/groups/';
 
+
+
+
+	# AUTHENTICATION FUNCTIONS (PHASE 1)
+	#####################################################################
 
 	/**
 	 * This function is hooked into the 'authenticate' filter where
@@ -24,18 +30,25 @@ class CustomAuthtentication {
 			return new WP_Error();
 		}
 
-		// Get the user from the database. If the user doesn't exist
+		// List forbidden usernames here. 
+		// This will make the ceaseless hack attempts from bots 
+		// a little easier on the logs. 
+		$forbidden_usernames = array(
+			'admin', 
+			'administrator',
+		); 
+
+		if ( in_array($username, $forbidden_usernames) ) { 
+			return new WP_Error('forbidden_username', __('This username has been blocked.')); 	
+		} 
+
+		// Get the user from the MLA database. If the user doesn't exist
 		// or the username/password is wrong, return the error
 		$customUserData = $this->findCustomUser($username, $password);
 		$customLoginError = null;
 		if($customUserData instanceof WP_Error) {
-			// If the user is not an user, let's see if she is a WP admin.
+			// If the user is not a member, let's see if she is a WP admin.
 			$customLoginError = $customUserData;
-		}
-
-		// Make sure the user is active and of the allowed types (i.e. 'member')
-		if(!$customLoginError && !$this->validateCustomUser($customUserData, $username, $error)) {
-			return $error;
 		}
 
 		// Get the user from the WP database
@@ -102,6 +115,9 @@ class CustomAuthtentication {
 		// Create/join/leave groups.
 		$this->manageGroups($userdata->ID, $customUserData['groups']);
 
+		// Special activities for special users.
+		$this->specialCases($userdata->ID, $customUserData['id']);
+
 		return $userdata;
 	}
 
@@ -111,7 +127,7 @@ class CustomAuthtentication {
 		} else {
 			$secure_connection = false;
 		}
-		setcookie('AuthBeenHereBefore', md5($value), time() + (20 * 365 * 24 * 60 * 60), null, null, $secure_connection);
+		setcookie('MLABeenHereBefore', md5($value), time() + (20 * 365 * 24 * 60 * 60), null, null, $secure_connection);
 	}
 
 	/**
@@ -186,7 +202,7 @@ class CustomAuthtentication {
 		global $wpdb, $bp;
 
 		// Get BP groups with OIDs and their associated BP group IDs.
-		$custom_groups = $wpdb->get_results($wpdb->prepare('SELECT group_id, meta_value FROM ' . $bp->groups->table_name_groupmeta . ' WHERE meta_key = %s', 'custom_oid'));
+		$custom_groups = $wpdb->get_results($wpdb->prepare('SELECT group_id, meta_value FROM ' . $bp->groups->table_name_groupmeta . ' WHERE meta_key = %s', 'mla_oid'));
 
 		// Make an efficient copy of the user's groups.
 		$user_groups = array();
@@ -209,17 +225,17 @@ class CustomAuthtentication {
 				// No-Op if user is already a member
 				groups_join_group($groupId, $userId);
 
-				// If a user has the role 'chair', 'liason' [sic],
-				// 'secretary', or 'executive', then promote the
-				// user will to admin. Otherwise, demote the user.
+				// If a user has the role 'chair', 'liaison', 'liason' [sic],
+				// 'secretary', 'executive', or 'program-chair', then promote
+				// the user to admin. Otherwise, demote the user.
 				bp_update_is_item_admin(true, 'groups');
-				if(isset($groupData['role']) && ($groupData['role'] == 'chair' || $groupData['role'] == 'liason' || $groupData['role'] == 'secretary' || $groupData['role'] == 'executive')) {
+				if(isset($groupData['role']) && ($groupData['role'] == 'chair' || $groupData['role'] == 'liaison' || $groupData['role'] == 'liason' || $groupData['role'] == 'secretary' || $groupData['role'] == 'executive' || $groupData['role'] == 'program-chair')) {
 					groups_promote_member($userId, $groupId, 'admin');
 				} else {
 					groups_demote_member($userId, $groupId);
 				}
 
-			} else {
+			} elseif(substr($customOid, 0, 1) !== 'F') {
 				// Remove the user from the group.
 				groups_leave_group($groupId, $userId);
 			}
@@ -234,13 +250,13 @@ class CustomAuthtentication {
 				'status' => $groupData['status'],
 			);
 			$groupId = groups_create_group($newGroup);
-			groups_update_groupmeta($groupId, 'custom_oid', $groupData['oid']);
+			groups_update_groupmeta($groupId, 'mla_oid', $groupData['oid']);
 			groups_join_group($groupId, $userId);
 
-			// If a user has the role 'chair', 'liason' [sic],
-			// 'secretary', or 'executive', then promote the
-			// user will to admin. Otherwise, demote the user.
-			if(isset($groupData['role']) && ($groupData['role'] == 'chair' || $groupData['role'] == 'liason' || $groupData['role'] == 'secretary' || $groupData['role'] == 'executive')) {
+			// If a user has the role 'chair', 'liaison', 'liason' [sic],
+			// 'secretary', 'executive', or 'program-chair', then promote
+			// the user to admin. Otherwise, demote the user.
+			if(isset($groupData['role']) && ($groupData['role'] == 'chair' || $groupData['role'] == 'liaison' || $groupData['role'] == 'liason' || $groupData['role'] == 'secretary' || $groupData['role'] == 'executive' || $groupData['role'] == 'program-chair')) {
 				groups_promote_member($userId, $groupId, 'admin');
 			}
 
@@ -250,7 +266,27 @@ class CustomAuthtentication {
 	}
 
 	/**
-	 * Use cUrl to find the member data from the Authentication API.
+	 * @param $userId
+	 * @param $customUserId
+	 * @return null
+	 */
+	protected function specialCases($userId, $customUserId) {
+		global $wpdb, $bp;
+
+		switch($customUserId) {
+			case 67613:
+				// Add the user to some groups.
+				foreach(Array(310, 321, 322) as $groupId) {
+					groups_join_group($groupId, $userId);
+				}
+				break;
+		}
+
+		return null;
+	}
+
+	/**
+	 * Use cUrl to find the member data from the membership API.
 	 *
 	 * The API gives one of two things: an error or member data. If
 	 * we get member data, we convert it to a readable array.
@@ -260,7 +296,7 @@ class CustomAuthtentication {
 	 * @return array|WP_Error
 	 */
 	protected function findCustomUser($username, $password) {
-		$url = $this->apiUrl.'information'.$this->startQueryString($username, $password);
+		$url = $this->apiMembersUrl.'information'.$this->startQueryString($username, $password);
 		$xmlResponse = $this->runCurl($url);
 		$this->log($xmlResponse, $url);
 
@@ -287,13 +323,22 @@ class CustomAuthtentication {
 			return new WP_Error('server_error', __('<strong>Error (' . __LINE__ . '):</strong> There was a problem verifying your member credentials. Please try again later.'));
 		}
 
-		return $this->memberXmlToArray($xml, $password);
+		$xmlReturn = $this->memberXmlToArray($xml, $password);
+
+		// Make sure the user is active and of the allowed types (i.e. 'member')
+		if(!$this->validateCustomUser($xmlReturn, $username, $error)) {
+			return $error;
+		}
+
+		return $xmlReturn;
+
 	}
 
 	protected function mergeWpUser($userId, $member) {
+		wp_update_user( array('ID' => $userId, 'user_email' => $member['email']) );
 		update_user_meta($userId, 'languages', $member['languages']);
 		update_user_meta($userId, 'affiliations', $member['affiliations']);
-		update_user_meta($userId, 'custom_oid', $member['id']);
+		update_user_meta($userId, 'mla_oid', $member['id']);
 	}
 
 	/**
@@ -332,7 +377,7 @@ class CustomAuthtentication {
 	}
 
 	protected function changeCustomUsername($username, $password, $newname) {
-		$url = $this->apiUrl.'user-name'.$this->startQueryString($username, $password)."&new_user_name=$newname";
+		$url = $this->apiMembersUrl.'user-name'.$this->startQueryString($username, $password)."&new_user_name=$newname";
 		$xmlResponse = $this->runCurl($url);
 		$this->log($xmlResponse, $url);
 
@@ -362,7 +407,7 @@ class CustomAuthtentication {
 
 
 	/**
-	 * Turns member xml data from the Authentication API
+	 * Turns member xml data from the membership API
 	 * into a readable array.
 	 *
 	 * @param $xml
@@ -416,7 +461,7 @@ class CustomAuthtentication {
 				'oid' => (string) $attrs['oid'],
 				'role' => (string) $attrs['role'],
 				'name' => (string) $item[0],
-				'status' => 'private',
+				'status' => $this->isDivisionOrDiscussionGroup($attrs['oid']) ? 'public' : 'private',
 			);
 		}
 	}
@@ -447,6 +492,235 @@ class CustomAuthtentication {
 	}
 
 
+
+
+	# GROUP MANAGEMENT FUNCTIONS (PHASE 2)
+	#####################################################################
+
+	public function activate() {
+		$allGroups = groups_get_groups(array('per_page' => null));
+
+		foreach($allGroups['groups'] as $group) {
+			$group_custom_oid = groups_get_groupmeta($group->id, 'mla_oid', true);
+			if(empty($group_custom_oid)) {
+				continue;
+			}
+			if($this->isDivisionOrDiscussionGroup($group_custom_oid)) {
+				$this->changeGroupStatus($group, 'public');
+				continue;
+			}
+			if($this->isCommitteeGroup($group_custom_oid)) {
+				$this->changeGroupStatus($group, 'private');
+			}
+		}
+	}
+
+	/**
+	 * Allows you to change a groups status (i.e. private or public)
+	 *
+	 * @param stdClass $group
+	 * @param $status
+	 */
+	private function changeGroupStatus(stdClass $group, $status) {
+		global $wpdb, $bp;
+
+		if($group->status != $status) {
+			// Have to use SQL because buddypress isn't all set up at this point
+			$wpdb->query($wpdb->prepare("UPDATE ".$bp->groups->table_name." SET status=%s WHERE id=%d", $status, $group->id));
+		}
+	}
+
+	/**
+	 * A filter to hide the request membership tab for committee groups
+	 *
+	 * @param $string
+	 */
+	public function hide_request_membership_tab($string) {
+		global $groups_template;
+
+		// Get group info
+		$group =& $groups_template->group;
+		$group_custom_oid = groups_get_groupmeta($group->id, 'mla_oid', true);
+
+		// Don't show request membership if it's an MLA group (probably a committee, since only committees are private)
+		if(!empty($group_custom_oid) && ($this->isDivisionOrDiscussionGroup($group_custom_oid) || $this->isCommitteeGroup($group_custom_oid))) {
+			return;
+		}
+
+		return $string;
+	}
+	/**
+	 * A filter to hide the send invites tab for committee groups
+	 *
+	 * @param $string
+	 */
+	public function hide_send_invites_tab($string) {
+		global $groups_template;
+
+		// Get group info
+		$group =& $groups_template->group;
+		$group_custom_oid = groups_get_groupmeta($group->id, 'mla_oid', true);
+
+		// Don't show request membership if it's an MLA group (probably a committee, since only committees are private)
+		if(!empty($group_custom_oid) && $this->isCommitteeGroup($group_custom_oid)) {
+			return;
+		}
+
+		return $string;
+	}
+
+	/**
+	 * A filter that whitelists which sections can be shown in
+	 * the group settings.
+	 *
+	 * @param array $allowed
+	 * @return mixed
+	 */
+	public function determine_group_settings_sections(array $allowed) {
+		global $groups_template;
+
+		// Get group info
+		$group =& $groups_template->group;
+		$group_custom_oid = groups_get_groupmeta($group->id, 'mla_oid', true);
+
+		// Don't show privacy or invitation settings if it's an MLA group
+		if(!empty($group_custom_oid) && ($this->isDivisionOrDiscussionGroup($group_custom_oid) || $this->isCommitteeGroup($group_custom_oid))) {
+			return;
+		}
+
+		// Show all settings
+		$allowed['privacy'] = true;
+		$allowed['invitations'] = true;
+		return $allowed;
+	}
+
+
+	/**
+	 * Only show the join/login button if the group is not a committee
+	 * and the member is not an administrator of the
+	 * division or discussion group.
+	 *
+	 * @param bool $group
+	 */
+	public function hide_join_button($group = false) {
+		global $groups_template;
+
+		// Remove the other actions that would create this button
+		$priority = has_action('bp_group_header_actions', 'bp_group_join_button');
+		remove_action('bp_group_header_actions', 'bp_group_join_button', $priority);
+		$priority = has_action('bp_directory_groups_actions', 'bp_group_join_button');
+		remove_action('bp_directory_groups_actions', 'bp_group_join_button', $priority);
+
+		// Look up group info
+		if(empty($group)) {
+			$group =& $groups_template->group;
+		}
+		$group_custom_oid = groups_get_groupmeta($group->id, 'mla_oid', true);
+
+		// Get user id
+		$user_id = bp_loggedin_user_id();
+
+		// Render as normal if it's not an MLA group or it's a division or discussion group and user is not admin of group
+		if(empty($group_custom_oid) || ($group_custom_oid && $this->isDivisionOrDiscussionGroup($group_custom_oid) && !groups_is_user_admin($user_id, $group->id)) ) {
+			return bp_group_join_button($group);
+		}
+
+
+	}
+
+	/**
+	 * Remove user from the group in the MLA database
+	 *
+	 * @param int $group_id
+	 * @param int $user_id
+	 */
+	public function remove_user_from_group($group_id, $user_id = 0) {
+		$this->send_group_action('remove', $group_id, $user_id);
+	}
+
+	/**
+	 * Add the user to the group in the MLA database
+	 *
+	 * @param int $group_id
+	 * @param int $user_id
+	 */
+	public function add_user_to_group($group_id, $user_id = 0) {
+		$this->send_group_action('add', $group_id, $user_id);
+	}
+
+	/**
+	 * Sends post data to the API to manage group memberships
+	 *
+	 * @param string $method
+	 * @param int $group_id
+	 * @param int $user_id
+	 */
+	protected function send_group_action($method, $group_id, $user_id = 0) {
+
+		// Get user and group info
+		if (empty($user_id)) {
+			$user_id = bp_loggedin_user_id();
+		}
+		$user_custom_oid = get_user_meta($user_id, 'mla_oid', true);
+		$group_custom_oid = groups_get_groupmeta($group_id, 'mla_oid', true);
+
+		// Can't do anything if the user or group isn't in the MLA database
+		if(empty($group_custom_oid) || empty($user_custom_oid)) {
+			return;
+		}
+
+		// Only division and discussion groups should be reflected in the MLA database
+		if(!$this->isDivisionOrDiscussionGroup($group_custom_oid)) {
+			return;
+		}
+
+		$time = time();
+		$data = array(
+			"method" => $method,
+			"user_id" => $user_custom_oid,
+			"timestamp" => $time,
+			"signature" => hash_hmac('sha256', "$user_custom_oid:$group_custom_oid:$time", CBOX_AUTH_GROUPS_SECRET_TOKEN)
+		);
+
+		$url = $this->apiGroupsUrl."$group_custom_oid/members";
+		$result = $this->postCurl($url, $data);
+		$this->log("POST: " . print_r($data, true) . "\n\n" . $result, $url);
+	}
+
+
+
+
+	# UTILITY FUNCTIONS
+	#####################################################################
+
+	/**
+	 * Determine if the group is a division or discussion
+	 *
+	 * @param string $group_custom_oid
+	 * @return bool
+	 */
+	protected function isDivisionOrDiscussionGroup($group_custom_oid) {
+		$flag = substr($group_custom_oid, 0, 1);
+		if($flag != "D" && $flag != "G") {
+			return false;
+		}
+		return true;
+	}
+
+	/**
+	 * Determine if the group is a committee
+	 *
+	 * @param string $group_custom_oid
+	 * @return bool
+	 */
+	protected function isCommitteeGroup($group_custom_oid) {
+		$flag = substr($group_custom_oid, 0, 1);
+		if($flag != "M") {
+			return false;
+		}
+		return true;
+	}
+
 	/**
 	 * Gets data from a URL using cUrl
 	 *
@@ -464,24 +738,58 @@ class CustomAuthtentication {
 	}
 
 	/**
-	 * Adds the appropriate parameters to the Authentication API URL.
+	 * Sends a post request to the given url
 	 *
-	 * @param $username Can be an username or ID
+	 * @param string $url
+	 * @param array $data
+	 * @return mixed
+	 */
+	protected function postCurl($url, array $data) {
+
+		// Build query string
+		$query = "";
+		foreach($data as $key => $value) {
+			$query .= "$key=$value&";
+		}
+		$query = rtrim($query, '&');
+
+		// Send post
+		$ch = curl_init();
+		curl_setopt($ch, CURLOPT_URL, $url);
+		curl_setopt($ch, CURLOPT_POST, count($data));
+		curl_setopt($ch, CURLOPT_POSTFIELDS, $query);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+		curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $this->curlTimeout);
+		$result = curl_exec($ch);
+		curl_close($ch);
+		return $result;
+	}
+
+	/**
+	 * Adds the appropriate parameters to the membership API URL.
+	 *
+	 * @param $username Can be a username or ID
 	 * @param $password
 	 * @return string
 	 */
 	protected function startQueryString($username, $password) {
 		$time = time();
-		$signature = hash_hmac('sha256', "$username:$password:$time", AUTHENTICATION_SECRET_TOKEN);
+		$signature = hash_hmac('sha256', "$username:$password:$time", CBOX_AUTH_SECRET_TOKEN);
 		return "?user_id=$username&timestamp=$time&signature=$signature";
 	}
 
+	/**
+	 * A logging function for production environments
+	 *
+	 * @param $msg
+	 * @param $url
+	 */
 	public static function log($msg, $url) {
-		if(AUTHENTICATION_DEBUG && AUTHENTICATION_DEBUG_LOG) {
+		if(CBOX_AUTH_DEBUG && CBOX_AUTH_DEBUG_LOG) {
 			$time = round(microtime(true) * 1000);
 			$rand = rand();
 			$hash = md5($msg);
-			$filename = str_replace(array('%t','%r','%h'), array($time, $rand, $hash), AUTHENTICATION_DEBUG_LOG);
+			$filename = str_replace(array('%t','%r','%h'), array($time, $rand, $hash), MLA_DEBUG_LOG);
 
 			if(is_array($msg) || is_object($msg)) {
 				$msg = print_r($msg, true);
@@ -490,6 +798,21 @@ class CustomAuthtentication {
 			$format = $date->format(DATE_COOKIE);
 			$msg = "AUTH LOG: $format \nREQUEST: $url\n\n$msg \n";
 			file_put_contents($filename, $msg, FILE_APPEND);
+		}
+	}
+
+	/**
+	 * A logging function for development environments
+	 *
+	 * @param $msg
+	 */
+	protected function l($msg) {
+		if(WP_DEBUG) {
+			if(is_object($msg) || is_array($msg)) {
+				error_log(print_r($msg, true));
+			} else {
+				error_log($msg);
+			}
 		}
 	}
 }

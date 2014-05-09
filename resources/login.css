@@ -28,17 +28,15 @@ p.forgetmenot {
   vertical-align: baseline; }
 
 input.busy {
-  color: #66aabb !important;
   padding-left: 30px !important;
-  background-image: url("/wp-content/plugins/cbox-auth/resources/loading.gif") !important;
+  background-image: url("loading.gif") !important;
   background-position: 6px center !important;
   background-repeat: no-repeat !important; }
 
 input.busy:hover {
-  background-color: #21759b !important;
   text-shadow: none !important;
   cursor: default !important;
   padding-left: 30px !important;
-  background-image: url("/wp-content/plugins/cbox-auth/resources/loading.gif") !important;
+  background-image: url("loading.gif") !important;
   background-position: 6px center !important;
   background-repeat: no-repeat !important; }

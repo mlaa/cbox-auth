@@ -45,7 +45,7 @@ jQuery(document).ready(function($) {
       return false;
     }
     $('#wp-submit').addClass('busy');
-    if (hex_md5($('#user_login').val()) === readCookie('AuthBeenHereBefore')) {
+    if (hex_md5($('#user_login').val()) === readCookie('MLABeenHereBefore')) {
       return true;
     }
     data = {

@@ -1,6 +1,6 @@
 <?php
 /*
-Plugin Name: MLA Authentication
+Plugin Name: CBOX Authentication
 Author: Peter Soots, Cast Iron Coding
 Author URI: http://www.castironcoding.com
 */

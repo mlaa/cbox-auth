@@ -235,7 +235,7 @@ class CustomAuthentication {
 					groups_demote_member($userId, $groupId);
 				}
 
-			} elseif(substr($customOid, 0, 1) !== 'F') {
+			} elseif(!$this->isForumGroup($customOid)) {
 				// Remove the user from the group.
 				groups_leave_group($groupId, $userId);
 			}

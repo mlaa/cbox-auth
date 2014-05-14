@@ -621,7 +621,7 @@ class CustomAuthentication {
 		$user_id = bp_loggedin_user_id();
 
 		// Render as normal if it's not an MLA group or it's a division or discussion group and user is not admin of group
-		if(empty($group_custom_oid) || ($group_custom_oid && $this->isDivisionOrDiscussionGroup($group_custom_oid) && !groups_is_user_admin($user_id, $group->id)) ) {
+		if(empty($group_custom_oid) || $this->isForumGroup($group_custom_oid) || ($group_custom_oid && $this->isDivisionOrDiscussionGroup($group_custom_oid) && !groups_is_user_admin($user_id, $group->id)) ) {
 			return bp_group_join_button($group);
 		}
 
@@ -716,6 +716,20 @@ class CustomAuthentication {
 	protected function isCommitteeGroup($group_custom_oid) {
 		$flag = substr($group_custom_oid, 0, 1);
 		if($flag != "M") {
+			return false;
+		}
+		return true;
+	}
+
+	/**
+	 * Determine if the group is a prospective forum
+	 *
+	 * @param string $group_custom_oid
+	 * @return bool
+	 */
+	protected function isForumGroup($group_custom_oid) {
+		$flag = substr($group_custom_oid, 0, 1);
+		if($flag != "F") {
 			return false;
 		}
 		return true;

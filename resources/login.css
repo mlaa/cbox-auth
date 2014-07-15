@@ -40,3 +40,10 @@ input.busy:hover {
   background-image: url("loading.gif") !important;
   background-position: 6px center !important;
   background-repeat: no-repeat !important; }
+
+.login h1 a { 
+	background-image: url('mla-commons-logo.png'); 
+	background-size: auto; 
+	height: 40px; 
+	width: 300px; 
+} 

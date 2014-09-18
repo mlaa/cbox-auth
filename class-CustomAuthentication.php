@@ -339,6 +339,23 @@ class CustomAuthentication {
 		update_user_meta($userId, 'languages', $member['languages']);
 		update_user_meta($userId, 'affiliations', $member['affiliations']);
 		update_user_meta($userId, 'mla_oid', $member['id']);
+
+		// import member data into xprofile fields
+		$affiliation_field_id = xprofile_get_field_id_from_name( 'Institional or Other Affiliation' ); 
+		$title_field_id = xprofile_get_field_id_from_name( 'Title' ); 
+		// map the MLA member XML value to the xprofile field ID. 
+		$mla_xprofile_import_map = array( 
+			'affiliations' => $affiliation_field_id,
+			'rank' => $title_field_id,
+		); 
+
+		// check to see if "Title" and "Affiliation" xprofile fields are empty.
+		// if so, import this data from the MLA member database. 
+		foreach ( $mla_xprofile_import_map as $from_meta => $to_xprofile_field ) { 	
+			if ( empty( xprofile_get_field_data( $to_xprofile_field ) ) ) { 
+				xprofile_set_field_data( $to_xprofile_field, $userId, bp_get_usermeta( $from_meta ) ); 
+			} 
+		} 
 	}
 
 	/**

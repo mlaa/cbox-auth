@@ -11,6 +11,7 @@ Author URI: http://www.castironcoding.com
 
 
 require_once plugin_dir_path(__FILE__).'class-CustomAuthentication.php';
+require_once plugin_dir_path(__FILE__).'class-MLAMember.php';
 
 $myCustomAuthentication = new CustomAuthentication();
 

@@ -13,12 +13,12 @@ class MLAMember {
 	 * Contains dummy data for now.  
 	 */ 
 	public function get_member_data() { 
-		$this->affiliations[] = array( 'College of Yoknapatawpha' ); 
-		$this->first_name = 'William'; 
-		$this->last_name = 'Faulkner'; 
-		$this->nickname = 'William Faulkner'; 
-		$this->fullname = 'William Faulkner'; 
-		$this->title = 'Adjunct Professor'; 
+		$this->affiliations[] = array( 'Modern Language Association' ); 
+		$this->first_name = 'Jonathan'; 
+		$this->last_name = 'Reeve'; 
+		$this->nickname = 'Jonathan Reeve'; 
+		$this->fullname = 'Jonathan Reeve'; 
+		$this->title = 'Web Developer'; 
 	} 
 	/**
 	 * Gets member data from the new API and, if there are any changes,

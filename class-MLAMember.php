@@ -3,14 +3,18 @@
  * with the new member API, and syncs that data with BuddyPress if it has changed. 
  */
 class MLAMember {
-	public $user_id = bp_displayed_user_id();
 	public $name = '';
 	public $affiliations = array();
 	public $title = ''; // rank
+	public $user_id = 0;
 
 	// number of seconds below which to force update of group membership data. 
 	private $update_interval = 3600; 
 
+	// at minimum, get the displayed user ID
+	function __construct() { 
+		$this->user_id = bp_displayed_user_id(); 
+	} 
 	/* Checks when the group member data was last updated,
 	 * so that it doesn't reload it from the member API 
 	 * unnecessarily.
@@ -155,7 +159,7 @@ class MLAMember {
 			}
 		}
 
-		update_last_updated_time(); 
+		$this->update_last_updated_time(); 
 
 		return true;
 	}

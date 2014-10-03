@@ -1,4 +1,3 @@
-
 <?php 
 /* This class, MLA Group, is primarily used to update group memberships, 
  * so that when there is a group membership change, these are updated more frequently than 
@@ -24,6 +23,12 @@ class MLAGroup {
 		} else { 
 			return ( time() - $last_updated > 3600 );
 		} 
+	} 
+
+	/* After a sync, we have to update the user meta with the last updated time. 
+	 */  
+	private function update_last_updated_time() { 
+		groups_update_groupmeta( $this->group_bp_id, 'last_updated', time() ); 
 	} 
 
 	/* 
@@ -143,7 +148,9 @@ class MLAGroup {
 				// user is not or no longer a member, remove from BP group
 				groups_remove_member( $member_id, $group_id );
 			} 
-
 		} 
+
+		$this->update_last_updated_time(); 
+
 	} 
 } 

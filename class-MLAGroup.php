@@ -64,10 +64,10 @@ class MLAGroup {
 	 * Populates `bp_members_list` with an array made to resemble the $this->members array. 
 	 */ 
 	public function get_bp_group_data() { 
-		if ( ! $this->group_bp_id ) { 
+		if ( ! isset( $this->group_bp_id ) ) { 
 			$this->group_bp_id = bp_get_group_id(); 
 		} 
-		if ( ! $this->group_mla_oid ) { 
+		if ( ! isset( $this->group_mla_oid ) ) { 
 			$this->group_mla_oid = groups_get_groupmeta( $group_bp_id, 'mla_oid' ); 
 		} 
 
@@ -106,11 +106,11 @@ class MLAGroup {
 			return false; 
 		} 
 
-		if ( ! $this->mla_members_list ) { 
+		if ( ! isset( $this->mla_members_list ) ) { 
 			$this->get_mla_group_data(); 
 		} 
 
-		if ( ! $this->bp_members_list ) { 
+		if ( ! isset( $this->bp_members_list ) ) { 
 			$this->get_bp_group_data(); 
 		} 
 

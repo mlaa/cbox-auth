@@ -124,13 +124,18 @@ class MLAMember {
 			'fullname' => 'Name',
 		);
 
+
 		foreach ( $xprofile_fields_to_sync as $source_field => $dest_field ) {
-			$source = $this->flatten_array( $this->$source_field );
-			if ( xprofile_set_field_data( $dest_field, $this->user_id, $source ) ) {
-				//_log( 'Successfully updated xprofile data.' );
-			} else {
-				//_log( 'Something went wrong while updating xprofile data from member database.' );
-			}
+			// make sure the user doesn't already have something in this field, 
+			// because we're about to overwrite it. 
+			if ( ! xprofile_get_field_data( $dest_field, $this->user_id ) ) { 
+				$source = $this->flatten_array( $this->$source_field );
+				if ( xprofile_set_field_data( $dest_field, $this->user_id, $source ) ) {
+					//_log( 'Successfully updated xprofile data.' );
+				} else {
+					//_log( 'Something went wrong while updating xprofile data from member database.' );
+				}
+			} 
 		}
 
 		// Now sync member groups. Loop through MLA groups and add new ones to BP

@@ -339,31 +339,6 @@ class CustomAuthentication {
 		update_user_meta($userId, 'languages', $member['languages']);
 		update_user_meta($userId, 'affiliations', $member['affiliations']);
 		update_user_meta($userId, 'mla_oid', $member['id']);
-
-		// import member data into xprofile fields
-		$affiliation_field_id = xprofile_get_field_id_from_name( 'Institutional or Other Affiliation' ); 
-		$title_field_id = xprofile_get_field_id_from_name( 'Title' ); 
-		
-		// map the MLA member XML value to the xprofile field ID. 
-		$mla_xprofile_import_map = array( 
-			'affiliations' => $affiliation_field_id,
-			'rank' => $title_field_id,
-		); 
-
-		// check to see if "Title" and "Affiliation" xprofile fields are empty.
-		// if so, import this data from the MLA member database. 
-		foreach ( $mla_xprofile_import_map as $from_meta => $to_xprofile_field ) { 	
-			if ( ! ( xprofile_get_field_data( $to_xprofile_field ) ) ) { 
-				$user_meta_value = bp_get_user_meta( $userId, $from_meta );
-				$out_data = $user_meta_value[0]; // get the first affiliation or rank
-				if ( 'array' == gettype( $out_data ) ) { 
-					$out_data = $out_data[0]; // some affiliations are in 2-D arrays
-				} 
-				if ( $to_xprofile_field && $userId && $out_data ) { 
-					xprofile_set_field_data( $to_xprofile_field, $userId, $out_data ); 
-				} 
-			} 
-		} 
 	}
 
 	/**
@@ -467,7 +442,7 @@ class CustomAuthentication {
 			'display_name' => trim($xml->member->name->first_names.' '.$xml->member->name->surname),
 			'website' => trim($xml->member->website),
 			'languages' => $languages,
-			'affiliations' => $affiliations,
+			'affiliations' => '',
 			'groups' => $groups,
 			'role' => 'subscriber',
 		);
@@ -828,7 +803,7 @@ class CustomAuthentication {
 			$time = round(microtime(true) * 1000);
 			$rand = rand();
 			$hash = md5($msg);
-			$filename = str_replace(array('%t','%r','%h'), array($time, $rand, $hash), CBOX_AUTH_DEBUG_LOG);
+			$filename = str_replace(array('%t','%r','%h'), array($time, $rand, $hash), MLA_DEBUG_LOG);
 
 			if(is_array($msg) || is_object($msg)) {
 				$msg = print_r($msg, true);

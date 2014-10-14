@@ -803,7 +803,7 @@ class CustomAuthentication {
 			$time = round(microtime(true) * 1000);
 			$rand = rand();
 			$hash = md5($msg);
-			$filename = str_replace(array('%t','%r','%h'), array($time, $rand, $hash), MLA_DEBUG_LOG);
+			$filename = str_replace(array('%t','%r','%h'), array($time, $rand, $hash), CBOX_AUTH_DEBUG_LOG);
 
 			if(is_array($msg) || is_object($msg)) {
 				$msg = print_r($msg, true);

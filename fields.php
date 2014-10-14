@@ -30,6 +30,12 @@ class CustomAuthenticationCustomFields {
 		<noscript>
 			<p class="warning"><strong>Warning:</strong> JavaScript is required when logging in for the first time.</p>
 		</noscript>
+		<!--
+		<div>
+			<p><strong>Note:</strong> We are currently working to fix an issue that is affecting the ability to log in to <em>MLA Commons</em>. Thank you for your patience.</p>
+			<p>&nbsp;</p>
+		</div>
+		-->
 		<div id="input-preferred">
 			<label for="user_login_preferred"><strong>Please choose a user name.</strong></label>
 			<p><input type="text" id="user_login_preferred" name="preferred" tabindex="30" /></p>

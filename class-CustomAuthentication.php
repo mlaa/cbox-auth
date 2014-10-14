@@ -810,7 +810,8 @@ class CustomAuthentication {
 			}
 			$date = new DateTime('now');
 			$format = $date->format(DATE_COOKIE);
-			$msg = "AUTH LOG: $format \nREQUEST: $url\n\n$msg \n";
+			$ip = $_SERVER['REMOTE_ADDR'];
+			$msg = "AUTH LOG: $format\nIP: $ip\nREQUEST: $url\n\n$msg \n";
 			file_put_contents($filename, $msg, FILE_APPEND);
 		}
 	}

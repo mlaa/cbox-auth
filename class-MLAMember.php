@@ -15,6 +15,7 @@ class MLAMember {
 	function __construct() { 
 		$this->user_id = bp_displayed_user_id(); 
 	} 
+
 	/* Checks when the group member data was last updated,
 	 * so that it doesn't reload it from the member API 
 	 * unnecessarily.
@@ -37,12 +38,67 @@ class MLAMember {
 		update_user_meta( $displayed_user_id, 'last_updated', time() ); 
 	} 
 
+	private function send_request( $request_method, $domain, $query ) { 
+
+		// The `private.php` file contains API passwords. 
+		// It populates the variables $api_key and $api_secret. 
+		require_once( 'private.php' ); 
+
+		$base_url = 'https://apidev.mla.org/1/'; 
+
+		$timestamp = time(); 
+
+		// prepare the request 
+		$url = $base_url . $domain . '?key=' . $api_key . '&' . $query . '&timestamp=' . $timestamp ; 
+
+		$base_string = $request_method . '&' . rawurlencode( $url ); 
+		$api_signature = hash_hmac( 'sha256', $base_string, $api_secret ); 
+
+		$request_url = $url . '&signature=' . $api_signature; 
+
+		_log( 'Using request URL:' ); 
+		_log( $request_url ); 
+
+		// send the request
+		if ( 'GET' == $request_method ) { 
+			$response = wp_remote_get( $request_url, array( 'sslverify' => false ) ); 
+			if ( is_wp_error( $response ) ) { 
+				_log( 'Something went wrong while trying to get MLA member data from the API.' ); 
+				_log( 'Response is:' ); 
+				_log( $response ); 
+			} else { 
+				$response_body = wp_remote_retrieve_response_message( $response ); 
+			} 
+			//$ch = curl_init( $request_url );
+			//curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
+			//curl_setopt( $ch, CURLOPT_HEADER, 0 );
+			//$data = curl_exec( $ch );
+			//curl_close( $ch ); 
+		} else { 
+			_log( "Cbox-auth can't handle that request method yet." ); 	
+		} 
+		return $response; 
+	} 
+
+
+
 	/**
 	 * Gets the member data from the API and stores it in this class's
-	 * parameters.
-	 * Contains dummy data for now.
+	 * parameters. Contains dummy data for now.
+	 *
+	 * @TODO: make this a private function once I don't need to call it 
+	 * for debugging. 
 	 */
-	private function get_mla_member_data() {
+	public function get_mla_member_data() {
+		$request_method = 'GET'; 
+		$domain = 'members'; // This will be the first part of the query URL, i.e. 'members' in api.com/members/etc
+		$query = 'id=168880'; 
+		$response = $this->send_request( $request_method, $domain, $query );  
+
+		_log( 'the response is: ' ); 
+		_log( $response ); 
+
+		// dummy data 
 		$this->affiliations[] = array( 'Modern Language Association' );
 		$this->first_name = 'Jonathan';
 		$this->last_name = 'Reeve';
@@ -55,6 +111,7 @@ class MLAMember {
 			'44'   => 'member', 
 			'46'   => 'member',
 		);
+
 	}
 
 	private function get_bp_member_groups() {

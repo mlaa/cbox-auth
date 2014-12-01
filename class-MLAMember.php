@@ -43,10 +43,11 @@ class MLAMember {
 	 * -----------
 	 * Send a RESTful request to the API.
 	 */
-	function send_request( $http_method, $base_url, $parameters = array() ) {
+	function send_request( $http_method, $base_url, $parameters = array(), $request_body = "" ) {
 
 		// The `private.php` file contains API passwords. 
 		// It populates the variables $api_key and $api_secret. 
+		// @todo: put this in wp-config.php
 		require_once( 'private.php' ); 
 
 		// Append current time to request parameters (seconds from UNIX epoch).
@@ -61,20 +62,16 @@ class MLAMember {
 
 		// Add the request parameters to the base URL.
 		$request_url = $base_url . '?' . $query_string;
-		_log( 'using request url:' ); 
-		_log( $request_url ); 
-
+		//
 		// Compute the request signature (see specification).
 		$hash_input = $http_method . '&' . rawurlencode($request_url);
-		_log( 'using hash input:' ); 
-		_log( $hash_input ); 
 		$api_signature = hash_hmac('sha256', $hash_input, $api_secret);
 
 		// Append the signature to the request.
-		$request_body = $request_url . '&signature=' . $api_signature;
+		$request_url = $request_url . '&signature=' . $api_signature;
 
 		_log( 'using request:' ); 
-		_log( $request_body ); 
+		_log( $request_url ); 
 
 		// Initialize a cURL session.
 		$ch = curl_init();

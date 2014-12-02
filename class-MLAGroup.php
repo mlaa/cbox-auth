@@ -1,9 +1,13 @@
 <?php 
+
+/* The abstract API class is in another file. */ 
+require_once( 'class-MLAAPI.php' ); 
+
 /* This class, MLA Group, is primarily used to update group memberships, 
  * so that when there is a group membership change, these are updated more frequently than 
  * when the user logs out and logs back in.  
  */ 
-class MLAGroup { 
+class MLAGroup extends MLAAPI { 
 	public $group_bp_id = 0; 
 	public $group_mla_oid = 0; 
 	public $members = array(); // guessing that members list is going to be an array of member IDs

@@ -50,16 +50,40 @@ class MLAMember extends MLAAPI {
 	public function get_mla_member_data() {
 		$request_method = 'GET'; 
 		$query_domain = 'members'; 
-		$base_url = 'https://apidev.mla.org/1/' . $query_domain; 
+		// this is for queries that come directly after the query domain, 
+		// like https://apidev.mla.org/1/members/168880
+		$simple_query = '/168880'; 
+		$base_url = 'https://apidev.mla.org/1/' . $query_domain . $simple_query; 
 
 		$query = array(
 			//'id' => 168880, 
-			'last_name' => 'Reeve', 
+			//'last_name' => 'Reeve', 
 		); 
 		$response = $this->send_request( $request_method, $base_url, $query );  
 
 		_log( 'the response is: ' ); 
 		_log( $response ); 
+
+		//@todo: validate JSON, make sure we're getting a 200 code. 
+		
+		//_log( 'the response body is: ' ); 
+		//_log( json_decode($response['body'])->data[0]->general->first_name ); 
+
+		$decoded = json_decode( $response['body'] )->data[0]; 
+
+		$this->first_name = $decoded->general->first_name; 
+	        $this->last_name  = $decoded->general->last_name; 	
+		$this->affiliation = $decoded->addresses[0]->affiliation; 
+		$this->title = $decoded->addresses[0]->rank; 
+
+		_log( 'this->first_name is' ); 
+		_log( $this->first_name ); 
+		_log( 'this->last_name is' ); 
+		_log( $this->last_name ); 
+		_log( 'this->affiliation is' ); 
+		_log( $this->affiliation ); 
+		_log( 'this->title is' ); 
+		_log( $this->title ); 
 
 		// dummy data 
 		$this->affiliations[] = array( 'Modern Language Association' );

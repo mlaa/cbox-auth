@@ -12,11 +12,17 @@ class MLAMember extends MLAAPI {
 	public $user_id = 0;
 
 	// number of seconds below which to force update of group membership data. 
-	private $update_interval = 3600; 
+	public $update_interval = 3600; 
 
 	// at minimum, get the displayed user ID
 	function __construct() { 
 		$this->user_id = bp_displayed_user_id(); 
+		$this->username = bp_get_displayed_user_username(); 
+		_log( '$this->user_id is:' ); 
+		_log( $this->user_id ); 
+		$this->mla_user_id = $this->get_mla_user_id_from_bp_user_id( $this->user_id ); 
+		_log( '$this->mla_user_id is:' ); 
+		_log( $this->mla_user_id ); 
 	} 
 
 	/* Checks when the group member data was last updated,
@@ -31,7 +37,7 @@ class MLAMember extends MLAAPI {
 		if ( ! $last_updated ) { 
 			return true; /* never updated, so, it's too old. */ 
 		} else { 
-			return ( time() - $last_updated > 3600 );
+			return ( time() - $last_updated > $this->update_interval );
 		} 
 	} 
 
@@ -52,7 +58,7 @@ class MLAMember extends MLAAPI {
 		$query_domain = 'members'; 
 		// this is for queries that come directly after the query domain, 
 		// like https://apidev.mla.org/1/members/168880
-		$simple_query = '/168880'; 
+		$simple_query = '/' . $this->mla_user_id; 
 		$base_url = 'https://apidev.mla.org/1/' . $query_domain . $simple_query; 
 
 		$query = array(
@@ -70,11 +76,34 @@ class MLAMember extends MLAAPI {
 		//_log( json_decode($response['body'])->data[0]->general->first_name ); 
 
 		$decoded = json_decode( $response['body'] )->data[0]; 
+		//_log( 'decoded member data:' ); 
+		//_log( $decoded ); 
 
 		$this->first_name = $decoded->general->first_name; 
-	        $this->last_name  = $decoded->general->last_name; 	
-		$this->affiliation = $decoded->addresses[0]->affiliation; 
+		$this->last_name  = $decoded->general->last_name; 	
+		$this->fullname  = $this->first_name . ' ' . $this->last_name; 	
+		$this->nickname  = $this->fullname; 
+		$this->affiliation = $decoded->addresses[0]->affiliation; // assuming primary affiliation is at 0 
 		$this->title = $decoded->addresses[0]->rank; 
+
+		$raw_groups = $decoded->organizations; 
+
+		// parse raw affiliations
+		$this->affiliations = array(); 
+		foreach ( $decoded->addresses as $address ) { 
+			$this->affiliations[] = $address->affiliation; 
+		} 
+
+		// parse raw groups
+		$mla_groups_list = array(); 
+		foreach ( $raw_groups as $group ) { 
+			// groups array is in the form 'group_id' => role
+			$group_id = (string) $this->get_group_id_from_mla_oid( $group->convention_code ); 
+			$this->mla_groups_list[ $group_id ] = strtolower( $group->position ); 
+		} 
+		_log( 'groups are:' ); 
+		_log( $this->mla_groups_list ); 
+
 
 		_log( 'this->first_name is' ); 
 		_log( $this->first_name ); 
@@ -86,24 +115,24 @@ class MLAMember extends MLAAPI {
 		_log( $this->title ); 
 
 		// dummy data 
-		$this->affiliations[] = array( 'Modern Language Association' );
-		$this->first_name = 'Jonathan';
-		$this->last_name = 'Reeve';
-		$this->nickname = 'Jonathan Reeve';
-		$this->fullname = 'Jonathan Reeve';
-		$this->title = 'Web Developer';
+		//$this->affiliations[] = array( 'Modern Language Association' );
+		//$this->first_name = 'Jonathan';
+		//$this->last_name = 'Reeve';
+		//$this->nickname = 'Jonathan Reeve';
+		//$this->fullname = 'Jonathan Reeve';
+		//$this->title = 'Web Developer';
 
-		$this->mla_groups_list = array(
-			'17' 	=> 'member', 
-			'44'   => 'member', 
-			'46'   => 'member',
-		);
+		//$this->mla_groups_list = array(
+			//'17' 	=> 'member', 
+			//'44'   => 'member', 
+			//'46'   => 'member',
+		//);
 
 	}
 
 	private function get_bp_member_groups() {
 		$args = array(
-			user_id => $this->user_id,
+			'user_id' => $this->user_id,
 		);
 		$this->bp_groups = groups_get_groups( $args );
 		//_log( 'heyoo! have some groups here for you!' );
@@ -121,8 +150,8 @@ class MLAMember extends MLAAPI {
 				$this->bp_groups_list[ $bp_group->id ] = $role;
 			//}
 		}
-		//_log( 'bp_groups_list is:' );
-		//_log( $this->bp_groups_list );
+		_log( 'bp_groups_list is:' );
+		_log( $this->bp_groups_list );
 
 		// ignore groups that don't have a mla_oid
 		foreach ( $this->bp_groups_list as $bp_group_id => $bp_group_role ) {
@@ -130,8 +159,8 @@ class MLAMember extends MLAAPI {
 				unset( $this->bp_groups_list[ $bp_group_id ] );
 			}
 		}
-		//_log( 'bp_groups_list of just the mla groups is now:' );
-		//_log( $this->bp_groups_list );
+		_log( 'bp_groups_list of just the mla groups is now:' );
+		_log( $this->bp_groups_list );
 	}
 	/**
 	 * Gets member data from the new API and, if there are any changes,
@@ -152,37 +181,32 @@ class MLAMember extends MLAAPI {
 		$fields_to_sync = array( 'first_name', 'last_name', 'nickname', 'affiliations', 'title' );
 		foreach ( $fields_to_sync as $field ) {
 			update_user_meta( $this->user_id, $field, $this->$field );
-			/*
-			 *_log( 'Setting user meta:' );
-			 *_log( $field );
-			 *_log( 'with data:' );
-			 *_log( $this->$field );
-			 */
+			_log( 'Setting user meta:' );
+			_log( $field );
+			_log( 'with data:' );
+			_log( $this->$field );
 		}
+
 
 		// Map of fields to sync. Key is incoming MLA field; 
 		// value is Xprofile field name.  
 		$xprofile_fields_to_sync = array(
-			'affiliations' => 'Institutional or Other Affiliation',
+			'affiliation' => 'Institutional or Other Affiliation',
 			'title' => 'Title',
 			'fullname' => 'Name',
 		);
 
-
 		foreach ( $xprofile_fields_to_sync as $source_field => $dest_field ) {
-			// make sure the user doesn't already have something in this field, 
-			// because we're about to overwrite it. 
-			if ( ! xprofile_get_field_data( $dest_field, $this->user_id ) ) { 
-				$source = $this->flatten_array( $this->$source_field );
-				if ( xprofile_set_field_data( $dest_field, $this->user_id, $source ) ) {
-					//_log( 'Successfully updated xprofile data.' );
-				} else {
-					//_log( 'Something went wrong while updating xprofile data from member database.' );
-				}
-			} 
+			if ( xprofile_set_field_data( $dest_field, $this->user_id, $this->$source_field ) ) {
+				_log( 'Successfully updated xprofile data.' );
+			} else {
+				_log( 'Something went wrong while updating xprofile data from member database.' );
+			}
 		}
 
 		// Now sync member groups. Loop through MLA groups and add new ones to BP
+		_log( 'About to sync with mla_groups_list:' ); 
+		_log( $this->mla_groups_list ); 
 		foreach ( $this->mla_groups_list as $group_id => $member_role ) {
 			if ( ! array_key_exists( $group_id, $this->bp_groups_list ) ) {
 				_log( "$group_id not found in this user's membership list. adding user $this->user_id to group $group_id" );
@@ -211,23 +235,5 @@ class MLAMember extends MLAAPI {
 		$this->update_last_updated_time(); 
 
 		return true;
-	}
-
-	private function flatten_array( $array ) {
-		// Some values are stuck in arrays. For example, sometimes affiliations comes back as
-		// array( array( 'College of Yoknapatawpha' ) )
-		if ( 'array' == gettype( $array ) ) {
-			// data is hidden in an array
-			$value = $array[0];
-			if ( 'array' == gettype( $value ) ) {
-				// data is *still* hidden in another array
-				$value = $value[0];
-			}
-		} else {
-			// This wasn't an array at all.
-			// Carry on. Nothing to see here.
-			$value = $array;
-		}
-		return $value;
 	}
 }

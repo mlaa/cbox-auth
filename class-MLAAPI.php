@@ -94,4 +94,32 @@ abstract class MLAAPI {
 		curl_close($ch);
 		return $response;
 	} 
+
+	/* 
+	 * Gets a BuddyPress group ID if given the group's MLA OID.
+	 * @param $mla_oid str, the MLA OID, i.e. D086
+	 * @return int BuddyPress group ID, i.e. 86 
+	 */ 
+	public function get_group_id_from_mla_oid( $mla_oid ) { 
+		global $wpdb; 
+		$sql = "SELECT group_id FROM wp_bp_groups_groupmeta WHERE meta_key = 'mla_oid' AND meta_value = '$mla_oid'"; 
+		// @todo use wp_cache_get or some other caching method 
+		$result = $wpdb->get_results( $sql ); 
+		$group_id = $result[0]->group_id; 
+		return $group_id; 
+	} 
+
+	/* 
+	 * Gets a MLA user ID if given that user's WP/BP ID. 
+	 * @param $bp_user_id str, the user's WP/BP ID
+	 * @return $mla_user_id str, the MLA OID for that user. 
+	 */ 
+	public function get_mla_user_id_from_bp_user_id( $bp_user_id ) { 
+		global $wpdb; 
+		$sql = "SELECT meta_value FROM wp_usermeta WHERE meta_key = 'mla_oid' AND user_id = '$bp_user_id'"; 
+		// @todo use wp_cache_get or some other caching method 
+		$result = $wpdb->get_results( $sql ); 
+		$mla_user_id = $result[0]->meta_value; 
+		return $mla_user_id; 
+	} 
 } 

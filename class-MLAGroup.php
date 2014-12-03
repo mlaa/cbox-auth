@@ -68,12 +68,9 @@ class MLAGroup extends MLAAPI {
 	 * Populates `bp_members_list` with an array made to resemble the $this->members array. 
 	 */ 
 	public function get_bp_group_data() { 
-		if ( ! isset( $this->group_bp_id ) ) { 
-			$this->group_bp_id = bp_get_group_id(); 
-		} 
-		if ( ! isset( $this->group_mla_oid ) ) { 
-			$this->group_mla_oid = groups_get_groupmeta( $group_bp_id, 'mla_oid' ); 
-		} 
+		
+		$this->group_bp_id = bp_get_group_id(); 
+		$this->group_mla_oid = groups_get_groupmeta( $group_bp_id, 'mla_oid' ); 
 
 		$args = array( 
 			'group_id'		=> $this->group_bp_id, 

@@ -20,23 +20,22 @@ abstract class MLAAPI {
 		$parameters['timestamp'] = time();
 
 		// Sort the request parameters.
-		ksort($parameters);
+		ksort( $parameters );
 
 		// Collapse the parameters into a URI query string.
-		$query_string = http_build_query($parameters, '', '&');
+		$query_string = http_build_query( $parameters, '', '&' );
 
 		// Add the request parameters to the base URL.
 		$request_url = $base_url . '?' . $query_string;
-		//
+		
 		// Compute the request signature (see specification).
-		$hash_input = $http_method . '&' . rawurlencode($request_url);
-		$api_signature = hash_hmac('sha256', $hash_input, $api_secret);
+		$hash_input = $http_method . '&' . rawurlencode( $request_url );
+		$api_signature = hash_hmac( 'sha256', $hash_input, $api_secret );
 
 		// Append the signature to the request.
 		$request_url = $request_url . '&signature=' . $api_signature;
 
-		_log( 'using request:' ); 
-		_log( $request_url ); 
+		_log( 'Using request:', $request_url ); 
 
 		// Initialize a cURL session.
 		$ch = curl_init();

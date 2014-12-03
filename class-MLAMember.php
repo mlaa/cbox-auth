@@ -2,30 +2,37 @@
 /* The abstract API class is in another file. */ 
 require_once( 'class-MLAAPI.php' ); 
 
-/* This class, MLA Member (not to be confused with MLAM ember) interfaces
+/* 
+ * This class, MLA Member (not to be confused with MLAM ember) interfaces
  * with the new member API, and syncs that data with BuddyPress if it has changed. 
  */
 class MLAMember extends MLAAPI {
-	public $name = '';
-	public $affiliations = array();
-	public $title = ''; // rank
-	public $user_id = 0;
+	public $affiliations = array(); // a list of affiliations
+	public $affiliation = ''; // primary affiliation 
+	public $title = ''; // a.k.a. rank
+	public $user_id = 0; // BuddyPress user ID
+	public $debug = false; // debugging mode
 
 	// number of seconds below which to force update of group membership data. 
 	public $update_interval = 3600; 
 
-	// at minimum, get the displayed user ID
-	function __construct() { 
+	// get the displayed user ID and username right from the beginning
+	function __construct( $debug = false ) { 
+
+		// allow debugging mode by passing $debug = true while
+		// instantiating this class. 
+		$this->debug = $debug; 
+
 		$this->user_id = bp_displayed_user_id(); 
 		$this->username = bp_get_displayed_user_username(); 
-		_log( '$this->user_id is:' ); 
-		_log( $this->user_id ); 
 		$this->mla_user_id = $this->get_mla_user_id_from_bp_user_id( $this->user_id ); 
-		_log( '$this->mla_user_id is:' ); 
-		_log( $this->mla_user_id ); 
+
+		_log( '$this->user_id is:', $this->user_id ); 
+		_log( '$this->mla_user_id is:', $this->mla_user_id ); 
 	} 
 
-	/* Checks when the group member data was last updated,
+	/** 
+	 * Checks when the group member data was last updated,
 	 * so that it doesn't reload it from the member API 
 	 * unnecessarily.
 	 *
@@ -33,7 +40,12 @@ class MLAMember extends MLAAPI {
 	 */ 
 	private function is_too_old() { 
 		$last_updated = (integer) get_user_meta( $this->user_id, 'last_updated' ); 
-		return true; /* always enable for debugging */ 
+
+		// never skip updating while debugging 
+		if ( $this->debug ) { 
+			return true; 
+		} 
+
 		if ( ! $last_updated ) { 
 			return true; /* never updated, so, it's too old. */ 
 		} else { 
@@ -41,19 +53,18 @@ class MLAMember extends MLAAPI {
 		} 
 	} 
 
-	/* After a sync, we have to update the user meta with the last updated time. 
+	/**
+	 * After a sync, we have to update the user meta with the last updated time. 
 	 */  
 	private function update_last_updated_time() { 
 		update_user_meta( $displayed_user_id, 'last_updated', time() ); 
 	} 
+
 	/**
 	 * Gets the member data from the API and stores it in this class's
-	 * parameters. Contains dummy data for now.
-	 *
-	 * @TODO: make this a private function once I don't need to call it 
-	 * for debugging. 
+	 * parameters. 
 	 */
-	public function get_mla_member_data() {
+	private function get_mla_member_data() {
 		$request_method = 'GET'; 
 		$query_domain = 'members'; 
 		// this is for queries that come directly after the query domain, 
@@ -67,14 +78,14 @@ class MLAMember extends MLAAPI {
 		); 
 		$response = $this->send_request( $request_method, $base_url, $query );  
 
-		_log( 'the response is: ' ); 
-		_log( $response ); 
+		_log( 'the response is: ', $response ); 
 
 		//@todo: validate JSON, make sure we're getting a 200 code. 
+		if ( $response['code'] != 200 ) { 
+			_log( 'There was some kind of error while trying to get MLA member data. Here\'s what the API said:', $response['body']); 
+			return false; 
+		} 
 		
-		//_log( 'the response body is: ' ); 
-		//_log( json_decode($response['body'])->data[0]->general->first_name ); 
-
 		$decoded = json_decode( $response['body'] )->data[0]; 
 		//_log( 'decoded member data:' ); 
 		//_log( $decoded ); 
@@ -101,18 +112,12 @@ class MLAMember extends MLAAPI {
 			$group_id = (string) $this->get_group_id_from_mla_oid( $group->convention_code ); 
 			$this->mla_groups_list[ $group_id ] = strtolower( $group->position ); 
 		} 
-		_log( 'groups are:' ); 
-		_log( $this->mla_groups_list ); 
 
-
-		_log( 'this->first_name is' ); 
-		_log( $this->first_name ); 
-		_log( 'this->last_name is' ); 
-		_log( $this->last_name ); 
-		_log( 'this->affiliation is' ); 
-		_log( $this->affiliation ); 
-		_log( 'this->title is' ); 
-		_log( $this->title ); 
+		_log( 'groups are:', $this->mla_groups_list ); 
+		_log( 'this->first_name is', $this->first_name ); 
+		_log( 'this->last_name is', $this->last_name ); 
+		_log( 'this->affiliation is', $this->affiliation ); 
+		_log( 'this->title is', $this->title ); 
 
 		// dummy data 
 		//$this->affiliations[] = array( 'Modern Language Association' );
@@ -135,8 +140,7 @@ class MLAMember extends MLAAPI {
 			'user_id' => $this->user_id,
 		);
 		$this->bp_groups = groups_get_groups( $args );
-		//_log( 'heyoo! have some groups here for you!' );
-		//_log( $this->bp_groups );
+		//_log( 'heyoo! have some groups here for you!', $this->bp_groups );
 
 		$this->bp_groups_list = array();
 		foreach ( $this->bp_groups['groups'] as $bp_group ) {
@@ -181,10 +185,8 @@ class MLAMember extends MLAAPI {
 		$fields_to_sync = array( 'first_name', 'last_name', 'nickname', 'affiliations', 'title' );
 		foreach ( $fields_to_sync as $field ) {
 			update_user_meta( $this->user_id, $field, $this->$field );
-			_log( 'Setting user meta:' );
-			_log( $field );
-			_log( 'with data:' );
-			_log( $this->$field );
+			_log( 'Setting user meta:', $field );
+			_log( 'with data:', $this->$field );
 		}
 
 

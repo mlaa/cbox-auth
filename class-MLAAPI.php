@@ -13,12 +13,12 @@ abstract class MLAAPI {
 		// The `private.php` file contains API passwords. 
 		// It populates the variables $api_key and $api_secret. 
 		// @todo: put this in wp-config.php
-		require_once( 'private.php' ); 
+		require( 'private.php' ); 
 
 		// Append current time to request parameters (seconds from UNIX epoch).
 		$parameters['key'] = $api_key;  
 		$parameters['timestamp'] = time();
-
+		
 		// Sort the request parameters.
 		ksort( $parameters );
 
@@ -121,4 +121,5 @@ abstract class MLAAPI {
 		$mla_user_id = $result[0]->meta_value; 
 		return $mla_user_id; 
 	} 
+
 } 

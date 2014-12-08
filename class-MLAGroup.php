@@ -97,7 +97,7 @@ class MLAGroup extends MLAAPI {
 			// Now transform it into a lookup table.
 			$lookup_table = array();
 			foreach ( $data as $group ) {
-				$lookup_table[$group->convention_code] = $group->id;
+				$lookup_table[ $group->convention_code ] = $group->id;
 			}
 			//_log( 'lookup table is:', $lookup_table );
 
@@ -155,7 +155,6 @@ class MLAGroup extends MLAAPI {
 		}
 
 	}
-
 
 	/**
 	 * Gets the MLA API ID, the ID for the group (organization)
@@ -333,17 +332,11 @@ class MLAGroup extends MLAAPI {
 		// in the MLA API group membership and the BuddyPress group membership. They should
 		// look pretty much like this:
 		//
-		// -- $diff --
-		// [49] => chair
-		// [60] => liaison
-		// [] => member
-		// [40] => mla staff
-		//
-		// -- $bp-diff --
-		// [49] => admin
-		// [60] => admin
-		// [] =>
-		// [40] => member
+		// -- $diff --          |  -- $bp-diff --
+		// [49] => chair        |  [49] => admin
+		// [60] => liaison      |  [60] => admin
+		// [] => member         |  [] =>
+		// [40] => mla staff    |  [40] => member
 		//
 		// Now we need to go through this list and make sure this differences are actually
 		// differences we care about, and make the appropriate adjustments.

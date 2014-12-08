@@ -32,9 +32,14 @@ class MLAGroup extends MLAAPI {
 		if ( ! $this->group_mla_api_id || empty( $this->group_mla_api_id ) ) { 
 			_log( 'This group doesn\'t already have an MLA API ID, so asking the API for one.' ); 
 			$this->group_mla_api_id = $this->get_group_mla_api_id(); 
-			$this->set_group_mla_api_id(); 
+			if ( ! $this->group_mla_api_id || empty( $this->group_mla_api_id ) ) { 
+				_log( 'Looks like this group doesn\'t have an MLA API ID.' ); 
+			} else {  
+				_log( 'Setting this group\'s MLA API ID for future reference.' ); 
+				$this->set_group_mla_api_id(); 
+			} 
 		} else { 
-			_log( 'Looks like this group already has a recorded MLA API ID, and it\'s:', $this->group_mla_api_id ); 
+			_log( "Looks like this group already has a recorded MLA API ID, and it\'s: $this->group_mla_api_id" ); 
 		} 
 	} 
 
@@ -143,7 +148,12 @@ class MLAGroup extends MLAAPI {
 		} 
 		// Member lookup table should be in the form: 
 		// MLA OID => BP ID
-		return $this->member_lookup_table[ $mla_oid ]; 
+		if ( array_key_exists( $mla_oid, $this->member_lookup_table ) ) { 
+			return $this->member_lookup_table[ $mla_oid ]; 
+		} else { 
+		       //_log( "I can't find the BuddyPress ID for the user with MLA OID $mla_oid. Maybe this user isn't a member of the Commons?" ); 
+		} 
+
 	} 
 
 
@@ -168,10 +178,14 @@ class MLAGroup extends MLAAPI {
 			return false; 
 		} 
 
-		$mla_api_id = $lookup_table[ $this->group_mla_oid ]; 
-		_log( 'Found the group\'s MLA API ID. It\'s:', $mla_api_id ); 
-
-		return $mla_api_id; 
+		if ( array_key_exists( $this->group_mla_oid, $lookup_table ) ) { 
+			$mla_api_id = $lookup_table[ $this->group_mla_oid ]; 
+			_log( 'Found the group\'s MLA API ID. It\'s:', $mla_api_id ); 
+			return $mla_api_id; 
+		} else { 
+			_log( 'It doesn\'t look like this group has an MLA API ID.' ); 
+			return false; 
+		} 
 	} 
 
 	/** 
@@ -226,13 +240,16 @@ class MLAGroup extends MLAAPI {
 		// get the members with their MLA API IDs 
 		$members_list = $data[0]->members; 
 		//_log( 'Members list is:',  $members_list ); 
+		$members_count = count( $members_list ); 
+		_log( "Members list from MLA API has $members_count members." ); 
 
 		// now look up those member IDs 
 		$members_list_translated = array(); 
 		foreach ( $members_list as $member ) { 
 			$members_list_translated[ $this->get_bp_user_id_from_mla_oid( $member->id ) ] = strtolower( $member->position ); 
 		} 
-		_log( 'Translated members list from MLA API is:',  $members_list_translated ); 
+		$members_list_translated_count = count( $members_list_translated ); 
+		_log( "Translated members list from MLA API has $members_list_translated_count members." ); 
 
 		return $members_list_translated; 
 		
@@ -283,7 +300,8 @@ class MLAGroup extends MLAAPI {
 			$role = ( 1 == $member_obj->is_admin ) ? 'admin' : 'member'; 
 			$bp_members_list[ $member_obj->ID ] = $role; 
 		} 
-		_log( 'My bp members list:', $bp_members_list ); 
+		$bp_members_list_count = count( $bp_members_list ); 
+		_log( "BP members list has $bp_members_list_count members." ); 
 
 		return $bp_members_list; 
 	} 
@@ -300,6 +318,11 @@ class MLAGroup extends MLAAPI {
 			return false; 
 		} 
 
+		if ( ! $this->group_mla_api_id || empty( $this->group_mla_api_id ) ) { 
+			_log( 'This group doesn\'t seem to have an MLA API ID, so not syncing. Nothing to see here.' ); 
+			return false; 
+		} 
+
 		if ( ! isset( $this->mla_members_list ) ) { 
 			$this->mla_members_list = $this->get_mla_group_data(); 
 		} 
@@ -310,46 +333,79 @@ class MLAGroup extends MLAAPI {
 
 		$group_id = $this->group_bp_id; 
 
-		_log( 'Now syncing with mla_members_list:', $this->mla_members_list ); 
-		_log( 'Now syncing with bp_members_list:', $this->bp_members_list ); 
+		//_log( 'Now syncing with mla_members_list:', $this->mla_members_list ); 
+		//_log( 'Now syncing with bp_members_list:', $this->bp_members_list ); 
 
-
-		return; // debugging. Dry run.   
-
-		// loop through members list from DB and make sure they're 
-		// all BP members. If not, add them or remove them. 
-
-		foreach ( $this->mla_members_list as $member_id => $member_role ) { 
-
-			//_log( 'parsing member with id: ' ); 
-			//_log( $member_id ); 
-
-			// new members
-			if ( ! groups_is_user_member( $member_id, $group_id ) ) { 
-				//_log( 'user is not a member! adding.' ); 
-				groups_join_group( $group_id, $member_id ); 
-			} else { 
-				//_log( 'user is already a member. skipping.' ); 
-			} 
-
-			if ( 'chair' == $member_role ) { 
-				groups_promote_member( $member_id, $group_id, 'admin' ); 
-			} 
+		$diff = array_diff_assoc( $this->mla_members_list, $this->bp_members_list ); 
+		_log( 'Diff of arrays:', $diff ); 
+		
+		// BuddyPress values for those diffed members. 
+		$bp_diff = array(); 
+		foreach( array_keys( $diff ) as $member ) { 
+			$bp_diff[ $member ] = $this->bp_members_list[ $member ]; 
 		} 
+		_log( 'BP\'s version of those members:', $bp_diff ); 
 
-		// now look through BP members list and remove anyone that doesn't 
-		// already exist in the MLA list
+		// At this point we should have two associative arrays that reflect differences
+		// in the MLA API group membership and the BuddyPress group membership. They should
+		// look pretty much like this: 
+		//
+		// -- $diff -- 
+		// [49] => chair
+		// [60] => liaison
+		// [] => member
+		// [40] => mla staff
+		//
+		// -- $bp-diff --
+		// [49] => admin
+		// [60] => admin
+		// [] => 
+		// [40] => member
+		//
+		// Now we need to go through this list and make sure this differences are actually 
+		// differences we care about, and make the appropriate adjustments. 
+		foreach ( $diff as $member_id => $role ) { 
+			// We don't want no scrubs. 
+			// Ignore records with empty IDs. 
+			if ( '' == $member_id ) { 
+				continue; 
+			} 
 
-		foreach ( $this->bp_members_list as $member_id => $member_role ) { 
-			//_log( 'parsing BP member with id: ' ); 
-			//_log( $member_id ); 
+			// If MLA member isn't a member of the BuddyPress group, add them. 
+			if ( ! array_key_exists( $member_id, $bp_diff ) ) { 
+				groups_join_group( $group_id, $member_id ); 
+				// Also add it to our list so that we can compare the
+				// roles below. 
+				$bp_diff[ $member_id ] = translate_mla_role( $role ); 
+			}  
 
-			if ( ! array_key_exists( $member_id, $this->mla_members_list ) ) { 
-				// user is not or no longer a member, remove from BP group
-				groups_remove_member( $member_id, $group_id );
+			// First translate this to something BP can understand. 
+			$mla_role = translate_mla_role( $role );
+
+			// And look up the corresponding role in BP's records. 
+			$bp_role = $bp_diff[ $member_id ]; 
+
+			if ( $mla_role == $bp_role ) { 
+				// Roles are actually the same. 
+				// Move along, nothing to see here. 
+				continue; 
+			}  
+
+			if ( 'admin' == $mla_role && 'member' == $bp_role ) { 
+				// User has been promoted at MLA, but not on BP.  
+				// Promote them on BP. 
+                                groups_promote_member( $member_id, $group_id, 'admin' ); 
+			} 
+
+			if ( 'member' == $mla_role && 'admin' == $bp_role ) { 
+				// User has been demoted at MLA, but not on BP. 
+				// Demote them on BP. 
+				groups_demote_member( $member_id, $group_id );
 			} 
 		} 
 
 		$this->update_last_updated_time(); 
+
+		return; // debugging. Dry run.   
 	} 
 } 

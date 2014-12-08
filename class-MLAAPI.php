@@ -122,4 +122,22 @@ abstract class MLAAPI {
 		return $mla_user_id; 
 	} 
 
+
+	/**
+	 * Translate MLA roles like 'chair', 'liaison,' 'mla staff', into
+	 * the corresponding BP role, like 'admin', member. 
+	 *
+	 * @param $mla_role str the MLA role, like 'chair', 'mla staff.' 
+	 * @return $bp_role str the BP role, like 'admin', 'member.'  
+	 */ 
+	public function translate_mla_role( $mla_role ){ 
+		$mla_admin_roles = array('chair', 'liaison', 'liason', 'secretary', 'executive', 'program-chair'); 
+
+		if ( in_array( $mla_role, $mla_admin_roles ) ) { 
+			$bp_role = 'admin'; 
+		} else { 
+			$bp_role = 'member'; 
+		} 
+		return $bp_role; 
+	} 
 } 

@@ -252,23 +252,6 @@ class MLAGroup extends MLAAPI {
 		_log( "Translated members list from MLA API has $members_list_translated_count members." );
 
 		return $members_list_translated;
-
-		//$members_list = send_request();
-
-		/* Mock group members:
-		 *   Jonathan - jonreeve - 3164
-		 *   Katina - katinalynn - 57
-		 *   Chris - czarate - 1
-		 *   Kathleen - kfitz - 60
-		 */
-		//$this->mla_members_list = array(
-			//3164	=> 'chair',
-			//7	=> 'member',
-			//1	=> 'member',
-			//60	=> 'member',
-		//);
-		//_log( 'mla members list:', $this->mla_members_list );
-
 	}
 
 	/*

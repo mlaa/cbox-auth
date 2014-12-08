@@ -184,11 +184,12 @@ class MLAMember extends MLAAPI {
 		// since they're already the names of their associates
 		$fields_to_sync = array( 'first_name', 'last_name', 'nickname', 'affiliations', 'title' );
 		foreach ( $fields_to_sync as $field ) {
-			update_user_meta( $this->user_id, $field, $this->$field );
-			_log( 'Setting user meta:', $field );
-			_log( 'with data:', $this->$field );
+			if ( ! empty($this->field ) ) { 
+				update_user_meta( $this->user_id, $field, $this->$field );
+				_log( 'Setting user meta:', $field );
+				_log( 'with data:', $this->$field );
+			} 
 		}
-
 
 		// Map of fields to sync. Key is incoming MLA field; 
 		// value is Xprofile field name.  
@@ -199,10 +200,13 @@ class MLAMember extends MLAAPI {
 		);
 
 		foreach ( $xprofile_fields_to_sync as $source_field => $dest_field ) {
-			if ( xprofile_set_field_data( $dest_field, $this->user_id, $this->$source_field ) ) {
-				_log( 'Successfully updated xprofile data.' );
-			} else {
-				_log( 'Something went wrong while updating xprofile data from member database.' );
+			if ( ! empty( $this->$source_field ) ) {
+				$result = xprofile_set_field_data( $dest_field, $this->user_id, $this->$source_field );
+				if ( $result ) {
+					_log( 'Successfully updated xprofile data.' );
+				} else {
+					_log( 'Something went wrong while updating xprofile data from member database.' );
+				}
 			}
 		}
 
@@ -218,10 +222,10 @@ class MLAMember extends MLAAPI {
 				// class-CustomAuthentication.php:232 
 				$admins = array('chair', 'liaison', 'liason', 'secretary', 'executive', 'program-chair'); 
 
-				// Now promote user if user is chair or equivalent. 
-				if ( in_array( $member_role, $admins ) ) { 
-					groups_promote_member( $this->user_id, $group_id, 'admin' ); 
-				} 
+				// Now promote user if user is chair or equivalent.
+				if ( in_array( $member_role, $admins ) ) {
+					groups_promote_member( $this->user_id, $group_id, 'admin' );
+				}
 			}
 		}
 

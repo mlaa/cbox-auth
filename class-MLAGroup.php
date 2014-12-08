@@ -179,7 +179,7 @@ class MLAGroup extends MLAAPI {
 
 		if ( array_key_exists( $this->group_mla_oid, $lookup_table ) ) {
 			$mla_api_id = $lookup_table[ $this->group_mla_oid ];
-			_log( 'Found the group\'s MLA API ID. It\'s:', $mla_api_id );
+			_log( "Found the group's MLA API ID. It's: $mla_api_id" );
 			return $mla_api_id;
 		} else {
 			_log( 'It doesn\'t look like this group has an MLA API ID.' );

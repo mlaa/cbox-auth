@@ -371,19 +371,20 @@ class MLAGroup extends MLAAPI {
 				continue; 
 			} 
 
+			// First translate this to something BP can understand. 
+			$mla_role = $this->translate_mla_role( $role );
+
+			// And look up the corresponding role in BP's records. 
+			$bp_role = $bp_diff[ $member_id ]; 
+
 			// If MLA member isn't a member of the BuddyPress group, add them. 
 			if ( ! array_key_exists( $member_id, $bp_diff ) ) { 
 				groups_join_group( $group_id, $member_id ); 
 				// Also add it to our list so that we can compare the
 				// roles below. 
-				$bp_diff[ $member_id ] = translate_mla_role( $role ); 
+				$bp_diff[ $member_id ] = $mla_role; 
 			}  
 
-			// First translate this to something BP can understand. 
-			$mla_role = translate_mla_role( $role );
-
-			// And look up the corresponding role in BP's records. 
-			$bp_role = $bp_diff[ $member_id ]; 
 
 			if ( $mla_role == $bp_role ) { 
 				// Roles are actually the same. 

@@ -407,9 +407,21 @@ class CustomAuthentication extends MLAAPI {
 	}
 
 	protected function changeCustomUsername($username, $password, $newname) {
-		$url = $this->apiMembersUrl.'user-name'.$this->startQueryString($username, $password)."&new_user_name=$newname";
-		$xmlResponse = $this->runCurl($url);
-		$this->log($xmlResponse, $url);
+		//@todo use the new API for this
+		//$url = $this->apiMembersUrl.'user-name'.$this->startQueryString($username, $password)."&new_user_name=$newname";
+		//$xmlResponse = $this->runCurl($url);
+		//$this->log($xmlResponse, $url);
+		//
+		
+		die(); // Don't go any further! Not yet working!
+		$request_method = 'PUT';
+		$query_domain = 'members';
+		// this is for queries that come directly after the query domain,
+		// like https://apidev.mla.org/1/members/168880
+		// @todo get user ID somehow
+		$simple_query = '/' . $username;
+		$base_url = 'https://apidev.mla.org/1/' . $query_domain . $simple_query;
+		$response = $this->send_request( $request_method, $base_url, $query );
 
 		if($xmlResponse === false || $xmlResponse == '') {
 			// This only happens if we can't access the API server.
@@ -419,7 +431,7 @@ class CustomAuthentication extends MLAAPI {
 
 		try {
 			$xml = new SimpleXMLElement($xmlResponse);
-		}catch (Exception $e) {
+		} catch (Exception $e) {
 			error_log('Authentication Plugin: is API server down?');
 			return new WP_Error('server_error', __('<strong>Error (' . __LINE__ . '):</strong> There was a problem verifying your member credentials. Please try again later.'));
 		}
@@ -448,7 +460,6 @@ class CustomAuthentication extends MLAAPI {
 		$languages = array();
 		$affiliations = array();
 		$groups = array();
-		$groups = $json['organizations']; 
 		$affiliations = array(); 
 
 		foreach ( $json['addresses'] as $address ) { 
@@ -456,6 +467,22 @@ class CustomAuthentication extends MLAAPI {
 				$affiliations[] = $address['affiliation']; 
 			} 
 		} 
+
+		foreach ( $json['organizations'] as $group ) { 
+			//_log( 'here comes a group!', $group ); 
+			$groups[] = array( 
+				//[oid] => G049
+				//[role] => 
+				//[name] => Age Studies
+				//[status] => public
+				'oid'  => $group['convention_code'],
+				'role' => $group['position'], 
+				'type' => $group['type'], 
+				'name' => $group['name'], 
+				// @todo how to get status? 
+			); 
+		} 
+
 		return array(
 			'id' => $json['id'],
 			'user_name' => $json['authentication']['username'],

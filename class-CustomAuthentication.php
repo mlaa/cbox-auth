@@ -1,5 +1,9 @@
 <?php
-class CustomAuthentication {
+
+/* The abstract API class is in another file. */
+require_once( 'class-MLAAPI.php' );
+
+class CustomAuthentication extends MLAAPI {
 
 	// Seconds before curl times out
 	protected $curlTimeout = 10;
@@ -296,41 +300,67 @@ class CustomAuthentication {
 	 * @return array|WP_Error
 	 */
 	protected function findCustomUser($username, $password) {
-		$url = $this->apiMembersUrl.'information'.$this->startQueryString($username, $password);
-		$xmlResponse = $this->runCurl($url);
-		$this->log($xmlResponse, $url);
+		//$url = $this->apiMembersUrl.'information'.$this->startQueryString($username, $password);
+		//$xmlResponse = $this->runCurl($url);
+		//$this->log($xmlResponse, $url);
 
-		if($xmlResponse === false || $xmlResponse == '') {
+		$request_method = 'GET';
+		$query_domain = 'members';
+		// this is for queries that come directly after the query domain,
+		// like https://apidev.mla.org/1/members/168880
+		$simple_query = '/' . $username;
+		$base_url = 'https://apidev.mla.org/1/' . $query_domain . $simple_query;
+		$response = $this->send_request( $request_method, $base_url, $query );
+
+		if( $response === false || $response == '' ) {
 			// This only happens if we can't access the API server.
 			error_log('Authentication Plugin: is API server down?');
 			return new WP_Error('server_error', __('<strong>Error (' . __LINE__ . '):</strong> There was a problem verifying your member credentials. Please try again later.'));
 		}
 
-		try {
-			$xml = new SimpleXMLElement($xmlResponse);
-		}catch (Exception $e) {
+		if ( ! array_key_exists( 'code', $response ) ) { 
 			error_log('Authentication Plugin: is API server down?');
+			return new WP_Error('server_error', __('<strong>Error (' . __LINE__ . '):</strong> There was a problem verifying your member credentials. Please try again later.'));
+		} else if ( $response['code'] != 200 ) { 
+			_log('Authentication Plugin: got request error. Here\'s what the server said:');
+			_log( $response );
+			return new WP_Error('server_error', __('<strong>Error (' . __LINE__ . '):</strong> There was a problem verifying your member credentials. Please try again later.'));
+		} 
+
+		try {
+			$decoded = json_decode( $response['body'], true );
+		} catch ( Exception $e ) {
+			_log( 'Authentication Plugin: couldn\'t decode JSON response from server. Response was:', $response );
 			return new WP_Error('server_error', __('<strong>Error (' . __LINE__ . '):</strong> Because of a temporary problem, we cannot verify your member credentials at this time. Please try again in a few minutes.'));
 		}
 
-		if($xml->getName() === 'errors') {
+		//_log( 'Decoded JSON is: ', $decoded );
+
+		if ( $decoded['meta']['status'] != 'success' ) {
+			_log( 'Authentication plugin: member lookup was not a success. Server says:', $decoded->meta ); 
 			return new WP_Error('not_authorized', sprintf(__('<strong>Error (' . __LINE__ . '):</strong> Your user name and password could not be verified. Please try again.'), wp_lostpassword_url()));
 		}
 
-		if($xml->getName() !== 'members') {
-			// This should not happen. The only appropriate API responses are 'errors' or 'members'
-			error_log('Authentication Plugin: is API server down?');
-			return new WP_Error('server_error', __('<strong>Error (' . __LINE__ . '):</strong> There was a problem verifying your member credentials. Please try again later.'));
-		}
+		$json_data = $decoded['data']; 
 
-		$xmlReturn = $this->memberXmlToArray($xml, $password);
+		if ( sizeof( $json_data ) > 1 ) { 
+			_log( 'Authentication plugin: there was more than one response for that username. This should never happen. Responses:', $json_data ); 
+			return new WP_Error('not_authorized', sprintf(__('<strong>Error (' . __LINE__ . '):</strong> Your user name and password could not be verified. Please try again.'), wp_lostpassword_url()));
+		} 
+
+		$json_member_data = $decoded['data'][0]; 
+
+		$json_array = $this->memberJSONToArray( $json_member_data, $password );
+
+		//_log( '$json_array is as follows', $json_array ); 
+
 
 		// Make sure the user is active and of the allowed types (i.e. 'member')
-		if(!$this->validateCustomUser($xmlReturn, $username, $error)) {
+		if(!$this->validateCustomUser($json_array, $username, $error)) {
 			return $error;
 		}
 
-		return $xmlReturn;
+		return $json_array;
 
 	}
 
@@ -414,35 +444,32 @@ class CustomAuthentication {
 	 * @param $password
 	 * @return array
 	 */
-	protected function memberXmlToArray($xml, $password) {
-		$memberAttrs = $xml->member->attributes();
+	protected function memberJSONToArray( $json, $password ) {
 		$languages = array();
 		$affiliations = array();
 		$groups = array();
-		foreach($xml->member->languages->language as $language) {
-			$languages[] = ''.$language[0];
-		}
-		foreach($xml->member->affiliations->affiliation as $affiliation) {
-			$affiliations[] = ''.$affiliation[0];
-		}
-		$this->extractGroups($groups, $xml->member->committees->committee);
-		$this->extractGroups($groups, $xml->member->divisions->division);
-		$this->extractGroups($groups, $xml->member->discussions->discussion);
+		$groups = $json['organizations']; 
+		$affiliations = array(); 
 
-
+		foreach ( $json['addresses'] as $address ) { 
+			if ( array_key_exists( 'affiliation', $address ) ) { 
+				$affiliations[] = $address['affiliation']; 
+			} 
+		} 
 		return array(
-			'id' => trim($memberAttrs['oid']),
-			'user_name' => trim($xml->member->user_name),
-			'status' => trim($xml->member->status),
-			'type' => trim($xml->member->type),
+			'id' => $json['id'],
+			'user_name' => $json['authentication']['username'],
+			'status' => $json['authentication']['membership_status'],
+			// ??? 
+			//'type' => trim($xml->member->type),
 			'password' => $password,
-			'email' => trim($xml->member->email_address),
-			'first_name' => trim($xml->member->name->first_names),
-			'last_name' => trim($xml->member->name->surname),
-			'display_name' => trim($xml->member->name->first_names.' '.$xml->member->name->surname),
-			'website' => trim($xml->member->website),
-			'languages' => $languages,
-			'affiliations' => '',
+			'email' => trim($json['general']['email']),
+			'first_name' => trim( $json['general']['first_name'] ),
+			'last_name' => trim( $json['general']['last_name'] ),
+			'display_name' => trim($json['general']['first_name'] . ' ' . $json['general']['last_name']),
+			'website' => trim($json['general']['web_site']),
+			'languages' => $json['languages'],
+			'affiliations' => $affiliations,
 			'groups' => $groups,
 			'role' => 'subscriber',
 		);

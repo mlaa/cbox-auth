@@ -4,8 +4,8 @@
 require_once( 'class-MLAAPI.php' );
 
 /* This class, MLA Group, is primarily used to update group memberships,
- * so that when there is a group membership change, these are updated more frequently than
- * when the user logs out and logs back in.
+ * so that when there is a group membership change, these are updated
+ * more frequently than when the user logs out and logs back in.
  */
 class MLAGroup extends MLAAPI {
 	public $group_bp_id = 0;

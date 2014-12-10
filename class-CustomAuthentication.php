@@ -411,7 +411,6 @@ class CustomAuthentication extends MLAAPI {
 		//$url = $this->apiMembersUrl.'user-name'.$this->startQueryString($username, $password)."&new_user_name=$newname";
 		//$xmlResponse = $this->runCurl($url);
 		//$this->log($xmlResponse, $url);
-		//
 		
 		die(); // Don't go any further! Not yet working!
 		$request_method = 'PUT';
@@ -419,18 +418,21 @@ class CustomAuthentication extends MLAAPI {
 		// this is for queries that come directly after the query domain,
 		// like https://apidev.mla.org/1/members/168880
 		// @todo get user ID somehow
-		$simple_query = '/' . $username;
+		$simple_query = '/' . $username . '/general'
 		$base_url = 'https://apidev.mla.org/1/' . $query_domain . $simple_query;
+		$query = array( 'username' => $newname ); 
 		$response = $this->send_request( $request_method, $base_url, $query );
 
-		if($xmlResponse === false || $xmlResponse == '') {
+		findCustomUser( $username ) 
+
+		if($response === false || $response == '') {
 			// This only happens if we can't access the API server.
 			error_log('Authentication Plugin: is API server down?');
 			return new WP_Error('server_error', __('<strong>Error (' . __LINE__ . '):</strong> There was a problem verifying your member credentials. Please try again later.'));
 		}
 
 		try {
-			$xml = new SimpleXMLElement($xmlResponse);
+			//$xml = new SimpleXMLElement($xmlResponse);
 		} catch (Exception $e) {
 			error_log('Authentication Plugin: is API server down?');
 			return new WP_Error('server_error', __('<strong>Error (' . __LINE__ . '):</strong> There was a problem verifying your member credentials. Please try again later.'));

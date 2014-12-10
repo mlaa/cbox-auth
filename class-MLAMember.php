@@ -80,9 +80,8 @@ class MLAMember extends MLAAPI {
 
 		_log( 'the response is: ', $response );
 
-		//@todo: validate JSON, make sure we're getting a 200 code.
 		if ( $response['code'] != 200 ) {
-			_log( 'There was some kind of error while trying to get MLA member data. Here\'s what the API said:', $response['body']);
+			_log( 'There was some kind of error while trying to get MLA member data. Here\'s what the API said:', $response['body'] );
 			return false;
 		}
 

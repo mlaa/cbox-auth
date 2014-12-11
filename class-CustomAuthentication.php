@@ -352,7 +352,7 @@ class CustomAuthentication extends MLAAPI {
 
 		$json_array = $this->memberJSONToArray( $json_member_data, $password );
 
-		//_log( '$json_array is as follows', $json_array ); 
+		_log( '$json_array is as follows', $json_array ); 
 
 
 		// Make sure the user is active and of the allowed types (i.e. 'member')
@@ -412,41 +412,32 @@ class CustomAuthentication extends MLAAPI {
 		//$xmlResponse = $this->runCurl($url);
 		//$this->log($xmlResponse, $url);
 		
+
+		// First we need to get the user ID from the MLA API, 
+		// because the API can't look up users by username in this context
+		$user = findCustomUser( $username ); 
+		$user_id = $user['id'];  
+
 		die(); // Don't go any further! Not yet working!
+
+		// now we change the username
 		$request_method = 'PUT';
 		$query_domain = 'members';
-		// this is for queries that come directly after the query domain,
-		// like https://apidev.mla.org/1/members/168880
-		// @todo get user ID somehow
-		$simple_query = '/' . $username . '/general'
+		$simple_query = '/' . $user_id . '/general'; 
 		$base_url = 'https://apidev.mla.org/1/' . $query_domain . $simple_query;
 		$query = array( 'username' => $newname ); 
 		$response = $this->send_request( $request_method, $base_url, $query );
 
-		findCustomUser( $username ) 
 
-		if($response === false || $response == '') {
+		if ( $response === false || $response == '' ) {
 			// This only happens if we can't access the API server.
 			error_log('Authentication Plugin: is API server down?');
 			return new WP_Error('server_error', __('<strong>Error (' . __LINE__ . '):</strong> There was a problem verifying your member credentials. Please try again later.'));
 		}
 
-		try {
-			//$xml = new SimpleXMLElement($xmlResponse);
-		} catch (Exception $e) {
-			error_log('Authentication Plugin: is API server down?');
-			return new WP_Error('server_error', __('<strong>Error (' . __LINE__ . '):</strong> There was a problem verifying your member credentials. Please try again later.'));
-		}
-
-		if($xml->getName() === 'errors') {
-			$attrs = $xml->error->attributes();
-			$message = $attrs['message'];
- 			return new WP_Error('name_change_error',  __('<strong>Error (' . __LINE__ . '):</strong> '.$message));
-		}
-		if($xml->getName() === 'members') {
-			return true;
-		}
-		return false;
+		// @todo check for more errors in response
+		
+		return true; 
 	}
 
 

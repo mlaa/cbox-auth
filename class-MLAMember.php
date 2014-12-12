@@ -7,9 +7,6 @@ require_once( 'class-MLAAPI.php' );
  * with the new member API, and syncs that data with BuddyPress if it has changed.
  */
 class MLAMember extends MLAAPI {
-	public $affiliations = array(); // a list of affiliations
-	public $affiliation = ''; // primary affiliation
-	public $title = ''; // a.k.a. rank
 	public $user_id = 0; // BuddyPress user ID
 	public $debug = false; // debugging mode
 
@@ -86,8 +83,8 @@ class MLAMember extends MLAAPI {
 		}
 
 		$decoded = json_decode( $response['body'] )->data[0];
-		//_log( 'decoded member data:' );
-		//_log( $decoded );
+		_log( 'decoded member data:' );
+		_log( $decoded );
 
 		$this->first_name = $decoded->general->first_name;
 		$this->last_name  = $decoded->general->last_name;

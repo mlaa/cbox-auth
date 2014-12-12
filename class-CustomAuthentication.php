@@ -29,6 +29,7 @@ class CustomAuthentication extends MLAAPI {
 	 */
 	public function authenticate_username_password($ignored, $username, $password) {
 
+		_log( 'starting authenticate_username_password()' ); 
 		// Stolen from wp_authenticate_username_password
 		if ( empty($username) || empty($password) ) {
 			return new WP_Error();
@@ -304,6 +305,7 @@ class CustomAuthentication extends MLAAPI {
 		//$xmlResponse = $this->runCurl($url);
 		//$this->log($xmlResponse, $url);
 
+		_log( 'now in findCustomUser()' ); 
 		$request_method = 'GET';
 		$query_domain = 'members';
 		// this is for queries that come directly after the query domain,
@@ -311,6 +313,7 @@ class CustomAuthentication extends MLAAPI {
 		$simple_query = '/' . $username;
 		$base_url = 'https://apidev.mla.org/1/' . $query_domain . $simple_query;
 		$response = $this->send_request( $request_method, $base_url, $query );
+		_log( 'response was:', $response ); 
 
 		if( $response === false || $response == '' ) {
 			// This only happens if we can't access the API server.
@@ -352,7 +355,7 @@ class CustomAuthentication extends MLAAPI {
 
 		$json_array = $this->memberJSONToArray( $json_member_data, $password );
 
-		_log( '$json_array is as follows', $json_array ); 
+		//_log( '$json_array is as follows', $json_array ); 
 
 
 		// Make sure the user is active and of the allowed types (i.e. 'member')
@@ -426,6 +429,9 @@ class CustomAuthentication extends MLAAPI {
 		$simple_query = '/' . $user_id . '/general'; 
 		$base_url = 'https://apidev.mla.org/1/' . $query_domain . $simple_query;
 		$query = array( 'username' => $newname ); 
+		_log( 'changing username with params: ' ); 
+		_log( 'base_url: ', $base_url ); 
+		_log( 'query: ', $query ); 
 		$response = $this->send_request( $request_method, $base_url, $query );
 
 
@@ -524,6 +530,8 @@ class CustomAuthentication extends MLAAPI {
 	 * @return bool
 	 */
 	protected function validateCustomUser($member, $id, &$error = null) {
+
+		//_log( "attempting to validate member with id $id. Member is:", $member ); 
 
 		if($id !== $member['id'] && $id !== strtolower($member['user_name'])) {
 			// This should not happen since the API gives us the member based on the ID or Username. Nonetheless, it's worth checking.

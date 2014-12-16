@@ -112,7 +112,8 @@ class MLAMember extends MLAAPI {
 		foreach ( $raw_groups as $group ) {
 			// groups array is in the form 'group_id' => role
 			$group_id = (string) $this->get_group_id_from_mla_oid( $group->convention_code );
-			$this->mla_groups_list[ $group_id ] = strtolower( $group->position );
+			// have to translate the roles so that we can diff this array later
+			$this->mla_groups_list[ $group_id ] = $this->translate_mla_role( strtolower( $group->position ) ); 
 		}
 
 		_log( 'groups are:', $this->mla_groups_list );
@@ -162,6 +163,7 @@ class MLAMember extends MLAAPI {
 		} 
 		_log( 'this user is admin or mod of:', $admin_and_mod_of ); 
 
+		// make an array containing groups and roles 
 		$this->bp_groups_list = array();
 		foreach ( $this->bp_groups['groups'] as $bp_group ) {
 			if ( array_key_exists( $bp_group->id, $admin_and_mod_of ) ) { 
@@ -172,7 +174,8 @@ class MLAMember extends MLAAPI {
 		}
 		_log( 'bp_groups_list is:' );
 		_log( $this->bp_groups_list );
-		_log( "this member is a member or greater of $count BuddyPress groups.", count($this->bp_groups_list) );
+		$count = count( $this->bp_groups_list ); 
+		_log( "this member is a member or greater of $count BuddyPress groups." );
 
 		// ignore groups that don't have a mla_oid
 		foreach ( $this->bp_groups_list as $bp_group_id => $bp_group_role ) {
@@ -230,17 +233,39 @@ class MLAMember extends MLAAPI {
 		// Now sync member groups. Loop through MLA groups and add new ones to BP
 		_log( 'About to sync with mla_groups_list:' );
 		_log( $this->mla_groups_list );
-		foreach ( $this->mla_groups_list as $group_id => $member_role ) {
-			if ( ! array_key_exists( $group_id, $this->bp_groups_list ) ) {
-				_log( "$group_id not found in this user's membership list. adding user $this->user_id to group $group_id" );
+		_log( 'And about to sync with this bp_groups_list:' ); 
+		_log( $this->bp_groups_list ); 
+		$diff = array_diff_assoc( $this->mla_groups_list, $this->bp_groups_list ); 
+		_log( 'diff is:', $diff ); 
+
+		$bp_admins = array( 'admin', 'mod' ); 
+
+		foreach ( $diff as $group_id => $member_role  ) { 
+			$bp_role = ( array_key_exists( $group_id, $this->bp_groups_list ) ) ? $this->bp_groups_list[$group_id] : false; 
+
+			_log( "Now handling group $group_id, which is different between MLA and BP records. Member is a $member_role in the MLA API and $bp_role on BP." ); 
+			// If the user isn't yet a member of the BP group, add them and promote them as necessary. 
+			if ( ! $bp_role ) {
+				_log( "$group_id not found in this user's membership list. Adding user $this->user_id to group $group_id" );
 				groups_join_group( $group_id, $this->user_id );
 
 				// Now promote user if user is chair or equivalent.
-				if ( 'admin' == $this->translate_mla_role( $member_role ) ) {
+				// Should user be a BP admin according to the MLA API? 
+				if ( in_array( $member_role, $bp_admins ) ) {
 					groups_promote_member( $this->user_id, $group_id, 'admin' );
 				}
-			}
-		}
+				continue; // Nothing more to do here. 
+			} else { 
+				// Now handle cases where the user is a member of the BP group, but 
+				// doesn't have the right permissions. 
+
+				// Now demote member if member isn't an admin according to the MLA API records. 
+				// Is user a BP admin or mod, but shouldn't be? 
+				if ( in_array( $this->bp_groups_list[ $group_id ], $bp_admins ) ) { 
+					groups_demote_member( $this->user_id, $group_id ); 
+				} 
+			} 
+		} 
 
 		// Now look through the bp groups list and remove any groups
 		// with MLA OIDs that don't exist in the MLA database for this user.

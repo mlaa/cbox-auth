@@ -25,7 +25,8 @@ class MLAMember extends MLAAPI {
 
 		$this->user_id = bp_displayed_user_id();
 		$this->username = bp_get_displayed_user_username();
-		$this->mla_user_id = get_user_meta( $bp_user_id, 'mla_oid' );  
+		$mla_user_id_array = get_user_meta( $this->user_id, 'mla_oid' );  
+		$this->mla_user_id = $mla_user_id_array[0]; 
 
 		_log( '$this->user_id is:', $this->user_id );
 		_log( '$this->username is:', $this->username );
@@ -139,24 +140,39 @@ class MLAMember extends MLAAPI {
 	private function get_bp_member_groups() {
 		$args = array(
 			'user_id' => $this->user_id,
+			'per_page' => 9999, 
+			'populate_extras' => true, 
 		);
 		$this->bp_groups = groups_get_groups( $args );
 		//_log( 'heyoo! have some groups here for you!', $this->bp_groups );
 
+		$admin_of =  BP_Groups_Member::get_is_admin_of( $this->user_id ); 
+		$mod_of = BP_Groups_Member::get_is_mod_of( $this->user_id ); 
+		_log( 'this user is admin of:', $admin_of ); 
+		_log( 'this user is mod of:', $mod_of ); 
+		
+		// now make a standard table for groups for which this user
+		// is an admin or a mod.
+		$admin_and_mod_of = array(); 
+		foreach( $admin_of['groups'] as $group ) { 
+			$admin_and_mod_of[$group->id] = 'admin'; 
+		} 
+		foreach( $mod_of['groups'] as $group ) { 
+			$admin_and_mod_of[$group->id] = 'mod'; 
+		} 
+		_log( 'this user is admin or mod of:', $admin_and_mod_of ); 
+
 		$this->bp_groups_list = array();
 		foreach ( $this->bp_groups['groups'] as $bp_group ) {
-			//_log( 'looking at the bp_group:' );
-			//_log( $bp_group );
-
-			// disabling the is_member check for the moment, since for some reason
-			// I don't have that value on any of the groups I'm a member of!
-			//if ( $bp_group->is_member ) {
-				$role = 'member';
-				$this->bp_groups_list[ $bp_group->id ] = $role;
-			//}
+			if ( array_key_exists( $bp_group->id, $admin_and_mod_of ) ) { 
+				$this->bp_groups_list[ $bp_group->id ] = $admin_and_mod_of[ $bp_group->id ];
+			} else {  
+				$this->bp_groups_list[ $bp_group->id ] = 'member';
+			} 
 		}
 		_log( 'bp_groups_list is:' );
 		_log( $this->bp_groups_list );
+		_log( "this member is a member or greater of $count BuddyPress groups.", count($this->bp_groups_list) );
 
 		// ignore groups that don't have a mla_oid
 		foreach ( $this->bp_groups_list as $bp_group_id => $bp_group_role ) {
@@ -164,8 +180,6 @@ class MLAMember extends MLAAPI {
 				unset( $this->bp_groups_list[ $bp_group_id ] );
 			}
 		}
-
-
 		_log( 'bp_groups_list of just the mla groups is now:' );
 		_log( $this->bp_groups_list );
 	}
@@ -221,12 +235,8 @@ class MLAMember extends MLAAPI {
 				_log( "$group_id not found in this user's membership list. adding user $this->user_id to group $group_id" );
 				groups_join_group( $group_id, $this->user_id );
 
-				// list of MLA group roles that count as admins, stolen from
-				// class-CustomAuthentication.php:232
-				$admins = array('chair', 'liaison', 'liason', 'secretary', 'executive', 'program-chair');
-
 				// Now promote user if user is chair or equivalent.
-				if ( in_array( $member_role, $admins ) ) {
+				if ( 'admin' == $this->translate_mla_role( $member_role ) ) {
 					groups_promote_member( $this->user_id, $group_id, 'admin' );
 				}
 			}

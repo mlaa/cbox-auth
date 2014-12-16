@@ -115,6 +115,8 @@ abstract class MLAAPI {
 	 * @return $bp_role str the BP role, like 'admin', 'member.'
 	 */
 	public function translate_mla_role( $mla_role ){
+		// list of MLA group roles that count as admins, stolen from
+		// class-CustomAuthentication.php:232
 		$mla_admin_roles = array('chair', 'liaison', 'liason', 'secretary', 'executive', 'program-chair');
 		if ( in_array( $mla_role, $mla_admin_roles ) ) {
 			$bp_role = 'admin';

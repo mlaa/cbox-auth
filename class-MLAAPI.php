@@ -2,7 +2,6 @@
 /* This is an abstract class that contains methods for polling the MLA API.
  */
 abstract class MLAAPI {
-
 	/*
 	 * sendRequest
 	 * -----------
@@ -42,11 +41,11 @@ abstract class MLAAPI {
 		$headers = array('Accept: application/json');
 
 		// Set cURL options.
-		curl_setopt($ch, CURLOPT_URL, $request_url);
-		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-		curl_setopt($ch, CURLOPT_FAILONERROR, false);
-		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
-		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
+		curl_setopt( $ch, CURLOPT_URL, $request_url );
+		curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
+		curl_setopt( $ch, CURLOPT_FAILONERROR, false );
+		curl_setopt( $ch, CURLOPT_SSL_VERIFYPEER, true );
+		curl_setopt( $ch, CURLOPT_SSL_VERIFYHOST, 2 );
 
 		// Validate certificates.
 		if ( substr($request_url, 0, 23) === "https://apidev.mla.org/" ) {
@@ -108,21 +107,6 @@ abstract class MLAAPI {
 		return $group_id;
 	}
 
-	/*
-	 * Gets a MLA user ID if given that user's WP/BP ID.
-	 * @param $bp_user_id str, the user's WP/BP ID
-	 * @return $mla_user_id str, the MLA OID for that user.
-	 */
-	public function get_mla_user_id_from_bp_user_id( $bp_user_id ) {
-		global $wpdb;
-		$sql = "SELECT meta_value FROM wp_usermeta WHERE meta_key = 'mla_oid' AND user_id = '$bp_user_id'";
-		// @todo use wp_cache_get or some other caching method
-		$result = $wpdb->get_results( $sql );
-		$mla_user_id = $result[0]->meta_value;
-		return $mla_user_id;
-	}
-
-
 	/**
 	 * Translate MLA roles like 'chair', 'liaison,' 'mla staff', into
 	 * the corresponding BP role, like 'admin', member.
@@ -132,7 +116,6 @@ abstract class MLAAPI {
 	 */
 	public function translate_mla_role( $mla_role ){
 		$mla_admin_roles = array('chair', 'liaison', 'liason', 'secretary', 'executive', 'program-chair');
-
 		if ( in_array( $mla_role, $mla_admin_roles ) ) {
 			$bp_role = 'admin';
 		} else {

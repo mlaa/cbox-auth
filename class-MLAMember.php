@@ -25,9 +25,10 @@ class MLAMember extends MLAAPI {
 
 		$this->user_id = bp_displayed_user_id();
 		$this->username = bp_get_displayed_user_username();
-		$this->mla_user_id = $this->get_mla_user_id_from_bp_user_id( $this->user_id );
+		$this->mla_user_id = get_user_meta( $bp_user_id, 'mla_oid' );  
 
 		_log( '$this->user_id is:', $this->user_id );
+		_log( '$this->username is:', $this->username );
 		_log( '$this->mla_user_id is:', $this->mla_user_id );
 	}
 
@@ -163,6 +164,8 @@ class MLAMember extends MLAAPI {
 				unset( $this->bp_groups_list[ $bp_group_id ] );
 			}
 		}
+
+
 		_log( 'bp_groups_list of just the mla groups is now:' );
 		_log( $this->bp_groups_list );
 	}

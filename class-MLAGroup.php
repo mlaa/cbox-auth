@@ -88,15 +88,6 @@ class MLAGroup extends MLAAPI {
 
 		$mla_api_id = groups_get_groupmeta( $this->group_id, 'mla_api_id' ); 
 
-
-
-		//$lookup_table = $this->get_group_id_table();
-
-		//if ( ! $lookup_table || empty( $lookup_table ) ) {
-			//_log( 'Something went wrong getting the group ID lookup table. Abandon ship!' );
-			//return false;
-		//}
-
 		if ( ! $mla_api_id || empty( $mla_api_id ) ) {
 			_log( 'It doesn\'t look like this group has an MLA API ID. Not syncing.' );
 			return false;
@@ -294,6 +285,6 @@ class MLAGroup extends MLAAPI {
 
 		$this->update_last_updated_time();
 
-		return; // debugging. Dry run.
+		return true; 
 	}
 }

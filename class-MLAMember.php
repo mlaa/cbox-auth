@@ -28,9 +28,12 @@ class MLAMember extends MLAAPI {
 		$mla_user_id_array = get_user_meta( $this->user_id, 'mla_oid' );  
 		$this->mla_user_id = $mla_user_id_array[0]; 
 
-		_log( '$this->user_id is:', $this->user_id );
-		_log( '$this->username is:', $this->username );
-		_log( '$this->mla_user_id is:', $this->mla_user_id );
+		if ( 'verbose' === $this->debug ) { 
+			_log( 'Class MLAMember instantiated. Here\'s some information about this member.' ); 
+			_log( 'This user BP ID is is:', $this->user_id );
+			_log( 'Username is:', $this->username );
+			_log( 'MLA user ID is:', $this->mla_user_id );
+		} 
 	}
 
 	/**
@@ -73,14 +76,11 @@ class MLAMember extends MLAAPI {
 		// like https://apidev.mla.org/1/members/168880
 		$simple_query = '/' . $this->mla_user_id;
 		$base_url = 'https://apidev.mla.org/1/' . $query_domain . $simple_query;
+		$response = $this->send_request( $request_method, $base_url );
 
-		$query = array(
-			//'id' => 168880,
-			//'last_name' => 'Reeve',
-		);
-		$response = $this->send_request( $request_method, $base_url, $query );
-
-		_log( 'the response is: ', $response );
+		if ( 'verbose' === $this->debug ) { 
+			_log( 'Response from API is: ', $response ); 
+		} 
 
 		//@todo: validate JSON, make sure we're getting a 200 code.
 		if ( $response['code'] != 200 ) {
@@ -112,6 +112,25 @@ class MLAMember extends MLAAPI {
 		foreach ( $raw_groups as $group ) {
 			// groups array is in the form 'group_id' => role
 			$group_id = (string) $this->get_group_id_from_mla_oid( $group->convention_code );
+			if ( false == $group_id ) { 
+				// this means the MLA API group doesn't have a 
+				// corresponding BP group, and we need to create
+				// a BP group, provided that the group isn't 
+				// explicitly excluded from the Commons. 
+				// @todo
+			} 
+
+			// Check to see whether the group has an MLA API ID. 
+			$group_mla_api_id = groups_get_groupmeta( $group_id, 'mla_api_id' );
+			// If not, write it to the group meta. 
+			if ( ! $group_mla_api_id || empty( $group_mla_api_id ) ) {
+				_log( "The group $group_id doesn't already have an MLA API ID, so writing it." );
+				$group_mla_api_id = $group->id; 
+				groups_update_groupmeta( $group_id, 'mla_api_id', $group_mla_api_id );
+			} else { 
+				_log( "Found this group's MLA API ID, and it's: $group_mla_api_id" ); 
+			} 
+
 			// have to translate the roles so that we can diff this array later
 			$this->mla_groups_list[ $group_id ] = $this->translate_mla_role( strtolower( $group->position ) ); 
 		}
@@ -149,8 +168,8 @@ class MLAMember extends MLAAPI {
 
 		$admin_of =  BP_Groups_Member::get_is_admin_of( $this->user_id ); 
 		$mod_of = BP_Groups_Member::get_is_mod_of( $this->user_id ); 
-		_log( 'this user is admin of:', $admin_of ); 
-		_log( 'this user is mod of:', $mod_of ); 
+		if ( 'verbose' == $this->debug ) _log( 'This user is admin of:', $admin_of ); 
+		if ( 'verbose' == $this->debug ) _log( 'This user is mod of:', $mod_of ); 
 		
 		// now make a standard table for groups for which this user
 		// is an admin or a mod.
@@ -161,7 +180,7 @@ class MLAMember extends MLAAPI {
 		foreach( $mod_of['groups'] as $group ) { 
 			$admin_and_mod_of[$group->id] = 'mod'; 
 		} 
-		_log( 'this user is admin or mod of:', $admin_and_mod_of ); 
+		if ( 'verbose' == $this->debug ) _log( 'This user is admin or mod of:', $admin_and_mod_of ); 
 
 		// make an array containing groups and roles 
 		$this->bp_groups_list = array();
@@ -175,9 +194,10 @@ class MLAMember extends MLAAPI {
 		_log( 'bp_groups_list is:' );
 		_log( $this->bp_groups_list );
 		$count = count( $this->bp_groups_list ); 
-		_log( "this member is a member or greater of $count BuddyPress groups." );
+		_log( "This member belongs to $count BuddyPress groups." );
 
-		// ignore groups that don't have a mla_oid
+		// ignore groups that don't have a mla_oid, since they're 
+		// probably Commons-born groups. 
 		foreach ( $this->bp_groups_list as $bp_group_id => $bp_group_role ) {
 			if ( ! groups_get_groupmeta( $bp_group_id, 'mla_oid' ) ) {
 				unset( $this->bp_groups_list[ $bp_group_id ] );
@@ -223,7 +243,7 @@ class MLAMember extends MLAAPI {
 			if ( ! empty( $this->$source_field ) ) {
 				$result = xprofile_set_field_data( $dest_field, $this->user_id, $this->$source_field );
 				if ( $result ) {
-					_log( 'Successfully updated xprofile data.' );
+					_log( "Successfully updated xprofile field $dest_field." );
 				} else {
 					_log( 'Something went wrong while updating xprofile data from member database.' );
 				}
@@ -231,19 +251,22 @@ class MLAMember extends MLAAPI {
 		}
 
 		// Now sync member groups. Loop through MLA groups and add new ones to BP
-		_log( 'About to sync with mla_groups_list:' );
-		_log( $this->mla_groups_list );
-		_log( 'And about to sync with this bp_groups_list:' ); 
-		_log( $this->bp_groups_list ); 
+		if ( 'verbose' === $this->debug ) { 
+			_log( 'About to sync using this mla_groups_list:' );
+			_log( $this->mla_groups_list );
+			_log( 'And about to sync using this bp_groups_list:' ); 
+			_log( $this->bp_groups_list ); 
+		} 
 		$diff = array_diff_assoc( $this->mla_groups_list, $this->bp_groups_list ); 
-		_log( 'diff is:', $diff ); 
+		_log( 'MLA API groups for this member that aren\'t in the BP member group list:', $diff ); 
 
 		$bp_admins = array( 'admin', 'mod' ); 
 
 		foreach ( $diff as $group_id => $member_role  ) { 
 			$bp_role = ( array_key_exists( $group_id, $this->bp_groups_list ) ) ? $this->bp_groups_list[$group_id] : false; 
 
-			_log( "Now handling group $group_id, which is different between MLA and BP records. Member is a $member_role in the MLA API and $bp_role on BP." ); 
+			_log( "Now handling group $group_id, which is different between MLA and BP records." ); 
+		        _log( "Member has role: \"$member_role\" in the MLA API and role: \"$bp_role\" on BP." ); 
 			// If the user isn't yet a member of the BP group, add them and promote them as necessary. 
 			if ( ! $bp_role ) {
 				_log( "$group_id not found in this user's membership list. Adding user $this->user_id to group $group_id" );
@@ -267,11 +290,21 @@ class MLAMember extends MLAAPI {
 			} 
 		} 
 
-		// Now look through the bp groups list and remove any groups
-		// with MLA OIDs that don't exist in the MLA database for this user.
+		// Now loop through the bp groups list and remove any groups
+		// with MLA OIDs that don't exist in the MLA database for this user, 
+		// because we don't need to sync those. 
 		foreach ( $this->bp_groups_list as $group_id => $member_role ) {
 			if ( ! array_key_exists( $group_id, $this->mla_groups_list ) ) {
-				_log( "BP group ID $group_id not found in MLA groups list, removing." );
+				_log( "BP group ID $group_id not found in MLA groups list for this member." ); 
+
+				// Ignore prospective forums. 
+				$diffed_group_mla_oid = groups_get_groupmeta( $group_id, 'mla_oid' );  
+				if ( 'FXX' == $diffed_group_mla_oid ) { 
+					_log( "Group $group_id is a prospective forum, though, so ignoring." ); 
+					continue; 
+				} 
+
+				_log( "Assuming member has been removed from this group on the MLA API, so removing this user from the Commons group." );
 				groups_leave_group( $group_id, $this->user_id );
 			}
 		}

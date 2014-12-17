@@ -34,7 +34,7 @@ abstract class MLAAPI {
 		// Append the signature to the request.
 		$request_url = $request_url . '&signature=' . $api_signature;
 
-		_log( 'Using request:', $request_url );
+		if ( 'verbose' == $this->debug ) _log( 'Using request:', $request_url );
 
 		// Initialize a cURL session.
 		$ch = curl_init();
@@ -103,8 +103,28 @@ abstract class MLAAPI {
 		$sql = "SELECT group_id FROM wp_bp_groups_groupmeta WHERE meta_key = 'mla_oid' AND meta_value = '$mla_oid'";
 		// @todo use wp_cache_get or some other caching method
 		$result = $wpdb->get_results( $sql );
-		$group_id = $result[0]->group_id;
-		return $group_id;
+		if( count($result) > 0 ) { 
+			return $result[0]->group_id;
+		} else { 
+			return false; 
+		} 
+	}
+
+	/**
+	 * Gets a BP user ID if given that user's MLA OID.
+	 * @param $mla_oid str, the user's MLA OID
+	 * @return $bp_user_id str, that user's BP User ID
+	 */
+	public function get_bp_user_id_from_mla_oid( $mla_oid ) {
+		global $wpdb;
+		$sql = "SELECT user_id FROM wp_usermeta WHERE meta_key = 'mla_oid' AND meta_value = '$mla_oid'";
+		// @todo use wp_cache_get or some other caching method
+		$result = $wpdb->get_results( $sql );
+		if( count($result) > 0 ) { 
+			return $result[0]->user_id;
+		} else { 
+			return false; 
+		} 
 	}
 
 	/**

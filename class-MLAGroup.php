@@ -20,11 +20,12 @@ class MLAGroup extends MLAAPI {
 
 		// Get BuddyPress ID for this group.
 		$this->group_bp_id = bp_get_group_id();
-		_log( 'This group\'s BP ID is: ', $this->group_bp_id );
+		_log( "Instantiated the MLAGroup class. Here's some information about this group." ); 
+		_log( "This group's BP ID is: $this->group_bp_id" );
 
 		// Get MLA OID for this group, e.g. D038.
 		$this->group_mla_oid = groups_get_groupmeta( $this->group_bp_id, 'mla_oid' );
-		_log( 'This group\'s MLA OID is: ', $this->group_mla_oid );
+		_log( "This group's MLA OID is: $this->group_mla_oid" );
 
 		// Check to see if it already has an MLA API ID.
 		$this->group_mla_api_id = groups_get_groupmeta( $this->group_bp_id, 'mla_api_id' );
@@ -39,7 +40,7 @@ class MLAGroup extends MLAAPI {
 				$this->set_group_mla_api_id();
 			}
 		} else {
-			_log( "Looks like this group already has a recorded MLA API ID, and it\'s: $this->group_mla_api_id" );
+			_log( "Looks like this group already has a recorded MLA API ID, and it's: $this->group_mla_api_id" );
 		}
 	}
 
@@ -52,7 +53,11 @@ class MLAGroup extends MLAAPI {
 	 */
 	public function is_too_old() {
 		$last_updated = groups_get_groupmeta( $this->group_bp_id, 'last_updated' );
-		return true; /* always enable for debugging */
+
+		if ( $this->debug ) { 
+			return true; // always enable for debugging
+		} 
+
 		if ( ! $last_updated ) {
 			return true; /* never updated, so, it's too old. */
 		} else {
@@ -65,95 +70,6 @@ class MLAGroup extends MLAAPI {
 	 */
 	private function update_last_updated_time() {
 		groups_update_groupmeta( $this->group_bp_id, 'last_updated', time() );
-	}
-
-	/**
-	 * Gets a lookup table of group IDs so that we can
-	 * translate MLA OIDs (e.g. D045) into MLA API IDs (e.g. 235).
-	 * Returns a table of the form:
-	 * array( [A072] => 234, [A073] => 235 ).
-	 * @return $lookup_table assoc. array
-	 */
-	public function get_group_id_table() {
-
-		$file_path = plugin_dir_path( __FILE__ ) . 'group_ids.json';
-
-		if ( file_exists( $file_path ) ) {
-			$lookup_table = json_decode( file_get_contents( $file_path ), true );
-			//_log( 'Found group IDs in file. Lookup table is:', $lookup_table );
-			return $lookup_table;
-		} else {
-			// First get a list of all the organizations.
-			$http_method = 'GET';
-			$base_url = 'https://apidev.mla.org/1/';
-			$simple_query = 'organizations';
-			$request_url = $base_url . $simple_query;
-			$response = $this->send_request( $http_method, $request_url, $query );
-
-			$decoded = json_decode( $response['body'] );
-			$data = $decoded->data;
-			//_log( 'data is: ', $data );
-
-			// Now transform it into a lookup table.
-			$lookup_table = array();
-			foreach ( $data as $group ) {
-				$lookup_table[ $group->convention_code ] = $group->id;
-			}
-			//_log( 'lookup table is:', $lookup_table );
-
-			file_put_contents( $file_path, json_encode( $lookup_table, true ) );
-			return $lookup_table;
-		}
-	}
-
-	public function get_member_id_table() {
-		$file_path = plugin_dir_path( __FILE__ ) . 'member_ids.json';
-
-		// @todo: Regenerate this file every so often.
-
-		if ( file_exists( $file_path ) ) {
-			$lookup_table = json_decode( file_get_contents( $file_path ), true );
-			//_log( 'Found member IDs in file. Lookup table is:', $lookup_table );
-			return $lookup_table;
-		} else {
-
-			global $wpdb;
-			$sql = "SELECT meta_value, user_id FROM wp_usermeta WHERE meta_key = 'mla_oid'";
-			// @todo use wp_cache_get or some other caching method
-			$result = $wpdb->get_results( $sql );
-			$lookup_table = $result;
-
-			// Clean up lookup table so it's more usable.
-			// Convert an array of objects into an associative array.
-			$lookup_table_clean = array();
-			foreach( $lookup_table as $member ) {
-				$lookup_table_clean[ $member->meta_value ] = $member->user_id;
-			}
-
-			//_log( 'Member ID lookup_table clean:', $lookup_table_clean );
-
-			file_put_contents( $file_path, json_encode( $lookup_table_clean, true ) );
-			return $lookup_table_clean;
-		}
-	}
-
-	/**
-	 * Gets a BP user ID if given that user's MLA OID.
-	 * @param $mla_oid str, the user's MLA OID
-	 * @return $bp_user_id str, that user's BP User ID
-	 */
-	public function get_bp_user_id_from_mla_oid( $mla_oid ) {
-		if ( empty( $this->member_lookup_table ) ) {
-			$this->member_lookup_table = $this->get_member_id_table();
-		}
-		// Member lookup table should be in the form:
-		// MLA OID => BP ID
-		if ( array_key_exists( $mla_oid, $this->member_lookup_table ) ) {
-			return $this->member_lookup_table[ $mla_oid ];
-		} else {
-		       //_log( "I can't find the BuddyPress ID for the user with MLA OID $mla_oid. Maybe this user isn't a member of the Commons?" );
-		}
-
 	}
 
 	/**
@@ -170,37 +86,26 @@ class MLAGroup extends MLAAPI {
 			return;
 		}
 
-		$lookup_table = $this->get_group_id_table();
+		$mla_api_id = groups_get_groupmeta( $this->group_id, 'mla_api_id' ); 
 
-		if ( ! $lookup_table || empty( $lookup_table ) ) {
-			_log( 'Something went wrong getting the group ID lookup table. Abandon ship!' );
+
+
+		//$lookup_table = $this->get_group_id_table();
+
+		//if ( ! $lookup_table || empty( $lookup_table ) ) {
+			//_log( 'Something went wrong getting the group ID lookup table. Abandon ship!' );
+			//return false;
+		//}
+
+		if ( ! $mla_api_id || empty( $mla_api_id ) ) {
+			_log( 'It doesn\'t look like this group has an MLA API ID. Not syncing.' );
 			return false;
-		}
-
-		if ( array_key_exists( $this->group_mla_oid, $lookup_table ) ) {
-			$mla_api_id = $lookup_table[ $this->group_mla_oid ];
+		} else {
 			_log( "Found the group's MLA API ID. It's: $mla_api_id" );
 			return $mla_api_id;
-		} else {
-			_log( 'It doesn\'t look like this group has an MLA API ID.' );
-			return false;
 		}
 	}
 
-	/**
-	 * Stores the MLA API ID in the BuddyPress metadata,
-	 * so that we can find it easier in the future.
-	 */
-	public function set_group_mla_api_id() {
-		$success = groups_update_groupmeta( $this->group_bp_id, 'mla_api_id', $this->group_mla_api_id );
-		if ( ! $success ) {
-			_log( 'Something went wrong while trying to update the MLA API ID for this group in the BuddyPress metadata.' );
-			return false;
-		} else {
-			_log( 'Successfully set MLA API ID value in BuddyPress group metadata.' );
-			return true;
-		}
-	}
 	/*
 	 * Gets group data, like membership, etc, from the new API.
 	 */
@@ -224,7 +129,8 @@ class MLAGroup extends MLAAPI {
 		$base_url = 'https://apidev.mla.org/1/';
 		$simple_query = 'organizations/' . $this->group_mla_api_id;
 		$request_url = $base_url . $simple_query;
-		$response = $this->send_request( $http_method, $request_url );
+		$params = array( 'joined_commons' => 'Y' ); 
+		$response = $this->send_request( $http_method, $request_url, $params );
 
 		if ( 200 != $response['code'] ) {
 			_log( 'Something went wrong when polling the api with URL:', $request_url );
@@ -240,7 +146,7 @@ class MLAGroup extends MLAAPI {
 		$members_list = $data[0]->members;
 		//_log( 'Members list is:',  $members_list );
 		$members_count = count( $members_list );
-		_log( "Members list from MLA API has $members_count members." );
+		_log( "Members list from MLA API has $members_count members, (filtered by joined_commons)." );
 
 		// now look up those member IDs
 		$members_list_translated = array();
@@ -248,7 +154,7 @@ class MLAGroup extends MLAAPI {
 			$members_list_translated[ $this->get_bp_user_id_from_mla_oid( $member->id ) ] = strtolower( $member->position );
 		}
 		$members_list_translated_count = count( $members_list_translated );
-		_log( "Translated members list from MLA API has $members_list_translated_count members." );
+		_log( "Translated members list (BP IDs of MLA API members list) from MLA API has $members_list_translated_count members." );
 
 		return $members_list_translated;
 	}
@@ -324,7 +230,9 @@ class MLAGroup extends MLAAPI {
 		// BuddyPress values for those diffed members.
 		$bp_diff = array();
 		foreach( array_keys( $diff ) as $member ) {
-			$bp_diff[ $member ] = $this->bp_members_list[ $member ];
+			if ( array_key_exists( $member, $this->bp_members_list ) ) { 
+				$bp_diff[ $member ] = $this->bp_members_list[ $member ];
+			} 
 		}
 		_log( 'BP\'s version of those members:', $bp_diff );
 
@@ -351,16 +259,17 @@ class MLAGroup extends MLAAPI {
 			$mla_role = $this->translate_mla_role( $role );
 
 			// And look up the corresponding role in BP's records.
-			$bp_role = $bp_diff[ $member_id ];
-
-			// If MLA member isn't a member of the BuddyPress group, add them.
-			if ( ! array_key_exists( $member_id, $bp_diff ) ) {
+			if ( array_key_exists( $member_id, $bp_diff ) ) { 
+				$bp_role = $bp_diff[ $member_id ];
+			} else {  
+				// If MLA member isn't a member of the BuddyPress group, add them.
+				_log( "Member number $member_id not found in this BP group. Adding to group $group_id and assigning the role of $mla_role." ); 
 				groups_join_group( $group_id, $member_id );
 				// Also add it to our list so that we can compare the
 				// roles below.
 				$bp_diff[ $member_id ] = $mla_role;
+				$bp_role = $mla_role;  
 			}
-
 
 			if ( $mla_role == $bp_role ) {
 				// Roles are actually the same.
@@ -371,12 +280,14 @@ class MLAGroup extends MLAAPI {
 			if ( 'admin' == $mla_role && 'member' == $bp_role ) {
 				// User has been promoted at MLA, but not on BP.
 				// Promote them on BP.
+				_log( "Member $member_id has a higher role in the MLA DB than in BP. Promoting." ); 
 				groups_promote_member( $member_id, $group_id, 'admin' );
 			}
 
 			if ( 'member' == $mla_role && 'admin' == $bp_role ) {
 				// User has been demoted at MLA, but not on BP.
 				// Demote them on BP.
+				_log( "Member $member_id has a higher role in BP than the MLA API reflects. Demoting." ); 
 				groups_demote_member( $member_id, $group_id );
 			}
 		}

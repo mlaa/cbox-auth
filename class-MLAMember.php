@@ -70,6 +70,23 @@ class MLAMember extends MLAAPI {
 	 * properties.
 	 */
 	private function get_mla_member_data() {
+
+		// dummy data
+		//$this->affiliation = 'Modern Language Association';
+		//$this->first_name = 'Jonathan';
+		//$this->last_name = 'Reeve';
+		//$this->nickname = 'Jonathan Reeve';
+		//$this->fullname = 'Jonathan Reeve';
+		//$this->title = 'Web Developer';
+
+		//$this->mla_groups_list = array(
+			//'17' 	=> 'member',
+			//'44'   => 'member',
+			//'46'   => 'member',
+		//);
+
+		//return true; // debugging. 
+
 		$request_method = 'GET';
 		$query_domain = 'members';
 		// this is for queries that come directly after the query domain,
@@ -196,7 +213,7 @@ class MLAMember extends MLAAPI {
 			'populate_extras' => true, 
 		);
 		$this->bp_groups = groups_get_groups( $args );
-		_log( 'heyoo! have some groups here for you!', $this->bp_groups );
+		if ( 'verbose' === $this->debug ) _log( 'A full list of this member\'s groups:', $this->bp_groups );
 
 		if ( ! isset( $this->bp_groups ) || ! array_key_exists( 'total', $this->bp_groups ) || ! array_key_exists( 'groups', $this->bp_groups ) ) { 
 			_log( 'Something went wrong while trying to get the BP groups for this user.' ); 
@@ -245,6 +262,7 @@ class MLAMember extends MLAAPI {
 
 		return true; 
 	}
+
 	/**
 	 * Gets member data from the new API and, if there are any changes,
 	 * updates the corresponding WordPress user.
@@ -265,7 +283,7 @@ class MLAMember extends MLAAPI {
 		// since they're already the names of their associates
 		$fields_to_sync = array( 'first_name', 'last_name', 'nickname', 'affiliations', 'title' );
 		foreach ( $fields_to_sync as $field ) {
-			if ( ! empty($this->field ) ) {
+			if ( ! empty( $this->field ) ) {
 				update_user_meta( $this->user_id, $field, $this->$field );
 				_log( 'Setting user meta:', $field );
 				_log( 'with data:', $this->$field );

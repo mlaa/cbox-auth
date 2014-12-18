@@ -9,6 +9,14 @@ abstract class MLAAPI {
 	 */
 	public function send_request( $http_method, $base_url, $parameters = array(), $request_body = '' ) {
 
+		if ( $this->debug ) { 
+			_log( "base URL: $base_url" ); 
+			// @todo: abstract out API URL so that we can better access the useful
+			// part of the url, like /members, and pass this to 
+			// get_mock_data. 
+			return $this->get_mock_data( $http_method, $base_url, $parameters, $request_body ); 
+		} 
+
 		// The `private.php` file contains API passwords.
 		// It populates the variables $api_key and $api_secret.
 		// @todo: put this in wp-config.php
@@ -92,6 +100,17 @@ abstract class MLAAPI {
 		curl_close($ch);
 		return $response;
 	}
+
+	/** 
+	 * Get mock data from local JSON files to simulate API 
+	 * responses for debugging. 
+	 */ 
+	private function get_mock_data( $http_method, $base_url, $parameters = array(), $request_body = '' ) { 
+
+		// @todo: fill this out 
+		
+		return $response;  
+	} 
 
 	/*
 	 * Gets a BuddyPress group ID if given the group's MLA OID.

@@ -67,7 +67,7 @@ class MLAMember extends MLAAPI {
 
 	/**
 	 * Gets the member data from the API and stores it in this class's
-	 * parameters.
+	 * properties.
 	 */
 	private function get_mla_member_data() {
 		$request_method = 'GET';
@@ -110,6 +110,7 @@ class MLAMember extends MLAAPI {
 		// parse raw groups
 		$mla_groups_list = array();
 		foreach ( $raw_groups as $group ) {
+			_log( 'now looking at group: ', $group ); 
 			// groups array is in the form 'group_id' => role
 			$group_id = (string) $this->get_group_id_from_mla_oid( $group->convention_code );
 			if ( false == $group_id ) { 
@@ -117,7 +118,11 @@ class MLAMember extends MLAAPI {
 				// corresponding BP group, and we need to create
 				// a BP group, provided that the group isn't 
 				// explicitly excluded from the Commons. 
-				// @todo
+				if ( ! 'Y' === $group->exclude_from_commons ) { 
+					_log( "This group doesn\'t have a BP id, which means it's a new group that should be created." ); 
+					// create group
+					$this->create_group( $group ); 
+				} 
 			} 
 
 			// Check to see whether the group has an MLA API ID. 
@@ -141,21 +146,48 @@ class MLAMember extends MLAAPI {
 		_log( 'this->affiliation is', $this->affiliation );
 		_log( 'this->title is', $this->title );
 
-		// dummy data
-		//$this->affiliations[] = array( 'Modern Language Association' );
-		//$this->first_name = 'Jonathan';
-		//$this->last_name = 'Reeve';
-		//$this->nickname = 'Jonathan Reeve';
-		//$this->fullname = 'Jonathan Reeve';
-		//$this->title = 'Web Developer';
-
-		//$this->mla_groups_list = array(
-			//'17' 	=> 'member',
-			//'44'   => 'member',
-			//'46'   => 'member',
-		//);
+		return true; 
 
 	}
+
+	/** 
+	 * Creates a BuddyPress group based on MLA API group data. 
+	 * Used to create a group in BuddyPress when that group exists
+	 * in the MLA API, but not on the Commons. 
+	 *
+	 * @param $group stdClass Object, generally looks like this: 
+	 *   [id] => 360
+	 *   [name] => Cognitive and Affect Studies
+	 *   [convention_code] => D088
+	 *   [position] => Member
+	 *   [type] => Forum
+	 * 
+	 * @uses $this->user_id 
+	 * @return bool If success, returns true. If failure, returns false. 
+	 */ 
+	public function create_bp_group( $group_data ) { 
+		$newGroup = array(
+			'slug' => groups_check_slug(sanitize_title_with_dashes($group_data['name'])),
+			'name' => $group_data['name'],
+			//'status' => $group_data['status'],
+			// @todo handle group status (private, public, hidden) 
+			// based on the group type, i.e. "type": "Committee" 
+		);
+		$group_id = groups_create_group( $new_group );
+		if ( ! $group_id || empty( $group_id ) || $group_id instanceof WP_Error ) { 
+			_log( 'Something went wrong while trying to create a new group. Response:', $group_id ); 
+			return false; 
+		} 
+		groups_update_groupmeta( $group_id, 'mla_oid', $groupData['convention_code'] );
+		groups_update_groupmeta( $group_id, 'mla_api_id', $groupData['id'] );
+		groups_join_group( $group_id, $this->user_id );
+
+		if ( 'admin' === translate_mla_role( $group_data['position'] ) ) { 
+			groups_promote_member( $user_id, $group_id, 'admin');
+		} 
+
+		return true; 
+	} 
 
 	private function get_bp_member_groups() {
 		$args = array(
@@ -164,12 +196,17 @@ class MLAMember extends MLAAPI {
 			'populate_extras' => true, 
 		);
 		$this->bp_groups = groups_get_groups( $args );
-		//_log( 'heyoo! have some groups here for you!', $this->bp_groups );
+		_log( 'heyoo! have some groups here for you!', $this->bp_groups );
+
+		if ( ! isset( $this->bp_groups ) || ! array_key_exists( 'total', $this->bp_groups ) || ! array_key_exists( 'groups', $this->bp_groups ) ) { 
+			_log( 'Something went wrong while trying to get the BP groups for this user.' ); 
+			return false; 
+		} 
 
 		$admin_of =  BP_Groups_Member::get_is_admin_of( $this->user_id ); 
 		$mod_of = BP_Groups_Member::get_is_mod_of( $this->user_id ); 
-		if ( 'verbose' == $this->debug ) _log( 'This user is admin of:', $admin_of ); 
-		if ( 'verbose' == $this->debug ) _log( 'This user is mod of:', $mod_of ); 
+		if ( 'verbose' === $this->debug ) _log( 'This user is admin of:', $admin_of ); 
+		if ( 'verbose' === $this->debug ) _log( 'This user is mod of:', $mod_of ); 
 		
 		// now make a standard table for groups for which this user
 		// is an admin or a mod.
@@ -180,7 +217,7 @@ class MLAMember extends MLAAPI {
 		foreach( $mod_of['groups'] as $group ) { 
 			$admin_and_mod_of[$group->id] = 'mod'; 
 		} 
-		if ( 'verbose' == $this->debug ) _log( 'This user is admin or mod of:', $admin_and_mod_of ); 
+		if ( 'verbose' === $this->debug ) _log( 'This user is admin or mod of:', $admin_and_mod_of ); 
 
 		// make an array containing groups and roles 
 		$this->bp_groups_list = array();
@@ -205,6 +242,8 @@ class MLAMember extends MLAAPI {
 		}
 		_log( 'bp_groups_list of just the mla groups is now:' );
 		_log( $this->bp_groups_list );
+
+		return true; 
 	}
 	/**
 	 * Gets member data from the new API and, if there are any changes,
@@ -217,8 +256,10 @@ class MLAMember extends MLAAPI {
 		}
 
 		// get all the data
-		$this->get_mla_member_data();
-		$this->get_bp_member_groups();
+		$success = $this->get_mla_member_data();
+		if ( ! $success ) return false; 
+		$success = $this->get_bp_member_groups();
+		if ( ! $success ) return false; 
 
 		// don't actually need to map these in an associative array,
 		// since they're already the names of their associates

@@ -139,13 +139,14 @@ class MLAGroup extends MLAAPI {
 		$members_count = count( $members_list );
 		_log( "Members list from MLA API has $members_count members, (filtered by joined_commons)." );
 
-		// now look up those member IDs
+		// Put the members list into a standardized form, 
+		// and translate roles into something BuddyPress can understand. 
 		$members_list_translated = array();
 		foreach ( $members_list as $member ) {
-			$members_list_translated[ $this->get_bp_user_id_from_mla_oid( $member->id ) ] = strtolower( $member->position );
+			$members_list_translated[ $member->username ] = $this->translate_mla_role( strtolower( $member->position ) ); 
 		}
 		$members_list_translated_count = count( $members_list_translated );
-		_log( "Translated members list (BP IDs of MLA API members list) from MLA API has $members_list_translated_count members." );
+		_log( "Translated members list from MLA API has $members_list_translated_count members." );
 
 		return $members_list_translated;
 	}
@@ -177,7 +178,7 @@ class MLAGroup extends MLAAPI {
 		foreach ( $this->bp_members['members'] as $member_obj ) {
 			$role = ( 1 == $member_obj->is_mod ) ? 'mod' : 'member';
 			$role = ( 1 == $member_obj->is_admin ) ? 'admin' : 'member';
-			$bp_members_list[ $member_obj->ID ] = $role;
+			$bp_members_list[ $member_obj->user_nicename ] = $role;
 		}
 		$bp_members_list_count = count( $bp_members_list );
 		_log( "BP members list has $bp_members_list_count members." );
@@ -254,7 +255,7 @@ class MLAGroup extends MLAAPI {
 				$bp_role = $bp_diff[ $member_id ];
 			} else {  
 				// If MLA member isn't a member of the BuddyPress group, add them.
-				_log( "Member number $member_id not found in this BP group. Adding to group $group_id and assigning the role of $mla_role." ); 
+				_log( "Member $member_id not found in this BP group. Adding to group $group_id and assigning the role of $mla_role." ); 
 				groups_join_group( $group_id, $member_id );
 				// Also add it to our list so that we can compare the
 				// roles below.

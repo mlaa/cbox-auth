@@ -31,10 +31,10 @@ class CustomAuthenticationCustomFields {
 			<p class="warning"><strong>Warning:</strong> JavaScript is required when logging in for the first time.</p>
 		</noscript>
 		<div id="input-preferred">
-			<label for="user_login_preferred"><strong>Please choose a user name.</strong></label>
+			<label for="user_login_preferred"><strong>Please choose a username.</strong></label>
 			<p><input type="text" id="user_login_preferred" name="preferred" tabindex="30" /></p>
-			<p><strong>This is your only opportunity to choose a user name and you cannot change it later.</strong> Your user name will be visible to other members.</p>
-			<p>User names must be between four and twenty characters in length and must contain at least one letter. Only lowercase letters, numbers, and underscores are allowed.</p>
+			<p><strong>This is your only opportunity to choose a username and you cannot change it later.</strong> Your username will be visible to other members.</p>
+			<p>Usernames must be between four and twenty characters in length and must contain at least one letter. Only lowercase letters, numbers, and underscores are allowed.</p>
 			<p class="fineprint"><input type="checkbox" id="user_acceptance" name="acceptance" tabindex="40" value="Yes" /> <label for="user_acceptance">I accept the <a href="/terms/">Terms of Service</a>, <a href="/privacy/">Privacy Policy</a>, and <a href="/guidelines/">Guidelines for Participation</a>.</label></p>
 		</div>
         <p id="forgot-password"><strong>Use your mla.org credentials to log in.</strong> <a href="http://www.mla.org/login">Forgot your login information?</a></p>

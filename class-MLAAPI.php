@@ -15,6 +15,9 @@ abstract class MLAAPI {
 		// @todo: put this in wp-config.php
 		require( 'private.php' );
 
+		$api_key = CBOX_AUTH_API_KEY; 
+		$api_secret = CBOX_AUTH_API_SECRET; 
+
 		// Append current time to request parameters (seconds from UNIX epoch).
 		$parameters['key'] = $api_key;
 		$parameters['timestamp'] = time();

@@ -37,7 +37,7 @@ class CustomAuthenticationCustomFields {
 			<p>User names must be between four and twenty characters in length and must contain at least one letter. Only lowercase letters, numbers, and underscores are allowed.</p>
 			<p class="fineprint"><input type="checkbox" id="user_acceptance" name="acceptance" tabindex="40" value="Yes" /> <label for="user_acceptance">I accept the <a href="/terms/">Terms of Service</a>, <a href="/privacy/">Privacy Policy</a>, and <a href="/guidelines/">Guidelines for Participation</a>.</label></p>
 		</div>
-        <p id="forgot-password"><strong>Use your mla.org credentials to log in.</strong> <a href="http://www.mla.org/login">Forgot your login information?</a></p>
+        <p id="forgot-password"><strong>Use your MLA credentials to log in.</strong> <a href="http://www.mla.org/login">Forgotten your log-in credentials?</a></p>
 <?php
 	}
 

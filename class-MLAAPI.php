@@ -2,13 +2,20 @@
 /* This is an abstract class that contains methods for polling the MLA API.
  */
 abstract class MLAAPI {
-
 	/*
 	 * sendRequest
 	 * -----------
 	 * Send a RESTful request to the API.
 	 */
 	public function send_request( $http_method, $base_url, $parameters = array(), $request_body = '' ) {
+
+		//if ( $this->debug ) { 
+			//_log( "base URL: $base_url" ); 
+			// @todo: abstract out API URL so that we can better access the useful
+			// part of the url, like /members, and pass this to 
+			// get_mock_data. 
+			//return $this->get_mock_data( $http_method, $base_url, $parameters, $request_body ); 
+		//} 
 
 		// The `private.php` file contains API passwords.
 		// It populates the variables $api_key and $api_secret.
@@ -38,18 +45,18 @@ abstract class MLAAPI {
 		// Append the signature to the request.
 		$request_url = $request_url . '&signature=' . $api_signature;
 
-		_log( 'Using request:', $request_url );
+		if ( 'verbose' == $this->debug ) _log( 'Using request:', $request_url );
 
 		// Initialize a cURL session.
 		$ch = curl_init();
 		$headers = array('Accept: application/json');
 
 		// Set cURL options.
-		curl_setopt($ch, CURLOPT_URL, $request_url);
-		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-		curl_setopt($ch, CURLOPT_FAILONERROR, false);
-		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
-		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
+		curl_setopt( $ch, CURLOPT_URL, $request_url );
+		curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
+		curl_setopt( $ch, CURLOPT_FAILONERROR, false );
+		curl_setopt( $ch, CURLOPT_SSL_VERIFYPEER, true );
+		curl_setopt( $ch, CURLOPT_SSL_VERIFYHOST, 2 );
 
 		// Validate certificates.
 		if ( substr($request_url, 0, 23) === "https://apidev.mla.org/" ) {
@@ -97,6 +104,17 @@ abstract class MLAAPI {
 		return $response;
 	}
 
+	/** 
+	 * Get mock data from local JSON files to simulate API 
+	 * responses for debugging. 
+	 */ 
+	private function get_mock_data( $http_method, $base_url, $parameters = array(), $request_body = '' ) { 
+
+		// @todo: fill this out 
+		
+		return $response;  
+	} 
+
 	/*
 	 * Gets a BuddyPress group ID if given the group's MLA OID.
 	 * @param $mla_oid str, the MLA OID, i.e. D086
@@ -107,24 +125,29 @@ abstract class MLAAPI {
 		$sql = "SELECT group_id FROM wp_bp_groups_groupmeta WHERE meta_key = 'mla_oid' AND meta_value = '$mla_oid'";
 		// @todo use wp_cache_get or some other caching method
 		$result = $wpdb->get_results( $sql );
-		$group_id = $result[0]->group_id;
-		return $group_id;
+		if( count($result) > 0 ) { 
+			return $result[0]->group_id;
+		} else { 
+			return false; 
+		} 
 	}
 
-	/*
-	 * Gets a MLA user ID if given that user's WP/BP ID.
-	 * @param $bp_user_id str, the user's WP/BP ID
-	 * @return $mla_user_id str, the MLA OID for that user.
+	/**
+	 * Gets a BP user ID if given that user's MLA OID.
+	 * @param $mla_oid str, the user's MLA OID
+	 * @return $bp_user_id str, that user's BP User ID
 	 */
-	public function get_mla_user_id_from_bp_user_id( $bp_user_id ) {
+	public function get_bp_user_id_from_mla_oid( $mla_oid ) {
 		global $wpdb;
-		$sql = "SELECT meta_value FROM wp_usermeta WHERE meta_key = 'mla_oid' AND user_id = '$bp_user_id'";
+		$sql = "SELECT user_id FROM wp_usermeta WHERE meta_key = 'mla_oid' AND meta_value = '$mla_oid'";
 		// @todo use wp_cache_get or some other caching method
 		$result = $wpdb->get_results( $sql );
-		$mla_user_id = $result[0]->meta_value;
-		return $mla_user_id;
+		if( count($result) > 0 ) { 
+			return $result[0]->user_id;
+		} else { 
+			return false; 
+		} 
 	}
-
 
 	/**
 	 * Translate MLA roles like 'chair', 'liaison,' 'mla staff', into
@@ -134,8 +157,9 @@ abstract class MLAAPI {
 	 * @return $bp_role str the BP role, like 'admin', 'member.'
 	 */
 	public function translate_mla_role( $mla_role ){
+		// list of MLA group roles that count as admins, stolen from
+		// class-CustomAuthentication.php:232
 		$mla_admin_roles = array('chair', 'liaison', 'liason', 'secretary', 'executive', 'program-chair');
-
 		if ( in_array( $mla_role, $mla_admin_roles ) ) {
 			$bp_role = 'admin';
 		} else {

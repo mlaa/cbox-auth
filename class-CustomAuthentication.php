@@ -50,6 +50,7 @@ class CustomAuthentication extends MLAAPI {
 		// Get the user from the MLA database. If the user doesn't exist
 		// or the username/password is wrong, return the error
 		$customUserData = $this->findCustomUser($username, $password);
+
 		$customLoginError = null;
 		if($customUserData instanceof WP_Error) {
 			// If the user is not a member, let's see if she is a WP admin.
@@ -313,7 +314,7 @@ class CustomAuthentication extends MLAAPI {
 		$simple_query = '/' . $username;
 		$base_url = 'https://apidev.mla.org/1/' . $query_domain . $simple_query;
 		$response = $this->send_request( $request_method, $base_url, $query );
-		_log( 'response was:', $response ); 
+		//_log( 'response was:', $response ); 
 
 		if( $response === false || $response == '' ) {
 			// This only happens if we can't access the API server.
@@ -351,12 +352,24 @@ class CustomAuthentication extends MLAAPI {
 			return new WP_Error('not_authorized', sprintf(__('<strong>Error (' . __LINE__ . '):</strong> Your user name and password could not be verified. Please try again.'), wp_lostpassword_url()));
 		} 
 
+		$json_data = $json_data[0]; // There should only be one now. 
+
+		//Authenticate with password!
+		$our_password = crypt( $password, $json_data['authentication']['password'] ); // salt it and hash it appropriately 
+		$their_password = $json_data['authentication']['password']; 
+		_log( "encrypted password:", crypt($password, $json_data['authentication']['password']) ); 
+		_log( "API password:", $json_data['authentication']['password'] ); 
+
+		if ( $our_password != $their_password ) { 
+			_log( 'Passwords do not match!' ); 
+			return new WP_Error('not_authorized', sprintf(__('<strong>Error (' . __LINE__ . '):</strong> Your user name and password could not be verified. Please try again.'), wp_lostpassword_url()));
+		} 
+
 		$json_member_data = $decoded['data'][0]; 
 
 		$json_array = $this->memberJSONToArray( $json_member_data, $password );
 
-		//_log( '$json_array is as follows', $json_array ); 
-
+		_log( '$json_array is as follows', $json_array ); 
 
 		// Make sure the user is active and of the allowed types (i.e. 'member')
 		if(!$this->validateCustomUser($json_array, $username, $error)) {
@@ -410,38 +423,45 @@ class CustomAuthentication extends MLAAPI {
 	}
 
 	protected function changeCustomUsername($username, $password, $newname) {
-		//@todo use the new API for this
-		//$url = $this->apiMembersUrl.'user-name'.$this->startQueryString($username, $password)."&new_user_name=$newname";
-		//$xmlResponse = $this->runCurl($url);
-		//$this->log($xmlResponse, $url);
-		
+
+		// If the new username is the same as the old, we can save ourselves
+		// a little bit of effort.  
+		if ( $newname == $username ) return true; 
 
 		// First we need to get the user ID from the MLA API, 
-		// because the API can't look up users by username in this context
-		$user = findCustomUser( $username ); 
-		$user_id = $user['id'];  
+		// because the API can't look up users by username, 
+		// and we don't have the user's ID now.
+		// It sucks that we can't pass the User ID, but an AJAX function
+		// that calls this one doesn't have access to it. 
+		$customUserData = $this->findCustomUser($username, $password);
 
-		die(); // Don't go any further! Not yet working!
+		$user_id = $customUserData['id']; 
 
 		// now we change the username
 		$request_method = 'PUT';
 		$query_domain = 'members';
-		$simple_query = '/' . $user_id . '/general'; 
+		$simple_query = '/' . $user_id . '/username'; 
 		$base_url = 'https://apidev.mla.org/1/' . $query_domain . $simple_query;
-		$query = array( 'username' => $newname ); 
+		$request_body = "{ \"username\": \"$newname\" }"; 
 		_log( 'changing username with params: ' ); 
 		_log( 'base_url: ', $base_url ); 
-		_log( 'query: ', $query ); 
-		$response = $this->send_request( $request_method, $base_url, $query );
+		_log( 'request body: ', $request_body );
+		$response = $this->send_request( $request_method, $base_url, '', $request_body) ;
 
+		_log( 'changing username. API response was:', $response ); 
 
-		if ( $response === false || $response == '' ) {
+		if ( ( ! is_array( $response ) ) || ( ! array_key_exists( 'code', $response ) ) ) {
 			// This only happens if we can't access the API server.
 			error_log('Authentication Plugin: is API server down?');
-			return new WP_Error('server_error', __('<strong>Error (' . __LINE__ . '):</strong> There was a problem verifying your member credentials. Please try again later.'));
+			_log( 'On changing username, API gave a non-array response. Something is terribly wrong!' ); 
+			return new WP_Error('server_error', __('<strong>Error (' . __LINE__ . '):</strong> There was a problem changing your username. Please try again later.'));
 		}
 
-		// @todo check for more errors in response
+		if ( 200 != $response['code'] ) { 
+			_log( 'On changing username, API gave a non-200 response. Something is kind of wrong!' ); 
+			_log( 'Response: ', $response ); 
+			return new WP_Error('server_error', __('<strong>Error (' . __LINE__ . '):</strong> There was a problem changing your username. Please try again later.'));
+		} 
 		
 		return true; 
 	}
@@ -690,7 +710,7 @@ class CustomAuthentication extends MLAAPI {
 	 * @param int $user_id
 	 */
 	public function remove_user_from_group($group_id, $user_id = 0) {
-		$this->send_group_action('remove', $group_id, $user_id);
+		$this->send_group_action('DELETE', $group_id, $user_id);
 	}
 
 	/**
@@ -700,7 +720,7 @@ class CustomAuthentication extends MLAAPI {
 	 * @param int $user_id
 	 */
 	public function add_user_to_group($group_id, $user_id = 0) {
-		$this->send_group_action('add', $group_id, $user_id);
+		$this->send_group_action('POST', $group_id, $user_id);
 	}
 
 	/**
@@ -711,6 +731,7 @@ class CustomAuthentication extends MLAAPI {
 	 * @param int $user_id
 	 */
 	protected function send_group_action($method, $group_id, $user_id = 0) {
+		_log( 'now in send_group_action()' ); 
 
 		// Get user and group info
 		if (empty($user_id)) {
@@ -721,25 +742,50 @@ class CustomAuthentication extends MLAAPI {
 
 		// Can't do anything if the user or group isn't in the MLA database
 		if(empty($group_custom_oid) || empty($user_custom_oid)) {
+			_log( 'no group MLA OID or user OID! Can\'t perform this request. ' );
+			_log( 'user_custom_oid is:', $user_custom_oid );
+			_log( 'group_custom_oid is:', $group_custom_oid );
 			return;
 		}
 
 		// Only division and discussion groups should be reflected in the MLA database
 		if(!$this->isDivisionOrDiscussionGroup($group_custom_oid)) {
+			_log( 'not a division or discussion group!' ); 
 			return;
 		}
 
-		$time = time();
-		$data = array(
-			"method" => $method,
-			"user_id" => $user_custom_oid,
-			"timestamp" => $time,
-			"signature" => hash_hmac('sha256', "$user_custom_oid:$group_custom_oid:$time", CBOX_AUTH_GROUPS_SECRET_TOKEN)
-		);
+		// Don't try to do anything that uses a method we're not prepared for. 
+		if ( ( 'POST' != $method ) && ( 'DELETE' != $method ) ) { 
+			_log( 'not a recognized method!' ); 
+			_log( 'method is:', $method );
+			return;
+		} 
 
-		$url = $this->apiGroupsUrl."$group_custom_oid/members";
-		$result = $this->postCurl($url, $data);
-		$this->log("POST: " . print_r($data, true) . "\n\n" . $result, $url);
+		// Old API Endpoints. 
+		//$time = time();
+		//$data = array(
+			//"method" => $method,
+			//"user_id" => $user_custom_oid,
+			//"timestamp" => $time,
+			//"signature" => hash_hmac('sha256', "$user_custom_oid:$group_custom_oid:$time", CBOX_AUTH_GROUPS_SECRET_TOKEN)
+		//);
+
+		//$url = $this->apiGroupsUrl."$group_custom_oid/members";
+		//$result = $this->postCurl($url, $data);
+		//$this->log("POST: " . print_r($data, true) . "\n\n" . $result, $url);
+		
+		// New API Endpoints
+		$query_domain = 'members';
+		// this is for queries that come directly after the query domain,
+		// like https://apidev.mla.org/1/members/168880
+		$simple_query = '/' . $user_custom_oid . '/organizations';
+		$query = array( 'items' => $group_custom_oid ); 
+		$base_url = 'https://apidev.mla.org/1/' . $query_domain . $simple_query;
+		_log( 'now sending requests with params:' ); 
+		_log( 'base_url is:', $base_url );
+		_log( 'query is:', $query );
+		$response = $this->send_request( $method, $base_url, $query );
+		_log( 'response from API is:', $response ); 
 	}
 
 
@@ -788,63 +834,6 @@ class CustomAuthentication extends MLAAPI {
 			return false;
 		}
 		return true;
-	}
-
-	/**
-	 * Gets data from a URL using cUrl
-	 *
-	 * @param $url
-	 * @return mixed
-	 */
-	protected function runCurl($url) {
-		$ch = curl_init();
-		curl_setopt($ch, CURLOPT_URL, $url);
-		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-		curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $this->curlTimeout);
-		$data = curl_exec($ch);
-		curl_close($ch);
-		return $data;
-	}
-
-	/**
-	 * Sends a post request to the given url
-	 *
-	 * @param string $url
-	 * @param array $data
-	 * @return mixed
-	 */
-	protected function postCurl($url, array $data) {
-
-		// Build query string
-		$query = "";
-		foreach($data as $key => $value) {
-			$query .= "$key=$value&";
-		}
-		$query = rtrim($query, '&');
-
-		// Send post
-		$ch = curl_init();
-		curl_setopt($ch, CURLOPT_URL, $url);
-		curl_setopt($ch, CURLOPT_POST, count($data));
-		curl_setopt($ch, CURLOPT_POSTFIELDS, $query);
-		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-		curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $this->curlTimeout);
-		$result = curl_exec($ch);
-		curl_close($ch);
-		return $result;
-	}
-
-	/**
-	 * Adds the appropriate parameters to the membership API URL.
-	 *
-	 * @param $username Can be a username or ID
-	 * @param $password
-	 * @return string
-	 */
-	protected function startQueryString($username, $password) {
-		$time = time();
-		$signature = hash_hmac('sha256', "$username:$password:$time", CBOX_AUTH_SECRET_TOKEN);
-		return "?user_id=$username&timestamp=$time&signature=$signature";
 	}
 
 	/**

@@ -61,9 +61,9 @@ abstract class MLAAPI {
 		// Validate certificates.
 		if ( substr($request_url, 0, 23) === "https://apidev.mla.org/" ) {
 			// openssl x509 -in /path/to/self-signed.crt -text > self-signed.pem
-			curl_setopt($ch, CURLOPT_CAINFO, getcwd() . '/wp-content/plugins/cbox-auth/ssl/self-signed.pem');
+			curl_setopt($ch, CURLOPT_CAINFO, plugin_dir_path( __FILE__ ) . 'ssl/self-signed.pem');
 		} elseif ( substr($request_url, 0, 20) === "https://api.mla.org/" ) {
-			curl_setopt($ch, CURLOPT_CAINFO, getcwd() . '/wp-content/plugins/cbox-auth/ssl/self-signed-production.pem');
+			curl_setopt($ch, CURLOPT_CAINFO, plugin_dir_path( __FILE__ ) . 'ssl/self-signed-production.pem');
 		}
 		//elseif ( substr($request_url, 0, 20) === "https://api.mla.org/" ):
 		// curl_setopt($ch, CURLOPT_CAINFO, getcwd() . '/ssl/cacert.pem');

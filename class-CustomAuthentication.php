@@ -5,16 +5,6 @@ require_once( 'class-MLAAPI.php' );
 
 class CustomAuthentication extends MLAAPI {
 
-	// Seconds before curl times out
-	protected $curlTimeout = 10;
-
-	// The base url to the membership API
-	protected $apiMembersUrl = 'https://www.mla.org/api/1/members/';
-	protected $apiGroupsUrl = 'https://www.mla.org/api/1/groups/';
-
-
-
-
 	# AUTHENTICATION FUNCTIONS (PHASE 1)
 	#####################################################################
 
@@ -731,8 +721,6 @@ class CustomAuthentication extends MLAAPI {
 	 * @param int $user_id
 	 */
 	protected function send_group_action($method, $group_id, $user_id = 0) {
-		_log( 'now in send_group_action()' ); 
-
 		// Get user and group info
 		if (empty($user_id)) {
 			$user_id = bp_loggedin_user_id();
@@ -761,19 +749,6 @@ class CustomAuthentication extends MLAAPI {
 			return;
 		} 
 
-		// Old API Endpoints. 
-		//$time = time();
-		//$data = array(
-			//"method" => $method,
-			//"user_id" => $user_custom_oid,
-			//"timestamp" => $time,
-			//"signature" => hash_hmac('sha256', "$user_custom_oid:$group_custom_oid:$time", CBOX_AUTH_GROUPS_SECRET_TOKEN)
-		//);
-
-		//$url = $this->apiGroupsUrl."$group_custom_oid/members";
-		//$result = $this->postCurl($url, $data);
-		//$this->log("POST: " . print_r($data, true) . "\n\n" . $result, $url);
-		
 		// New API Endpoints
 		$query_domain = 'members';
 		// this is for queries that come directly after the query domain,

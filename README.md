@@ -28,17 +28,18 @@ define('CBOX_AUTH_DEBUG_LOG', '/log/file/location/username_%t.log');
 ```
 
 ## TODO: Testing New Auth Plugin
- * [ ] User logs in with correct password. 
+ * [x] 0212 16:20 User logs in with correct password. 
   - Should successfully log user in, if user has already logged in at least once. 
   - [ ] User logs in for the first time. 
     - Should present user with username change screen. 
     - [ ] User chooses a username that is already taken. 
       - Should present user with message explaining that the name is taken. 
-    - [ ] User chooses an username with invalid characters. 
+    - [!] User chooses an username with invalid characters. 
       - Should present user with message explaining that some characters are not allowed. 
+      BROKEN: when changing username to a username containing spaces, auth plugin doesn't validate, and the username is changed to a username containing spaces in the API. 
     - [ ] User enters nothing in the username box. 
       - Should successfully log user in. 
- * [ ] User tries to log in with incorrect password. 
+ * [x] 0212 16:20 User tries to log in with incorrect password. 
   - Should disallow log-in and present user with an error message saying so. 
  * [ ] User's password has changed in Oracle, and user logs in with new password. 
   - Should successfully log user in. 
@@ -54,9 +55,9 @@ define('CBOX_AUTH_DEBUG_LOG', '/log/file/location/username_%t.log');
   - Should create that forum in BP and add all members to it, except for those members that are not yet on the Commons. 
   - [ ] New forum created in Oracle, excluded from Commons. 
     - Nothing should happen on Commons side. 
- * [ ] BP user leaves a committee or discussion group. 
+ * [x] 0212 15:31 BP user leaves a committee or discussion group. 
   - If that group exists in Oracle, the user should be removed from the group in Oracle. 
- * [ ] BP user joins a discussion group or committee. 
+ * [x] 0212 15:31 BP user joins a discussion group or committee. 
   - If that group exists in Oracle, the user should be added to the group in Oracle. 
  * [ ] User visits his or her own Portfolio page. 
   - Name, title, institutional affiliation, and groups for that user's own portfolio should be synced with Oracle every hour. 

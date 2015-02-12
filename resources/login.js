@@ -53,11 +53,8 @@ jQuery(document).ready(function($) {
       password: $('#user_pass').val(),
       action: 'test_user'
     };
-    alert('what about this?'); 
     $.post(WordPress.ajaxurl, data, function(response) {
       response = $.parseJSON(response);
-	    alert('heyo!'); 
-	    alert(response); 
       switch (response.result) {
         case "true":
           $('#forgot-password').hide();

@@ -19,8 +19,6 @@ abstract class MLAAPI {
 
 		// The `private.php` file contains API passwords.
 		// It populates the variables $api_key and $api_secret.
-		// @todo: put this in wp-config.php
-		require( 'private.php' );
 
 		$api_key = CBOX_AUTH_API_KEY; 
 		$api_secret = CBOX_AUTH_API_SECRET; 

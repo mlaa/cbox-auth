@@ -756,10 +756,18 @@ class CustomAuthentication extends MLAAPI {
 		$simple_query = '/' . $user_custom_oid . '/organizations';
 		$query = array( 'items' => $group_custom_oid ); 
 		$base_url = 'https://apidev.mla.org/1/' . $query_domain . $simple_query;
+		// There needs to be a request body for POSTs to work. 
+		if ( 'POST' == $method ) { 
+			$body = '{"":""}'; 
+		} else { 
+			$body = ''; 
+		} 
+
 		_log( 'now sending requests with params:' ); 
 		_log( 'base_url is:', $base_url );
 		_log( 'query is:', $query );
-		$response = $this->send_request( $method, $base_url, $query );
+		_log( 'body is:', $body );
+		$response = $this->send_request( $method, $base_url, $query, $body );
 		_log( 'response from API is:', $response ); 
 	}
 

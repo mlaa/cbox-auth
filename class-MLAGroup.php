@@ -217,7 +217,7 @@ class MLAGroup extends MLAAPI {
 		//_log( 'Now syncing with bp_members_list:', $this->bp_members_list );
 
 		$diff = array_diff_assoc( $this->mla_members_list, $this->bp_members_list );
-		_log( 'Diff of arrays:', $diff );
+		if ( 'verbose' == $this->debug ) _log( 'Diff of arrays:', $diff );
 
 		// BuddyPress values for those diffed members.
 		$bp_diff = array();
@@ -226,7 +226,7 @@ class MLAGroup extends MLAAPI {
 				$bp_diff[ $member ] = $this->bp_members_list[ $member ];
 			} 
 		}
-		_log( 'BP\'s version of those members:', $bp_diff );
+		if ( 'verbose' == $this->debug ) _log( 'BP\'s version of those members:', $bp_diff );
 
 		// At this point we should have two associative arrays that reflect differences
 		// in the MLA API group membership and the BuddyPress group membership. They should

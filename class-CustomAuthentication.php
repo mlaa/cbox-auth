@@ -19,7 +19,7 @@ class CustomAuthentication extends MLAAPI {
 	 */
 	public function authenticate_username_password($ignored, $username, $password) {
 
-		_log( 'Starting authenticate_username_password()' ); 
+		if ( 'verbose' == $this->debug ) _log( 'Starting authenticate_username_password()' ); 
 		// Stolen from wp_authenticate_username_password
 		if ( empty($username) || empty($password) ) {
 			return new WP_Error();
@@ -44,7 +44,7 @@ class CustomAuthentication extends MLAAPI {
 		$customLoginError = null;
 		if($customUserData instanceof WP_Error) {
 			// If the user is not a member, let's see if she is a WP admin.
-			_log( 'looks like customUserData is an instance of WP_Error!' ); 
+			_log( 'Looks like customUserData is an instance of WP_Error!' ); 
 			$customLoginError = $customUserData;
 		}
 
@@ -63,16 +63,10 @@ class CustomAuthentication extends MLAAPI {
 				return new WP_Error('invalid_username', __('<strong>Error (' . __LINE__ . '):</strong> That user name already exists.'));
 			}
 
-			//// WordPress allows spaces in usernames, but we don't. 
-			//if ( $_POST['preferred'] != '' && preg_match('/\s/', $_POST['preferred'] ) ) { 
-				//return new WP_Error( 'invalid_username', __( '<strong>Error (' . __LINE__ . '):</strong> User names may not contain spaces.' ) );
-			//} 
-
 			if($_POST['preferred'] != '' && !validate_username($_POST['preferred'])) {
 				return new WP_Error('invalid_username', __('<strong>Error (' . __LINE__ . '):</strong> User names must be between four and twenty characters in length and must contain at least one letter. Only lowercase letters, numbers, and underscores are allowed.'));
 			}
 			_log( 'Username valid!' ); 
-
 
 			if($customLoginError) {
 				// The user doesn't exist yet anywhere. Don't allow login.
@@ -312,7 +306,7 @@ class CustomAuthentication extends MLAAPI {
 		//$xmlResponse = $this->runCurl($url);
 		//$this->log($xmlResponse, $url);
 
-		_log( 'now in findCustomUser()' ); 
+		if ( 'verbose' == $this->debug ) _log( 'Now in findCustomUser()' ); 
 		$request_method = 'GET';
 		$query_domain = 'members';
 		// this is for queries that come directly after the query domain,
@@ -321,7 +315,7 @@ class CustomAuthentication extends MLAAPI {
 		$simple_query = '/' . $username;
 		$base_url = 'https://apidev.mla.org/1/' . $query_domain . $simple_query;
 		$response = $this->send_request( $request_method, $base_url, $query );
-		//_log( 'response was:', $response ); 
+		if ( 'verbose' == $this->debug ) _log( 'response was:', $response ); 
 
 		if( $response === false || $response == '' ) {
 			// This only happens if we can't access the API server.
@@ -345,7 +339,7 @@ class CustomAuthentication extends MLAAPI {
 			return new WP_Error('server_error', __('<strong>Error (' . __LINE__ . '):</strong> Because of a temporary problem, we cannot verify your member credentials at this time. Please try again in a few minutes.'));
 		}
 
-		//_log( 'Decoded JSON is: ', $decoded );
+		if ( 'verbose' == $this->debug ) _log( 'Decoded JSON is: ', $decoded );
 
 		if ( $decoded['meta']['status'] != 'success' ) {
 			_log( 'Authentication plugin: member lookup was not a success. Server says:', $decoded->meta ); 
@@ -364,8 +358,6 @@ class CustomAuthentication extends MLAAPI {
 		//Authenticate with password!
 		$our_password = crypt( $password, $json_data['authentication']['password'] ); // salt it and hash it appropriately 
 		$their_password = $json_data['authentication']['password']; 
-		_log( "encrypted password:", crypt($password, $json_data['authentication']['password']) ); 
-		_log( "API password:", $json_data['authentication']['password'] ); 
 
 		if ( $our_password != $their_password ) { 
 			_log( 'Passwords do not match!' ); 
@@ -376,14 +368,12 @@ class CustomAuthentication extends MLAAPI {
 
 		$json_array = $this->memberJSONToArray( $json_member_data, $password );
 
-		_log( '$json_array is as follows', $json_array ); 
+		if ( 'verbose' == $this->debug ) _log( '$json_array is as follows', $json_array ); 
 
 		// Make sure the user is active and of the allowed types (i.e. 'member')
 		if(!$this->validateCustomUser($json_array, $username, $error)) {
 			return $error;
 		}
-
-		_log( 'Everything looks good in findCustomuser. Returning json array from before.' ); 
 
 		return $json_array;
 
@@ -452,12 +442,16 @@ class CustomAuthentication extends MLAAPI {
 		$simple_query = '/' . $user_id . '/username'; 
 		$base_url = 'https://apidev.mla.org/1/' . $query_domain . $simple_query;
 		$request_body = "{ \"username\": \"$newname\" }"; 
-		_log( 'changing username with params: ' ); 
-		_log( 'base_url: ', $base_url ); 
-		_log( 'request body: ', $request_body );
+
+		if ( 'verbose' == $this->debug ) {   
+			_log( 'changing username with params: ' ); 
+			_log( 'base_url: ', $base_url ); 
+			_log( 'request body: ', $request_body );
+		}
+
 		$response = $this->send_request( $request_method, $base_url, '', $request_body) ;
 
-		_log( 'changing username. API response was:', $response ); 
+		if ( 'verbose' == $this->debug ) _log( 'changing username. API response was:', $response ); 
 
 		if ( ( ! is_array( $response ) ) || ( ! array_key_exists( 'code', $response ) ) ) {
 			// This only happens if we can't access the API server.
@@ -560,13 +554,12 @@ class CustomAuthentication extends MLAAPI {
 	 */
 	protected function validateCustomUser($member, $id, &$error = null) {
 
-		//_log( "attempting to validate member with id $id. Member is:", $member ); 
-
 		if($id !== $member['id'] && $id !== urlencode($member['user_name'])) {
 			// This should not happen since the API gives us the member based on the ID or Username. Nonetheless, it's worth checking.
 			$error = new WP_Error('server_error', __('<strong>Error (' . __LINE__ . '):</strong> There was a problem verifying your member credentials. Please try again later.'));
 			return false;
 		}
+
 		if($member['status'] !== 'active') {
 			$error = new WP_Error('server_error', __('<strong>Error (' . __LINE__ . '):</strong> Your membership is not active.'));
 			return false;
@@ -763,7 +756,7 @@ class CustomAuthentication extends MLAAPI {
 
 		// Don't try to do anything that uses a method we're not prepared for. 
 		if ( ( 'POST' != $method ) && ( 'DELETE' != $method ) ) { 
-			_log( 'not a recognized method!' ); 
+			_log( 'not a recognized HTTP method!' ); 
 			_log( 'method is:', $method );
 			return;
 		} 

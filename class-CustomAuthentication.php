@@ -62,6 +62,11 @@ class CustomAuthentication extends MLAAPI {
 				return new WP_Error('invalid_username', __('<strong>Error (' . __LINE__ . '):</strong> That user name already exists.'));
 			}
 
+			// WordPress allows spaces in usernames, but we don't. 
+			if ( preg_match('/\s/', $_POST['preferred'] ) ) { 
+				return new WP_Error( 'invalid_username', __( '<strong>Error (' . __LINE__ . '):</strong> User names may not contain spaces.' ) );
+			} 
+
 			if($_POST['preferred'] != '' && !validate_username($_POST['preferred'])) {
 				return new WP_Error('invalid_username', __('<strong>Error (' . __LINE__ . '):</strong> User names must be between four and twenty characters in length and must contain at least one letter. Only lowercase letters, numbers, and underscores are allowed.'));
 			}

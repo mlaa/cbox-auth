@@ -32,14 +32,14 @@ define('CBOX_AUTH_DEBUG_LOG', '/log/file/location/username_%t.log');
   - Should successfully log user in, if user has already logged in at least once. 
   - [ ] User logs in for the first time. 
     - Should present user with username change screen. 
-    - [ ] User chooses a username that is already taken. 
+    - [x] 0213 13:41 User chooses a username that is already taken. 
       - Should present user with message explaining that the name is taken. 
-    - [!] User chooses an username with invalid characters. 
+    - [x] 0213 13:41 User chooses an username with invalid characters. 
       - Should present user with message explaining that some characters are not allowed. 
-      BROKEN: when changing username to a username containing spaces, auth plugin doesn't validate, and the username is changed to a username containing spaces in the API. 
-      Also broken: errors throw the user back to the first screen.
-      Is this an AJAX issue? 
-    - [ ] User enters nothing in the username box. 
+    - [ ] User choose a username with too many characters
+      - Should throw error
+      - Doesn't throw error, because API response is "value too large for column" 
+    - [x] 0213 13:42 User enters nothing in the username box. 
       - Should successfully log user in. 
  * [x] 0212 16:20 User tries to log in with incorrect password. 
   - Should disallow log-in and present user with an error message saying so. 

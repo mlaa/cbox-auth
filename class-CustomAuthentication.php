@@ -170,6 +170,8 @@ class CustomAuthentication extends MLAAPI {
 		if (validate_username($preferred)) {
 			if (username_exists($preferred)) {
 				$message = 'That user name already exists.';
+			} else if ( preg_match( '/\s/', $preferred ) ) { 
+				$message = 'User names may not contain spaces.';
 			} else {
 				$res = $this->changeCustomUsername($username, $password, $preferred);
 				if($res instanceof WP_Error) {

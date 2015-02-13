@@ -101,6 +101,13 @@ class MLAMember extends MLAAPI {
 			return false;
 		}
 
+		$meta = json_decode( $response['body'] )->meta; 
+
+		if ( 'API-1000' != $meta->code ) { 
+			_log( 'API has returned an error or exception. Message:', $meta ); 
+			return false; 
+		} 
+
 		$decoded = json_decode( $response['body'] )->data[0];
 		_log( 'decoded member data:' );
 		_log( $decoded );

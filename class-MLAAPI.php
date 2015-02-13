@@ -32,6 +32,8 @@ abstract class MLAAPI {
 		// Append the signature to the request.
 		$request_url = $request_url . '&signature=' . $api_signature;
 
+		$this->debug = 'verbose'; // turning on debugging output
+
 		if ( 'verbose' == $this->debug ) _log( 'Using request:', $request_url );
 
 		// Initialize a cURL session.

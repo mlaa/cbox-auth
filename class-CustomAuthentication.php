@@ -44,6 +44,7 @@ class CustomAuthentication extends MLAAPI {
 		$customLoginError = null;
 		if($customUserData instanceof WP_Error) {
 			// If the user is not a member, let's see if she is a WP admin.
+			_log( 'looks like customUserData is an instance of WP_Error!' ); 
 			$customLoginError = $customUserData;
 		}
 
@@ -62,10 +63,10 @@ class CustomAuthentication extends MLAAPI {
 				return new WP_Error('invalid_username', __('<strong>Error (' . __LINE__ . '):</strong> That user name already exists.'));
 			}
 
-			// WordPress allows spaces in usernames, but we don't. 
-			if ( preg_match('/\s/', $_POST['preferred'] ) ) { 
-				return new WP_Error( 'invalid_username', __( '<strong>Error (' . __LINE__ . '):</strong> User names may not contain spaces.' ) );
-			} 
+			//// WordPress allows spaces in usernames, but we don't. 
+			//if ( $_POST['preferred'] != '' && preg_match('/\s/', $_POST['preferred'] ) ) { 
+				//return new WP_Error( 'invalid_username', __( '<strong>Error (' . __LINE__ . '):</strong> User names may not contain spaces.' ) );
+			//} 
 
 			if($_POST['preferred'] != '' && !validate_username($_POST['preferred'])) {
 				return new WP_Error('invalid_username', __('<strong>Error (' . __LINE__ . '):</strong> User names must be between four and twenty characters in length and must contain at least one letter. Only lowercase letters, numbers, and underscores are allowed.'));
@@ -75,10 +76,12 @@ class CustomAuthentication extends MLAAPI {
 
 			if($customLoginError) {
 				// The user doesn't exist yet anywhere. Don't allow login.
+				_log( 'Getting a customLoginError.'); 
 				return $customLoginError;
 			}
 			$userdata = $this->createWpUser($customUserData);
 			if($userdata instanceof WP_Error) {
+				_log( 'Error creating WP User!'); 
 				return $userdata;
 			}
 			// Catch terms acceptance on first login.
@@ -310,6 +313,7 @@ class CustomAuthentication extends MLAAPI {
 		$query_domain = 'members';
 		// this is for queries that come directly after the query domain,
 		// like https://apidev.mla.org/1/members/168880
+		$username = urlencode( $username );  
 		$simple_query = '/' . $username;
 		$base_url = 'https://apidev.mla.org/1/' . $query_domain . $simple_query;
 		$response = $this->send_request( $request_method, $base_url, $query );
@@ -317,15 +321,15 @@ class CustomAuthentication extends MLAAPI {
 
 		if( $response === false || $response == '' ) {
 			// This only happens if we can't access the API server.
-			error_log('Authentication Plugin: is API server down?');
+			_log('Authentication Plugin: is API server down?');
 			return new WP_Error('server_error', __('<strong>Error (' . __LINE__ . '):</strong> There was a problem verifying your member credentials. Please try again later.'));
 		}
 
 		if ( ! array_key_exists( 'code', $response ) ) { 
-			error_log('Authentication Plugin: is API server down?');
+			_log('Didn\'t get a code in the response. Is the API server down?');
 			return new WP_Error('server_error', __('<strong>Error (' . __LINE__ . '):</strong> There was a problem verifying your member credentials. Please try again later.'));
 		} else if ( $response['code'] != 200 ) { 
-			_log('Authentication Plugin: got request error. Here\'s what the server said:');
+			_log('Authentication plugin: got a code other than 200. Here\'s what the server said:');
 			_log( $response );
 			return new WP_Error('server_error', __('<strong>Error (' . __LINE__ . '):</strong> There was a problem verifying your member credentials. Please try again later.'));
 		} 
@@ -374,6 +378,8 @@ class CustomAuthentication extends MLAAPI {
 		if(!$this->validateCustomUser($json_array, $username, $error)) {
 			return $error;
 		}
+
+		_log( 'Everything looks good in findCustomuser. Returning json array from before.' ); 
 
 		return $json_array;
 
@@ -552,7 +558,7 @@ class CustomAuthentication extends MLAAPI {
 
 		//_log( "attempting to validate member with id $id. Member is:", $member ); 
 
-		if($id !== $member['id'] && $id !== strtolower($member['user_name'])) {
+		if($id !== $member['id'] && $id !== urlencode($member['user_name'])) {
 			// This should not happen since the API gives us the member based on the ID or Username. Nonetheless, it's worth checking.
 			$error = new WP_Error('server_error', __('<strong>Error (' . __LINE__ . '):</strong> There was a problem verifying your member credentials. Please try again later.'));
 			return false;

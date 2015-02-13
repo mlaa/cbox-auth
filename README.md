@@ -37,6 +37,8 @@ define('CBOX_AUTH_DEBUG_LOG', '/log/file/location/username_%t.log');
     - [!] User chooses an username with invalid characters. 
       - Should present user with message explaining that some characters are not allowed. 
       BROKEN: when changing username to a username containing spaces, auth plugin doesn't validate, and the username is changed to a username containing spaces in the API. 
+      Also broken: errors throw the user back to the first screen.
+      Is this an AJAX issue? 
     - [ ] User enters nothing in the username box. 
       - Should successfully log user in. 
  * [x] 0212 16:20 User tries to log in with incorrect password. 

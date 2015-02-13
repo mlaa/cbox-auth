@@ -166,12 +166,14 @@ class CustomAuthentication extends MLAAPI {
 		$username = $_POST['username'];
 		$password = $_POST['password'];
 		$message = '';
+		$error_message = 'User names must be between four and twenty characters in length and must contain at least one letter. Only lowercase letters, numbers, and underscores are allowed.'; 
 		$result = false;
 		if (validate_username($preferred)) {
 			if (username_exists($preferred)) {
 				$message = 'That user name already exists.';
-			} else if ( preg_match( '/\s/', $preferred ) ) { 
-				$message = 'User names may not contain spaces.';
+			} else if ( ! preg_match( '/^[a-z0-9_]{4,20}$/', $preferred ) ) { 
+				// don't allow characters that aren't lowercase letters, numbers, underscores
+				$message = $error_message;  
 			} else {
 				$res = $this->changeCustomUsername($username, $password, $preferred);
 				if($res instanceof WP_Error) {
@@ -181,7 +183,7 @@ class CustomAuthentication extends MLAAPI {
 				}
 			}
 		} else {
-			$message = 'User names must be between four and twenty characters in length and must contain at least one letter. Only lowercase letters, numbers, and underscores are allowed.';
+			$message = $error_message;
 		}
 		echo json_encode(array('result' => ($result ? 'true' : 'false'), 'message' => $message));
 		die();

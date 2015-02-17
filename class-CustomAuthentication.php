@@ -62,11 +62,11 @@ class CustomAuthentication extends MLAAPI {
 				_log( 'Using value: $_POST[\'preferred\']', $_POST['preferred'] );
 			}
 			if ( $_POST['preferred'] != '' && username_exists( $_POST['preferred'] ) ) {
-				return new WP_Error( 'invalid_username', __( '<strong>Error ( ' . __LINE__ . ' ):</strong> That user name already exists.' ) );
+				return new WP_Error( 'invalid_username', __( '<strong>Error (' . __LINE__ . '):</strong> That user name already exists.' ) );
 			}
 
 			if ( $_POST['preferred'] != '' && !validate_username( $_POST['preferred'] ) ) {
-				return new WP_Error( 'invalid_username', __( '<strong>Error ( ' . __LINE__ . ' ):</strong> User names must be between four and twenty characters in length and must contain at least one letter. Only lowercase letters, numbers, and underscores are allowed.' ) );
+				return new WP_Error( 'invalid_username', __( '<strong>Error (' . __LINE__ . '):</strong> User names must be between four and twenty characters in length and must contain at least one letter. Only lowercase letters, numbers, and underscores are allowed.' ) );
 			}
 			_log( 'Username valid!' );
 
@@ -88,13 +88,13 @@ class CustomAuthentication extends MLAAPI {
 			if ( is_multisite() ) {
 				// Is user marked as spam?
 				if ( 1 == $userdata->spam )
-					return new WP_Error( 'invalid_username', __( '<strong>Error (' . __LINE__ . ' ):</strong> Your account has been marked as a spammer.' ) );
+					return new WP_Error( 'invalid_username', __( '<strong>Error (' . __LINE__ . '):</strong> Your account has been marked as a spammer.' ) );
 
 				// Is a user's blog marked as spam?
 				if ( !is_super_admin( $userdata->ID ) && isset( $userdata->primary_blog ) ) {
 					$details = get_blog_details( $userdata->primary_blog );
 					if ( is_object( $details ) && $details->spam == 1 )
-						return new WP_Error( 'blog_suspended', __( '<strong>Error (' . __LINE__ . ' ):</strong> Your account has been suspended.' ) );
+						return new WP_Error( 'blog_suspended', __( '<strong>Error (' . __LINE__ . '):</strong> Your account has been suspended.' ) );
 				}
 			}
 
@@ -320,37 +320,37 @@ class CustomAuthentication extends MLAAPI {
 		if ( $response === false || $response == '' ) {
 			// This only happens if we can't access the API server.
 			_log( 'Authentication Plugin: is API server down?' );
-			return new WP_Error( 'server_error', __( '<strong>Error ( ' . __LINE__ . ' ):</strong> There was a problem verifying your member credentials. Please try again later.' ) );
+			return new WP_Error( 'server_error', __( '<strong>Error (' . __LINE__ . '):</strong> There was a problem verifying your member credentials. Please try again later.' ) );
 		}
 
 		if ( ! array_key_exists( 'code', $response ) ) {
 			_log( 'Didn\'t get a code in the response. Is the API server down?' );
-			return new WP_Error( 'server_error', __( '<strong>Error ( ' . __LINE__ . ' ):</strong> There was a problem verifying your member credentials. Please try again later.' ) );
+			return new WP_Error( 'server_error', __( '<strong>Error (' . __LINE__ . '):</strong> There was a problem verifying your member credentials. Please try again later.' ) );
 		} else if ( $response['code'] != 200 ) {
 			_log( 'Authentication plugin: got a code other than 200. Here\'s what the server said:' );
 			_log( $response );
-			return new WP_Error( 'server_error', __( '<strong>Error (' . __LINE__ . ' ):</strong> There was a problem verifying your member credentials. Please try again later.' ) );
+			return new WP_Error( 'server_error', __( '<strong>Error (' . __LINE__ . '):</strong> There was a problem verifying your member credentials. Please try again later.' ) );
 		}
 
 		try {
 			$decoded = json_decode( $response['body'], true );
 		} catch ( Exception $e ) {
 			_log( 'Authentication Plugin: couldn\'t decode JSON response from server. Response was:', $response );
-			return new WP_Error( 'server_error', __( '<strong>Error ( ' . __LINE__ . ' ):</strong> Because of a temporary problem, we cannot verify your member credentials at this time. Please try again in a few minutes.' ) );
+			return new WP_Error( 'server_error', __( '<strong>Error (' . __LINE__ . '):</strong> Because of a temporary problem, we cannot verify your member credentials at this time. Please try again in a few minutes.' ) );
 		}
 
 		if ( 'verbose' == $this->debug ) _log( 'Decoded JSON is: ', $decoded );
 
 		if ( $decoded['meta']['status'] != 'success' ) {
 			_log( 'Authentication plugin: member lookup was not a success. Server says:', $decoded->meta );
-			return new WP_Error( 'not_authorized', sprintf( __( '<strong>Error ( ' . __LINE__ . ' ):</strong> Your user name and password could not be verified. Please try again.' ), wp_lostpassword_url() ) );
+			return new WP_Error( 'not_authorized', sprintf( __( '<strong>Error (' . __LINE__ . '):</strong> Your user name and password could not be verified. Please try again.' ), wp_lostpassword_url() ) );
 		}
 
 		$json_data = $decoded['data'];
 
 		if ( sizeof( $json_data ) > 1 ) {
 			_log( 'Authentication plugin: there was more than one response for that username. This should never happen. Responses:', $json_data );
-			return new WP_Error( 'not_authorized', sprintf( __( '<strong>Error ( ' . __LINE__ . ' ):</strong> Your user name and password could not be verified. Please try again.' ), wp_lostpassword_url() ) );
+			return new WP_Error( 'not_authorized', sprintf( __( '<strong>Error (' . __LINE__ . '):</strong> Your user name and password could not be verified. Please try again.' ), wp_lostpassword_url() ) );
 		}
 
 		$json_data = $json_data[0]; // There should only be one now.
@@ -361,7 +361,7 @@ class CustomAuthentication extends MLAAPI {
 
 		if ( $our_password != $their_password ) {
 			_log( 'Passwords do not match!' );
-			return new WP_Error( 'not_authorized', sprintf( __( '<strong>Error ( ' . __LINE__ . ' ):</strong> Your user name and password could not be verified. Please try again.' ), wp_lostpassword_url() ) );
+			return new WP_Error( 'not_authorized', sprintf( __( '<strong>Error (' . __LINE__ . '):</strong> Your user name and password could not be verified. Please try again.' ), wp_lostpassword_url() ) );
 		}
 
 		$json_member_data = $decoded['data'][0];
@@ -457,13 +457,13 @@ class CustomAuthentication extends MLAAPI {
 			// This only happens if we can't access the API server.
 			error_log( 'Authentication Plugin: is API server down?' );
 			_log( 'On changing username, API gave a non-array response. Something is terribly wrong!' );
-			return new WP_Error( 'server_error', __( '<strong>Error ( ' . __LINE__ . ' ):</strong> There was a problem changing your username. Please try again later.' ) );
+			return new WP_Error( 'server_error', __( '<strong>Error (' . __LINE__ . '):</strong> There was a problem changing your username. Please try again later.' ) );
 		}
 
 		if ( 200 != $response['code'] ) {
 			_log( 'On changing username, API gave a non-200 response. Something is kind of wrong!' );
 			_log( 'Response: ', $response );
-			return new WP_Error( 'server_error', __( '<strong>Error ( ' . __LINE__ . ' ):</strong> There was a problem changing your username. Please try again later.' ) );
+			return new WP_Error( 'server_error', __( '<strong>Error (' . __LINE__ . '):</strong> There was a problem changing your username. Please try again later.' ) );
 		}
 
 		return true;
@@ -556,12 +556,12 @@ class CustomAuthentication extends MLAAPI {
 
 		if ( $id !== $member['id'] && $id !== urlencode( $member['user_name'] ) ) {
 			// This should not happen since the API gives us the member based on the ID or Username. Nonetheless, it's worth checking.
-			$error = new WP_Error( 'server_error', __( '<strong>Error ( ' . __LINE__ . ' ):</strong> There was a problem verifying your member credentials. Please try again later.' ) );
+			$error = new WP_Error( 'server_error', __( '<strong>Error (' . __LINE__ . '):</strong> There was a problem verifying your member credentials. Please try again later.' ) );
 			return false;
 		}
 
 		if ( $member['status'] !== 'active' ) {
-			$error = new WP_Error( 'server_error', __( '<strong>Error ( ' . __LINE__ . ' ):</strong> Your membership is not active.' ) );
+			$error = new WP_Error( 'server_error', __( '<strong>Error (' . __LINE__ . '):</strong> Your membership is not active.' ) );
 			return false;
 		}
 

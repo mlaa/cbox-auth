@@ -57,8 +57,10 @@ class CustomAuthentication extends MLAAPI {
 
 		// If the user doesn't exist yet, create one.
 		if(!$userdata) {
-			_log( 'Now validating username!' ); 
-			_log( 'Using value: $_POST[\'preferred\']', $_POST['preferred'] ); 
+			if ( 'verbose' == $this->debug ) { 
+				_log( 'Now validating username!' ); 
+				_log( 'Using value: $_POST[\'preferred\']', $_POST['preferred'] ); 
+			} 
 			if($_POST['preferred'] != '' && username_exists($_POST['preferred'])) {
 				return new WP_Error('invalid_username', __('<strong>Error (' . __LINE__ . '):</strong> That user name already exists.'));
 			}
@@ -775,12 +777,14 @@ class CustomAuthentication extends MLAAPI {
 			$body = ''; 
 		} 
 
-		_log( 'now sending requests with params:' ); 
-		_log( 'base_url is:', $base_url );
-		_log( 'query is:', $query );
-		_log( 'body is:', $body );
+		if ( 'verbose' == $this->debug ) { 
+			_log( 'now sending requests with params:' ); 
+			_log( 'base_url is:', $base_url );
+			_log( 'query is:', $query );
+			_log( 'body is:', $body );
+		} 
 		$response = $this->send_request( $method, $base_url, $query, $body );
-		_log( 'response from API is:', $response ); 
+		if ( 'verbose' == $this->debug ) _log( 'response from API is:', $response ); 
 	}
 
 

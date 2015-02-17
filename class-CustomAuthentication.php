@@ -5,6 +5,10 @@ require_once( 'class-MLAAPI.php' );
 
 class CustomAuthentication extends MLAAPI {
 
+	function __construct() { 
+		if ( ! isset ( $this->debug ) ) $this->debug = false; 
+	} 
+
 	# AUTHENTICATION FUNCTIONS ( PHASE 1 )
 	#####################################################################
 

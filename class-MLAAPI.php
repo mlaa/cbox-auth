@@ -48,48 +48,48 @@ abstract class MLAAPI {
 		curl_setopt( $ch, CURLOPT_SSL_VERIFYHOST, 2 );
 
 		// Validate certificates.
-		if ( substr($request_url, 0, 23) === "https://apidev.mla.org/" ) {
+		if ( substr( $request_url, 0, 23 ) === 'https://apidev.mla.org/' ) {
 			// openssl x509 -in /path/to/self-signed.crt -text > self-signed.pem
-			curl_setopt($ch, CURLOPT_CAINFO, plugin_dir_path( __FILE__ ) . 'ssl/self-signed.pem');
-		} elseif ( substr($request_url, 0, 20) === "https://api.mla.org/" ) {
-			curl_setopt($ch, CURLOPT_CAINFO, plugin_dir_path( __FILE__ ) . 'ssl/self-signed-production.pem');
+			curl_setopt( $ch, CURLOPT_CAINFO, plugin_dir_path( __FILE__ ) . 'ssl/self-signed.pem' );
+		} elseif ( substr( $request_url, 0, 20 ) === 'https://api.mla.org/' ) {
+			curl_setopt( $ch, CURLOPT_CAINFO, plugin_dir_path( __FILE__ ) . 'ssl/self-signed-production.pem' );
 		}
 		//elseif ( substr($request_url, 0, 20) === "https://api.mla.org/" ):
 		// curl_setopt($ch, CURLOPT_CAINFO, getcwd() . '/ssl/cacert.pem');
 
 		// Set HTTP method.
 		if ( $http_method === 'PUT' || $http_method === 'DELETE' ) {
-			curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $http_method);
-		} elseif ($http_method === 'POST') {
-			curl_setopt($ch, CURLOPT_POST, 1);
+			curl_setopt( $ch, CURLOPT_CUSTOMREQUEST, $http_method );
+		} elseif ( $http_method === 'POST' ) {
+			curl_setopt( $ch, CURLOPT_POST, 1 );
 		}
 
 		// Add request body.
-		if ( strlen($request_body) ) {
-			$headers[] = 'Content-Length: ' . strlen($request_body);
-			curl_setopt($ch, CURLOPT_POSTFIELDS, $request_body);
+		if ( strlen( $request_body ) ) {
+			$headers[] = 'Content-Length: ' . strlen( $request_body );
+			curl_setopt( $ch, CURLOPT_POSTFIELDS, $request_body );
 		}
 
 		// Add HTTP headers.
-		curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+		curl_setopt( $ch, CURLOPT_HTTPHEADER, $headers );
 
 		// Send request.
-		$response_text = curl_exec($ch);
+		$response_text = curl_exec( $ch );
 
 		// Describe error if request failed.
-		if ( !$response_text ) {
+		if ( ! $response_text ) {
 			$response = array(
 				'code' => '500',
-				'body' => curl_error($ch)
+				'body' => curl_error( $ch )
 			);
 		} else {
 			$response = array(
-				'code' => curl_getinfo($ch, CURLINFO_HTTP_CODE),
-				'body' => $response_text
+				'code' => curl_getinfo( $ch, CURLINFO_HTTP_CODE ),
+				'body' => $response_text,
 			);
 		}
 		// Close cURL session.
-		curl_close($ch);
+		curl_close( $ch );
 		return $response;
 	}
 
@@ -114,7 +114,7 @@ abstract class MLAAPI {
 		$sql = "SELECT group_id FROM wp_bp_groups_groupmeta WHERE meta_key = 'mla_oid' AND meta_value = '$mla_oid'";
 		// @todo use wp_cache_get or some other caching method
 		$result = $wpdb->get_results( $sql );
-		if( count($result) > 0 ) { 
+		if ( count( $result ) > 0 ) { 
 			return $result[0]->group_id;
 		} else { 
 			return false; 
@@ -131,7 +131,7 @@ abstract class MLAAPI {
 		$sql = "SELECT user_id FROM wp_usermeta WHERE meta_key = 'mla_oid' AND meta_value = '$mla_oid'";
 		// @todo use wp_cache_get or some other caching method
 		$result = $wpdb->get_results( $sql );
-		if( count($result) > 0 ) { 
+		if ( count( $result ) > 0 ) { 
 			return $result[0]->user_id;
 		} else { 
 			return false; 

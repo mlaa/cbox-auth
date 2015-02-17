@@ -187,7 +187,7 @@ class MLAMember extends MLAAPI {
 	 */ 
 	public function create_bp_group( $group_data ) { 
 		$newGroup = array(
-			'slug' => groups_check_slug(sanitize_title_with_dashes($group_data['name'])),
+			'slug' => groups_check_slug( sanitize_title_with_dashes( $group_data['name'] ) ),
 			'name' => $group_data['name'],
 			//'status' => $group_data['status'],
 			// @todo handle group status (private, public, hidden) 
@@ -203,7 +203,7 @@ class MLAMember extends MLAAPI {
 		groups_join_group( $group_id, $this->user_id );
 
 		if ( 'admin' === translate_mla_role( $group_data['position'] ) ) { 
-			groups_promote_member( $user_id, $group_id, 'admin');
+			groups_promote_member( $user_id, $group_id, 'admin' );
 		} 
 
 		return true; 
@@ -223,7 +223,7 @@ class MLAMember extends MLAAPI {
 			return false; 
 		} 
 
-		$admin_of =  BP_Groups_Member::get_is_admin_of( $this->user_id ); 
+		$admin_of = BP_Groups_Member::get_is_admin_of( $this->user_id ); 
 		$mod_of = BP_Groups_Member::get_is_mod_of( $this->user_id ); 
 		if ( 'verbose' === $this->debug ) _log( 'This user is admin of:', $admin_of ); 
 		if ( 'verbose' === $this->debug ) _log( 'This user is mod of:', $mod_of ); 
@@ -231,11 +231,11 @@ class MLAMember extends MLAAPI {
 		// now make a standard table for groups for which this user
 		// is an admin or a mod.
 		$admin_and_mod_of = array(); 
-		foreach( $admin_of['groups'] as $group ) { 
-			$admin_and_mod_of[$group->id] = 'admin'; 
+		foreach ( $admin_of['groups'] as $group ) { 
+			$admin_and_mod_of[ $group->id ] = 'admin'; 
 		} 
-		foreach( $mod_of['groups'] as $group ) { 
-			$admin_and_mod_of[$group->id] = 'mod'; 
+		foreach ( $mod_of['groups'] as $group ) { 
+			$admin_and_mod_of[ $group->id ] = 'mod'; 
 		} 
 		if ( 'verbose' === $this->debug ) _log( 'This user is admin or mod of:', $admin_and_mod_of ); 
 
@@ -366,7 +366,7 @@ class MLAMember extends MLAAPI {
 					continue; 
 				} 
 
-				_log( "Assuming member has been removed from this group on the MLA API, so removing this user from the Commons group." );
+				_log( 'Assuming member has been removed from this group on the MLA API, so removing this user from the Commons group.' );
 				groups_leave_group( $group_id, $this->user_id );
 			}
 		}

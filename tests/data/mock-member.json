@@ -17,7 +17,9 @@
         "first_name": "Jennifer",
         "last_name": "Smith",
         "suffix": "",
-        "email": "jsmith@example.com"
+        "email": "jsmith@example.com", 
+	"web_site": "http://www.example.com", 
+	"joined_commons": "Y"
       },
       "addresses": [
         {
@@ -87,7 +89,14 @@
           "type": "MLA Organization",
           "exclude_from_commons": "Y"
         }
-      ]
+      ],
+      "languages": [
+        {
+          "code": "400",
+          "name": "Other languages",
+          "primary": "Y"
+        }
+      ] 
     }
   ]
 }

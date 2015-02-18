@@ -509,7 +509,7 @@ class CustomAuthentication extends MLAAPI {
 			);
 		}
 
-		return array(
+		$return = array(
 			'id' => $json['id'],
 			'user_name' => $json['authentication']['username'],
 			'status' => $json['authentication']['membership_status'],
@@ -526,6 +526,9 @@ class CustomAuthentication extends MLAAPI {
 			'groups' => $groups,
 			'role' => 'subscriber',
 		 );
+		_log( 'converted member JSON to array. Array is:' ); 
+		_log( $return ); 
+		return $return; 
 	}
 
 	/**

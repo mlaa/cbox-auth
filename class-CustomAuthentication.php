@@ -526,8 +526,6 @@ class CustomAuthentication extends MLAAPI {
 			'groups' => $groups,
 			'role' => 'subscriber',
 		 );
-		_log( 'converted member JSON to array. Array is:' ); 
-		_log( $return ); 
 		return $return; 
 	}
 

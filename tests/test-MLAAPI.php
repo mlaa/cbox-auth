@@ -68,7 +68,6 @@ class MLAAPITest extends Base {
     // Load mocked member data.
     $this->member_json = file_get_contents('tests/data/mock-member.json');
     $this->member_data = json_decode($this->member_json, true)['data'][0];
-
   }
 
   public function testClassProperties () {
@@ -90,10 +89,10 @@ class MLAAPITest extends Base {
 
     // Changing the membership status to inactive should throw an error.
     // However, this currently generates a fatal error as WP_Error is not found.
-    //$member_array['status'] = 'inactive';
-    //$method = $this->getMethod('validateCustomUser');
-    //$isValid = $method->invoke($this->testClass, $member_array, 'exampleuser');
-    //$this->assertTrue($isValid);
+    $member_array['status'] = 'inactive';
+    $method = $this->getMethod('validateCustomUser');
+    $isValid = $method->invoke($this->testClass, $member_array, 'exampleuser');
+    $this->assertFalse($isValid);
 
   }
 

@@ -97,11 +97,16 @@ class MLAAPITest extends Base {
 
   }
 
-  public function testTranslateMLARole() { 
-	  $this->assertTrue( translate_mla_role( 'chair' ) == 'admin' ); 
-	  $this->assertTrue( translate_mla_role( 'liaison' ) == 'admin' ); 
-	  $this->assertTrue( translate_mla_role( 'liason' ) == 'admin' ); 
-	  $this->assertTrue( translate_mla_role( 'secretary' ) == 'admin' ); 
+  public function test_translate_mla_role() { 
+	  $method = $this->getMethod('translate_mla_role');
+	  $retval = $method->invoke($this->testClass, 'chair' );
+	  $this->assertTrue( $retval == 'admin' ); 
+	  $retval = $method->invoke($this->testClass, 'liaison' );
+	  $this->assertTrue( $retval == 'admin' ); 
+	  $retval = $method->invoke($this->testClass, 'liason' );
+	  $this->assertTrue( $retval == 'admin' ); 
+	  $retval = $method->invoke($this->testClass, 'secretary' );
+	  $this->assertTrue( $retval == 'admin' ); 
   } 
 
 }

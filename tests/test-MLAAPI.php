@@ -9,12 +9,21 @@
  * Run:
  *   php phpunit.phar test-MLAAPI.php
  *
+ * OR...
+ *
+ * Download: 
+ *   sudo apt-get install phpunit
+ *
+ * Run: 
+ *   cd /path/to/cbox-auth
+ *   phpunit
+ *
  */
 
 
 /* Dependencies */
 
-require_once '../class-CustomAuthentication.php';
+require_once 'class-CustomAuthentication.php';
 
 
 /*
@@ -57,7 +66,7 @@ class MLAAPITest extends Base {
     parent::setUp();
 
     // Load mocked member data.
-    $this->member_json = file_get_contents('data/mock-member.json');
+    $this->member_json = file_get_contents('tests/data/mock-member.json');
     $this->member_data = json_decode($this->member_json, true)['data'][0];
 
   }

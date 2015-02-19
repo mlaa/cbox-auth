@@ -97,7 +97,7 @@ class MLAAPITest extends Base {
 
   }
 
-  public function test_translate_mla_role() { 
+  public function testTranslateMLARole() { 
 	  $method = $this->getMethod('translate_mla_role');
 	  $retval = $method->invoke($this->testClass, 'chair' );
 	  $this->assertTrue( $retval == 'admin' ); 

@@ -93,7 +93,6 @@ class MLAAPITest extends Base {
     $method = $this->getMethod('validateCustomUser');
     $isValid = $method->invoke($this->testClass, $member_array, 'exampleuser');
     $this->assertFalse($isValid);
-
   }
 
   public function testTranslateMLARole() { 

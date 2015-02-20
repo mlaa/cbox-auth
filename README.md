@@ -46,21 +46,25 @@ define('CBOX_AUTH_DEBUG_LOG', '/log/file/location/username_%t.log');
   - Should successfully log user in. 
  * [/] Oracle user becomes inactive, and user tries to log in. 
   - Should disallow the user to log in, and return an error about the user's membership status. 
-  - **Can't test, since API doesn't seem to have the capability to change a member's status.**
+  - Can't test, since API doesn't seem to have the capability to change a member's status.
+    - [x] 0219 16:26 tested with PHPUnit 
  * [x] 0213 15:52 New user created in Oracle, with some groups excluded from Commons. 
   - Should create user in WP, add to all relevant groups, except those excluded from Commons. 
  * [x] 0213 16:00 User added to forum(s) in Oracle, some of which are excluded from Commons. 
   - Should add the user to those forums in BP, omitting those forums that are excluded from the Commons. 
     - Syncs in My Commons -> Groups, but the badge count next to the tab is out of sync for one page load.
-    - **Doesn't sync in Groups -> My Groups tab** 
+    - Doesn't sync in Groups -> My Groups tab
+      - opened cbox-auth #8 about this. 
  * [x] 0213 15:56 User removed from forum(s) in Oracle, some of which are excluded from Commons. 
   - Should remove those user from those forums in BP. 
  * [/] New forum created in Oracle. 
   - Should create that forum in BP and add all members to it, except for those members that are not yet on the Commons. 
-    - **Can't test, since API doesn't seem to have the capability to add an organization.**
+    - Can't test, since API doesn't seem to have the capability to add an organization.
+      - opened cbox-auth #9 about this. 
   - [/] New forum created in Oracle, excluded from Commons. 
     - Nothing should happen on Commons side. 
-    - **Can't test, API doesn't have this ability.**
+    - Can't test, API doesn't have this ability.
+      - opened cbox-auth #10 for this.  
  * [x] 0212 15:31 BP user leaves a committee or discussion group. 
   - If that group exists in Oracle, the user should be removed from the group in Oracle. 
  * [x] 0212 15:31 BP user joins a discussion group or committee. 

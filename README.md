@@ -76,6 +76,7 @@ define('CBOX_AUTH_DEBUG_LOG', '/log/file/location/username_%t.log');
  * [x] 0213 16:20 User visits a group page.
   - If that page is a committee or discussion group, membership data should be synced with Oracle every hour.  
     - **Works, but the members count in the badge is out of sync with the count at the bottom.**
+ * [x] 0220 11:20 Set up Travis
 
 ### License
 

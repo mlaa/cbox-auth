@@ -1,3 +1,8 @@
+#don't show our private keys
 private.php
 ssl/
 ssl/*
+
+#ignore composer packages
+vendor/
+vendor/*

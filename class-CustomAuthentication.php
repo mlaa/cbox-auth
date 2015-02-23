@@ -1,8 +1,5 @@
 <?php
 
-/* The abstract API class is in another file. */
-require_once( 'class-MLAAPI.php' );
-
 class CustomAuthentication extends MLAAPI {
 
 	function __construct() { 

@@ -104,6 +104,20 @@ abstract class MLAAPI {
 		return $response;  
 	} 
 
+	/**
+	 * Get a member from the member database API. 
+	 * @param $username can be either ID number (e.g. 168880) 
+	 * or username (e.g. commonstest). 
+	 * @return response. Can be false, blank, or a member. 
+	 */ 
+	public function get_member( $username ) { 
+		if ( 'verbose' == $this->debug ) _log( 'Now getting the member from the API.' );
+		$username = urlencode( $username );
+		$response = $this->send_request( 'GET', 'https://apidev.mla.org/1/members/' . $username );
+		if ( 'verbose' == $this->debug ) _log( 'API response was:', $response );
+		return $response; 
+	} 
+
 	/*
 	 * Gets a BuddyPress group ID if given the group's MLA OID.
 	 * @param $mla_oid str, the MLA OID, i.e. D086

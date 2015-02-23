@@ -306,20 +306,8 @@ class CustomAuthentication extends MLAAPI {
 	 * @return array|WP_Error
 	 */
 	protected function findCustomUser( $username, $password ) {
-		//$url = $this->apiMembersUrl.'information'.$this->startQueryString( $username, $password );
-		//$xmlResponse = $this->runCurl( $url);
-		//$this->log( $xmlResponse, $url);
 
-		if ( 'verbose' == $this->debug ) _log( 'Now in findCustomUser()' );
-		$request_method = 'GET';
-		$query_domain = 'members';
-		// this is for queries that come directly after the query domain,
-		// like https://apidev.mla.org/1/members/168880
-		$username = urlencode( $username );
-		$simple_query = '/' . $username;
-		$base_url = 'https://apidev.mla.org/1/' . $query_domain . $simple_query;
-		$response = $this->send_request( $request_method, $base_url, $query );
-		if ( 'verbose' == $this->debug ) _log( 'response was:', $response );
+		$response = get_member( $username ); 
 
 		if ( $response === false || $response == '' ) {
 			// This only happens if we can't access the API server.

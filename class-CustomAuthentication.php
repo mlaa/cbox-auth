@@ -132,7 +132,9 @@ class CustomAuthentication extends MLAAPI {
 		} else {
 			$secure_connection = false;
 		}
-		setcookie( 'MLABeenHereBefore', md5( $value ), time() + ( 20 * 365 * 24 * 60 * 60 ), null, null, $secure_connection );
+		if ( ! defined( 'RUNNING_TESTS' ) ) { 
+			setcookie( 'MLABeenHereBefore', md5( $value ), time() + ( 20 * 365 * 24 * 60 * 60 ), null, null, $secure_connection );
+		} 
 	}
 
 	/**
@@ -304,7 +306,7 @@ class CustomAuthentication extends MLAAPI {
 	 */
 	protected function findCustomUser( $username, $password ) {
 
-		$response = get_member( $username ); 
+		$response = $this->get_member( $username ); 
 
 		if ( $response === false || $response == '' ) {
 			// This only happens if we can't access the API server.
@@ -363,6 +365,8 @@ class CustomAuthentication extends MLAAPI {
 		if ( !$this->validateCustomUser( $json_array, $username, $error ) ) {
 			return $error;
 		}
+
+		_log( 'I did a whole bunch of stuff and the json array is:', $json_array ); 
 
 		return $json_array;
 
@@ -426,6 +430,7 @@ class CustomAuthentication extends MLAAPI {
 		$user_id = $customUserData['id'];
 
 		// now we change the username
+		// @todo refactor this. 
 		$request_method = 'PUT';
 		$query_domain = 'members';
 		$simple_query = '/' . $user_id . '/username';
@@ -472,6 +477,8 @@ class CustomAuthentication extends MLAAPI {
 		$affiliations = array();
 		$groups = array();
 		$affiliations = array();
+
+		//_log( 'incoming json to memberJSONToArray:', $json ); 
 
 		foreach ( $json['addresses'] as $address ) {
 			if ( array_key_exists( 'affiliation', $address ) ) {

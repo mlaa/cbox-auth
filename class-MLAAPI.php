@@ -109,8 +109,10 @@ abstract class MLAAPI {
 	 * @param $username can be either ID number (e.g. 168880) 
 	 * or username (e.g. commonstest). 
 	 * @return response. Can be false, blank, or a member. 
+	 * @todo: put this in MLAMember? Factor out base URL to make it easier to switch to production? 
 	 */ 
 	public function get_member( $username ) { 
+		$this->debug='verbose'; 
 		if ( 'verbose' == $this->debug ) _log( 'Now getting the member from the API.' );
 		$username = urlencode( $username );
 		$response = $this->send_request( 'GET', 'https://apidev.mla.org/1/members/' . $username );

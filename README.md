@@ -1,5 +1,7 @@
 # WordPress/CBOX Authentication Plugin
 
+![Is the build passing?](https://travis-ci.org/mlaa/cbox-auth.svg?branch=develop)
+
 This plugin allows authentication against an external propietary API. The API
 response provides user metadata which is used to populate the user in or out
 of groups within an installation of [Commons-in-a-Box][1], including roles

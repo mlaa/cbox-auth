@@ -83,6 +83,10 @@ class CustomAuthentication extends MLAAPI {
 			}
 			// Catch terms acceptance on first login.
 			update_user_meta( $userdata->ID, 'accepted_terms', $_POST['acceptance'] );
+
+			// Send welcome email. 
+			//$this->send_welcome_email( $to_user['email'] ); 
+
 			add_filter( 'login_redirect', array( $this, 'redirect_to_profile' ), 10, 3 );
 		} else {
 			// Stolen from wp_authenticate_username_password
@@ -781,6 +785,12 @@ class CustomAuthentication extends MLAAPI {
 		$response = $this->send_request( $method, $base_url, $query, $body );
 		if ( 'verbose' == $this->debug ) _log( 'response from API is:', $response );
 	}
+
+	protected function send_welcome_email( $to_user ) { 
+		// $subject = '';
+		// $message = ''; 
+		// wp_mail( $to_user, $subject, $message ); 
+	} 
 
 
 

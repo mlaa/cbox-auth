@@ -81,6 +81,11 @@ class CustomAuthentication extends MLAAPI {
 				_log( 'Error creating WP User!' );
 				return $userdata;
 			}
+
+			// Send welcome email
+			$user_id = $userdata->data->ID; 
+			wpmu_welcome_user_notification( $user_id, $password='' ); 
+
 			// Catch terms acceptance on first login.
 			update_user_meta( $userdata->ID, 'accepted_terms', $_POST['acceptance'] );
 
@@ -114,6 +119,7 @@ class CustomAuthentication extends MLAAPI {
 				}
 			}
 		}
+
 
 		// Add a cookie to speed up the login process for non-first-time users
 		$this->setRememberCookie( $username );

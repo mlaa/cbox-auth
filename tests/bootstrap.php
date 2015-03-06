@@ -8,7 +8,11 @@ if ( !$_tests_dir ) $_tests_dir = '/tmp/wordpress-tests-lib';
 
 require_once $_tests_dir . '/includes/functions.php';
 
+define( 'BP_TESTS_DIR', '/home/jreeve/Apps/wp-bp-tests/buddypress-svn/tests/phpunit' ); 
+
 function _manually_load_plugin() {
+	require BP_TESTS_DIR . '/includes/loader.php';
+
 	require dirname( __FILE__ ) . '/debug.php';
 	// overrides to get mock data
 	require dirname( __FILE__ ) . '/class-MockMLAAPI.php'; 

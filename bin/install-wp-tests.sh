@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 if [ $# -lt 3 ]; then
-	echo "usage: $0 <db-name> <db-user> <db-pass> [db-host] [wp-version]"
+	echo "usage: $0 <db-name> <db-user> <db-pass> [db-host] [wp-version] [bp-version]"
 	exit 1
 fi
 
@@ -10,9 +10,14 @@ DB_USER=$2
 DB_PASS=$3
 DB_HOST=${4-localhost}
 WP_VERSION=${5-latest}
+BP_VERSION=${6-latest}
 
 WP_TESTS_DIR=${WP_TESTS_DIR-/tmp/wordpress-tests-lib}
 WP_CORE_DIR=${WP_CORE_DIR-/tmp/wordpress/}
+
+BP_CORE_DIR=${BP_CORE_DIR-/tmp/buddypress}
+BP_SRC_DIR=${BP_SRC_DIR-/tmp/buddypress/src}
+BP_TESTS_DIR=${BP_TESTS_DIR-/tmp/buddypress/tests}
 
 set -ex
 
@@ -29,6 +34,18 @@ install_wp() {
 	tar --strip-components=1 -zxmf /tmp/wordpress.tar.gz -C $WP_CORE_DIR
 
 	wget -nv -O $WP_CORE_DIR/wp-content/db.php https://raw.github.com/markoheijnen/wp-mysqli/master/db.php
+}
+
+install_bp() {
+	mkdir -p $BP_CORE_DIR
+
+	if [ $BP_VERSION == 'latest' ]; then 
+		svn co https://buddypress.svn.wordpress.org/trunk $BP_CORE_DIR 
+	else
+		echo "This script can't yet handle BuddyPress versions other than the latest."; 
+		exit
+	fi
+
 }
 
 install_test_suite() {
@@ -76,3 +93,4 @@ install_db() {
 install_wp
 install_test_suite
 install_db
+install_bp

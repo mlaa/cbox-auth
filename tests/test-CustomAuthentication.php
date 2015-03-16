@@ -66,7 +66,7 @@ class CustomAuthenticationTest extends Base {
     parent::setUp();
 
     // Load mocked member data.
-    $this->member_data_raw = $this->testClass->get_member(); 
+    $this->member_data_raw = MLAAPI::get_member(); 
     $this->member_data = json_decode( $this->member_data_raw['body'], TRUE);
     $this->member_json = $this->member_data['data'][0]; 
   }

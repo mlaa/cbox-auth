@@ -13,6 +13,8 @@ define( 'BP_TESTS_DIR', $bp_tests_dir );
 
 echo 'Done defining stuff! '; 
 
+require_once $wp_tests_dir . '/includes/bootstrap.php';
+
 require_once $wp_tests_dir . '/includes/functions.php';
 
 echo 'Done requiring test dirs! ' ; 
@@ -33,8 +35,10 @@ function _manually_load_plugin() {
 	// don't get the whole plugin now, just a few classes, because 
 	// to test them individually we feed them mock data above. 
 	require dirname( __FILE__ ) . '/../class-CustomAuthentication.php';
+
+	// Requiring this file gives you access to BP_UnitTestCase
+	require $bp_tests_dir . '/includes/testcase.php';
+
 }
 tests_add_filter( 'muplugins_loaded', '_manually_load_plugin' );
 
-// Requiring this file gives you access to BP_UnitTestCase
-require $bp_tests_dir . '/includes/testcase.php';

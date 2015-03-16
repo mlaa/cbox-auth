@@ -23,6 +23,7 @@
 
 /* Dependencies */
 
+require_once 'tests/class-MockMLAAPI.php';
 require_once 'class-CustomAuthentication.php';
 
 

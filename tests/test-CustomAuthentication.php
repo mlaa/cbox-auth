@@ -106,19 +106,38 @@ class CustomAuthenticationTest extends Base {
     $this->assertFalse($isValid);
   } 
 
-  // This almost works, except it appears to be failing with manageGroups() trying to get
-  // the global $wpdb. Maybe load these plugins in the bootstrap? 
-  //public function testAuthenticateUsernamePassword() { 
-	  //$_POST['preferred'] = ''; // the function expects this to be set 
-	  //$_POST['acceptance'] = false; // the function expects this to be set, too
-	  //$_SERVER['SERVER_PORT'] = 0; // the function expects this to be set, too
-	  //$method = $this->getMethod('authenticate_username_password');
-	  //// username should be `exampleuser`
-	  //$username = 'exampleuser'; 
-	  //// password should be `test`. 
-	  //$password = 'test'; 
-	  //$retval = $method->invoke( $this->testClass, '', $username, $password );
-  //} 
+  public function testValidUserAuthentication() { 
+	  $_POST['preferred'] = ''; // the function expects this to be set 
+	  $_POST['acceptance'] = false; // the function expects this to be set, too
+	  $_SERVER['SERVER_PORT'] = 0; // the function expects this to be set, too
+	  $method = $this->getMethod('authenticate_username_password');
+	  // username should be `exampleuser`
+	  $username = 'exampleuser'; 
+	  // password should be `test`. 
+	  $password = 'test'; 
+	  $retval = $method->invoke( $this->testClass, '', $username, $password );
+	  // this tests if the valid user (returned as valid from the API) 
+	  // is correctly added to the database, which should return an instance
+	  // of WP_User from the function AuthenticateUsernamePassword. 
+	  $this->assertInstanceOf( 'WP_User', $retval );  
+  } 
+
+  public function testInvalidUserAuthentication() { 
+	  $_POST['preferred'] = ''; // the function expects this to be set 
+	  $_POST['acceptance'] = false; // the function expects this to be set, too
+	  $_SERVER['SERVER_PORT'] = 0; // the function expects this to be set, too
+	  $method = $this->getMethod('authenticate_username_password');
+	  // credentials are bogus! Don't let this person in!
+	  $username = 'notauser'; 
+	  $password = 'whatever'; 
+	  $retval = $method->invoke( $this->testClass, '', $username, $password );
+	  // this tests if the valid user (returned as valid from the API) 
+	  // is correctly added to the database, which should return an instance
+	  // of WP_User from the function AuthenticateUsernamePassword. 
+	  _log( 'Value returning from InvalidUserAuthentication is: ', $retval ); 
+	  $this->assertInstanceOf( 'WP_Error', $retval );  
+
+  } 
 }
 
 ?>

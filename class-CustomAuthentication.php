@@ -264,6 +264,13 @@ class CustomAuthentication extends MLAAPI {
 		// Groups still in the user_groups array need to be created.
 		foreach ( $user_groups as $groupData ) {
 
+			$groupData['name'] = $groupData['name'] ? $groupData['name'] : ''; 
+
+			// fill empty keys with empty so that slicing below doesn't complain
+			foreach ( array( 'name', 'status' ) as $key ) { 
+				if ( ! array_key_exists( $key, $groupData ) ) $groupData[ $key ] = ''; 
+			} 
+
 			$newGroup = array(
 				'slug' => groups_check_slug( sanitize_title_with_dashes( $groupData['name'] ) ),
 				'name' => $groupData['name'],
@@ -375,8 +382,6 @@ class CustomAuthentication extends MLAAPI {
 		if ( !$this->validateCustomUser( $json_array, $username, $error ) ) {
 			return $error;
 		}
-
-		_log( 'I did a whole bunch of stuff and the json array is:', $json_array ); 
 
 		return $json_array;
 

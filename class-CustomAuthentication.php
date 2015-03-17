@@ -510,7 +510,7 @@ class CustomAuthentication extends MLAAPI {
 		}
 
 		foreach ( $json['organizations'] as $group ) {
-			//_log( 'here comes a group!', $group );
+			_log( 'here comes a group!', $group );
 			$groups[] = array(
 				//[oid] => G049
 				//[role] =>

@@ -142,8 +142,9 @@ class CustomAuthenticationTest extends Base {
 	  $convertermethod = $this->getMethod('memberJSONToArray');
 	  $member_array = $convertermethod->invoke($this->testClass, $this->member_json, 'test');
 
+	  // Now take the array and feed it to `manageGroups()`, which is going to add
+	  // groups that don't exist (i.e. all of them). 
 	  $method = $this->getMethod('manageGroups');
-
 	  $retval = $method->invoke( $this->testClass, $member_array['id'], $member_array['groups'] );
 
 	  // Now since our test data has a bunch of test groups in it, 
@@ -156,10 +157,18 @@ class CustomAuthenticationTest extends Base {
 	  $hebrew = groups_get_id( 'hebrew' ); 
 	  $hungarian = groups_get_id( 'hungarian' ); 
 	  $travel_writing = groups_get_id( 'travel-writing' ); 
+	  $advisory = groups_get_id( 'advisory-comm-on-foreign-lang-programs' ); 
+	  $women = groups_get_id( 'committee-on-the-status-of-women-in-the-profession' ); 
+	  $research = groups_get_id( 'office-of-research' ); 
+
+	  _log( 'groups!', $member_array['groups'] ); 
 
 	  $this->assertEquals( $hebrew, 1 ); 
 	  $this->assertEquals( $hungarian, 2 ); 
 	  $this->assertEquals( $travel_writing, 3 ); 
+	  $this->assertEquals( $advisory, 4 ); 
+	  $this->assertEquals( $women, 5 ); 
+	  //$this->assertEquals( $research, 0 ); 
   } 
 }
 

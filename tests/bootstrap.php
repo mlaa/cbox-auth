@@ -4,11 +4,16 @@
 define( 'RUNNING_TESTS', TRUE ); 
 
 $_tests_dir = getenv('WP_TESTS_DIR');
-if ( !$_tests_dir ) $_tests_dir = '/tmp/wordpress-tests-lib';
+
+if ( ! $_tests_dir ) $_tests_dir = '/tmp/wordpress-tests-lib';
 
 require_once $_tests_dir . '/includes/functions.php';
 
-define( 'BP_TESTS_DIR', '/home/jreeve/Apps/wp-bp-tests/buddypress-svn/tests/phpunit' ); 
+if ( ! getenv( 'BP_TESTS_DIR' ) ) { 
+	define( 'BP_TESTS_DIR', '/tmp/buddypress/tests' ); 
+} else { 
+	define( 'BP_TESTS_DIR', getenv( 'BP_TESTS_DIR' ) ); 
+} 
 
 function _manually_load_plugin() {
 	require BP_TESTS_DIR . '/includes/loader.php';

@@ -276,7 +276,13 @@ class CustomAuthentication extends MLAAPI {
 				'name' => $groupData['name'],
 				'status' => $groupData['status'],
 			 );
+
+			_log( 'About to create group with data: ', $newGroup ); 
+
 			$groupId = groups_create_group( $newGroup );
+
+			_log( "Group created ID is: $groupId" ); 
+
 			groups_update_groupmeta( $groupId, 'mla_oid', $groupData['oid'] );
 			groups_join_group( $groupId, $userId );
 

@@ -267,6 +267,7 @@ class CustomAuthentication extends MLAAPI {
 			$groupData['name'] = $groupData['name'] ? $groupData['name'] : ''; 
 
 			$newGroup = array(
+				'creator_id' => 1, // Chris can be the group creator.
 				'slug' => groups_check_slug( sanitize_title_with_dashes( $groupData['name'] ) ),
 				'name' => $groupData['name'],
 			);

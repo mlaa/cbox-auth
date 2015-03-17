@@ -134,7 +134,6 @@ class CustomAuthenticationTest extends Base {
 	  // this tests if the valid user (returned as valid from the API) 
 	  // is correctly added to the database, which should return an instance
 	  // of WP_User from the function AuthenticateUsernamePassword. 
-	  _log( 'Value returning from InvalidUserAuthentication is: ', $retval ); 
 	  $this->assertInstanceOf( 'WP_Error', $retval );  
 
   } 
@@ -143,17 +142,24 @@ class CustomAuthenticationTest extends Base {
 	  $convertermethod = $this->getMethod('memberJSONToArray');
 	  $member_array = $convertermethod->invoke($this->testClass, $this->member_json, 'test');
 
-
-	  _log( 'member array is:', $member_array ); 
-	  _log( 'member id is:', $member_array['id'] ); 
-	  _log( 'groups are:', $member_array['groups'] ); 
-
 	  $method = $this->getMethod('manageGroups');
 
 	  $retval = $method->invoke( $this->testClass, $member_array['id'], $member_array['groups'] );
 
-	  _log( 'return from testGroupCreation is: ', $retval ); 
+	  // Now since our test data has a bunch of test groups in it, 
+	  // and since our database doesn't currently have these groups, 
+	  // the method manageGroups should've created these groups for us, 
+	  // and we should be able to see them now in the database. 
 
+	  // this looks for groups by their slug. We should see 'hebrew', 
+	  // 'hungarian', 'travel-writing', etc. 
+	  $hebrew = groups_get_id( 'hebrew' ); 
+	  $hungarian = groups_get_id( 'hungarian' ); 
+	  $travel_writing = groups_get_id( 'travel-writing' ); 
+
+	  $this->assertEquals( $hebrew, 1 ); 
+	  $this->assertEquals( $hungarian, 2 ); 
+	  $this->assertEquals( $travel_writing, 3 ); 
   } 
 }
 

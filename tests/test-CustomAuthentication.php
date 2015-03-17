@@ -138,6 +138,23 @@ class CustomAuthenticationTest extends Base {
 	  $this->assertInstanceOf( 'WP_Error', $retval );  
 
   } 
+  public function testGroupCreation() { 
+	  // Get test data and convert it to an array. 
+	  $convertermethod = $this->getMethod('memberJSONToArray');
+	  $member_array = $convertermethod->invoke($this->testClass, $this->member_json, 'test');
+
+
+	  _log( 'member array is:', $member_array ); 
+	  _log( 'member id is:', $member_array['id'] ); 
+	  _log( 'groups are:', $member_array['groups'] ); 
+
+	  $method = $this->getMethod('manageGroups');
+
+	  $retval = $method->invoke( $this->testClass, $member_array['id'], $member_array['groups'] );
+
+	  _log( 'return from testGroupCreation is: ', $retval ); 
+
+  } 
 }
 
 ?>

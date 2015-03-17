@@ -266,22 +266,23 @@ class CustomAuthentication extends MLAAPI {
 
 			$groupData['name'] = $groupData['name'] ? $groupData['name'] : ''; 
 
-			// fill empty keys with empty so that slicing below doesn't complain
-			foreach ( array( 'name', 'status' ) as $key ) { 
-				if ( ! array_key_exists( $key, $groupData ) ) $groupData[ $key ] = ''; 
-			} 
-
 			$newGroup = array(
 				'slug' => groups_check_slug( sanitize_title_with_dashes( $groupData['name'] ) ),
 				'name' => $groupData['name'],
-				'status' => $groupData['status'],
-			 );
+			);
+
+			// add group status to array if given. 
+			if ( array_key_exists( 'status', $groupData ) ) $newGroup['status'] = $groupData['status'];   
 
 			_log( 'About to create group with data: ', $newGroup ); 
 
 			$groupId = groups_create_group( $newGroup );
 
-			_log( "Group created ID is: $groupId" ); 
+			if ( ! $groupId ) { 
+				_log( 'Warning! No group created!' ); 
+			} else {  
+				_log( "Group created ID is: $groupId" ); 
+			} 
 
 			groups_update_groupmeta( $groupId, 'mla_oid', $groupData['oid'] );
 			groups_join_group( $groupId, $userId );

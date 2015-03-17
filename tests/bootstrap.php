@@ -10,7 +10,7 @@ if ( ! $_tests_dir ) $_tests_dir = '/tmp/wordpress-tests-lib';
 require_once $_tests_dir . '/includes/functions.php';
 
 if ( ! getenv( 'BP_TESTS_DIR' ) ) { 
-	define( 'BP_TESTS_DIR', '/tmp/buddypress/tests' ); 
+	define( 'BP_TESTS_DIR', '/tmp/buddypress/tests/phpunit' ); 
 } else { 
 	define( 'BP_TESTS_DIR', getenv( 'BP_TESTS_DIR' ) ); 
 } 

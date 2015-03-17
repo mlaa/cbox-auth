@@ -13,6 +13,6 @@ env:
 before_script:
     - bash bin/install-wp-tests.sh wordpress_test root '' localhost $WP_VERSION 
     - export WP_TESTS_DIR=/tmp/wordpress-tests-lib
-    - export BP_TESTS_DIR=/tmp/buddypress/tests
+    - export BP_TESTS_DIR=/tmp/buddypress/tests/phpunit
 
 script: phpunit

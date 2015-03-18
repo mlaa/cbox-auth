@@ -1,5 +1,4 @@
-<?php
-
+<?php 
 /*
  * PHPUnit tests
  *
@@ -179,6 +178,55 @@ class CustomAuthenticationTest extends Base {
 	  //_log( 'Group status is: ', $committee_group->status ); 
 	  $this->assertEquals( 'private', $committee_group->status ); 
   }
-}
+  /* 
+   * Add a new forum to a user's member forums, 
+   * then make sure this forum is created in the database. 
+   * This depends on all the prior tests to have run correctly. 
+   */ 
+  public function testNewForum() { 
+	  $member_json = $this->member_json;
+	  
+	  // When we're starting out, this group shouldn't already exist in the database. 
+	  $interdisciplinary = groups_get_id( 'interdisciplinary-approaches-to-culture-and-society' ); 
 
+	  // Delete the group if it's already there. Ideally, there would be a destructor method of this 
+	  // class that would delete everything from the DB, but until then, there's this. 
+	  if ( $interdisciplinary ) { 
+		  $success = groups_delete_group( $interdisciplinary ); 
+		  if ( $success ) { 
+			  _log( "Deleted group $interdisciplinary, which shouldn't have been there." ); 
+		  } else { 
+			  _log( "Can't delete group $interdisciplinary for some reason." ); 
+		  } 
+	  } 
+
+	  $newForum = array( 
+		  "id" => "215",
+		  "name" => "Interdisciplinary Approaches to Culture and Society",
+		  "type" => "Forum",
+		  "convention_code" => "G017",
+		  "position" => "Member", 
+		  "exclude_from_commons" => "",
+	  ); 
+
+	  // add new forum to mock user's list of forums
+	  $member_json['organizations'][] = $newForum; 
+
+	  _log( 'JSON is now:', $member_json ); 
+
+	  // Get test data and convert it to an array. 
+	  $convertermethod = $this->getMethod('memberJSONToArray');
+	  $member_array = $convertermethod->invoke($this->testClass, $member_json, 'test');
+
+	  // Now take the array and feed it to `manageGroups()`, which is going to add
+	  // groups that don't exist (i.e. the one we just added). 
+	  $method = $this->getMethod('manageGroups');
+	  $retval = $method->invoke( $this->testClass, $member_array['id'], $member_array['groups'] );
+
+	  // Now we should see our new forum appear in slot 6. 
+	  $interdisciplinary = groups_get_id( 'interdisciplinary-approaches-to-culture-and-society' ); 
+
+	  $this->assertEquals( 6, $interdisciplinary ); 
+  } 
+}
 ?>

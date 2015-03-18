@@ -191,14 +191,7 @@ class CustomAuthenticationTest extends Base {
 
 	  // Delete the group if it's already there. Ideally, there would be a destructor method of this 
 	  // class that would delete everything from the DB, but until then, there's this. 
-	  if ( $interdisciplinary ) { 
-		  $success = groups_delete_group( $interdisciplinary ); 
-		  if ( $success ) { 
-			  _log( "Deleted group $interdisciplinary, which shouldn't have been there." ); 
-		  } else { 
-			  _log( "Can't delete group $interdisciplinary for some reason." ); 
-		  } 
-	  } 
+	  if ( $interdisciplinary ) groups_delete_group( $interdisciplinary ); 
 
 	  $newForum = array( 
 		  "id" => "215",
@@ -211,8 +204,6 @@ class CustomAuthenticationTest extends Base {
 
 	  // add new forum to mock user's list of forums
 	  $member_json['organizations'][] = $newForum; 
-
-	  _log( 'JSON is now:', $member_json ); 
 
 	  // Get test data and convert it to an array. 
 	  $convertermethod = $this->getMethod('memberJSONToArray');

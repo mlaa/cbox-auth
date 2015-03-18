@@ -510,7 +510,17 @@ class CustomAuthentication extends MLAAPI {
 		}
 
 		foreach ( $json['organizations'] as $group ) {
-			_log( 'here comes a group!', $group );
+
+			// Don't parse groups that have been excluded from the Commons. 
+			if ( 'Y' == $group['exclude_from_commons'] ) continue; 
+
+			// Committees and other MLA organizations should be private groups. 
+			if ( $this->isCommitteeGroup( $group['convention_code'] ) || 'MLA Organization' == $group['type']  ) { 
+				$group['status'] = 'private'; 
+			} else { 
+				$group['status'] = 'public'; 
+			} 
+
 			$groups[] = array(
 				//[oid] => G049
 				//[role] =>
@@ -520,7 +530,7 @@ class CustomAuthentication extends MLAAPI {
 				'role' => $group['position'],
 				'type' => $group['type'],
 				'name' => $group['name'],
-				// @todo how to get status?
+				'status' => $group['status'],
 			);
 		}
 

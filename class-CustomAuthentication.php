@@ -288,6 +288,10 @@ class CustomAuthentication extends MLAAPI {
 			groups_update_groupmeta( $groupId, 'mla_oid', $groupData['oid'] );
 			groups_join_group( $groupId, $userId );
 
+			// Now sync the group memebership data using the new MLAGroup class.
+			$sync_obj = new MLAGroup( $debug = true, $id = $groupId ); 
+			$sync_obj->sync(); 
+
 			// If a user has the role 'chair', 'liaison', 'liason' [sic],
 			// 'secretary', 'executive', or 'program-chair', then promote
 			// the user to admin. Otherwise, demote the user.

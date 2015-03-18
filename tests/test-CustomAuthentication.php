@@ -161,21 +161,23 @@ class CustomAuthenticationTest extends Base {
 	  $women = groups_get_id( 'committee-on-the-status-of-women-in-the-profession' ); 
 	  $research = groups_get_id( 'office-of-research' ); 
 
-	  $this->assertEquals( $hebrew, 1 ); 
-	  $this->assertEquals( $hungarian, 2 ); 
-	  $this->assertEquals( $travel_writing, 3 ); 
-	  $this->assertEquals( $advisory, 4 ); 
-	  $this->assertEquals( $women, 5 ); 
+	  $this->assertEquals( 1, $hebrew ); 
+	  $this->assertEquals( 2, $hungarian ); 
+	  $this->assertEquals( 3, $travel_writing ); 
+	  $this->assertEquals( 4, $advisory ); 
+	  $this->assertEquals( 5, $women ); 
 
 	  // "Office of Research" is excluded from the commons, so it shouldn't be in the database. 
-	  $this->assertEquals( $research, 0 ); 
+	  $this->assertEquals( 0, $research ); 
   } 
   public function testCommitteeCreation() { 
 	  // Committees should be private groups.  
 	  $committee_id = groups_get_id( 'committee-on-the-status-of-women-in-the-profession' ); 
 	  $committee_group = groups_get_group( array( 'group_id' => $committee_id ) ); 
 
-	  $this->assertEquals( $committee_group->status, 'private' ); 
+	  //_log( 'Group is: ', $committee_group ); 
+	  //_log( 'Group status is: ', $committee_group->status ); 
+	  $this->assertEquals( 'private', $committee_group->status ); 
   }
 }
 

@@ -1,8 +1,5 @@
 <?php
 
-/* The abstract API class is in another file. */
-require_once( 'class-MLAAPI.php' );
-
 /* This class, MLA Group, is primarily used to update group memberships,
  * so that when there is a group membership change, these are updated
  * more frequently than when the user logs out and logs back in.
@@ -13,14 +10,18 @@ class MLAGroup extends MLAAPI {
 	public $members = array(); // guessing that members list is going to be an array of member IDs
 	private $update_interval = 3600; // number of seconds below which to force update of group membership data.
 
-	public function __construct( $debug = false ) {
+	public function __construct( $debug = false, $group_bp_id=0 ) {
 		// Allow debugging to be turned on by passing a parameter
 		// while instantiating this class.
 		$this->debug = $debug;
 
-		// Get BuddyPress ID for this group.
-		$this->group_bp_id = bp_get_group_id();
 		_log( "Instantiated the MLAGroup class. Here's some information about this group." );
+
+		// If a group ID is passed, assume we're logging in, and go 
+		// with the passed value. If not, assume we're on a page, 
+		// and get the group ID from context. 
+		$this->group_bp_id = $group_bp_id ? $group_bp_id : bp_get_group_id(); 
+
 		_log( "This group's BP ID is: $this->group_bp_id" );
 
 		// Get MLA OID for this group, e.g. D038.
@@ -86,7 +87,7 @@ class MLAGroup extends MLAAPI {
 			return;
 		}
 
-		$mla_api_id = groups_get_groupmeta( $this->group_id, 'mla_api_id' );
+		$mla_api_id = groups_get_groupmeta( $this->group_bp_id, 'mla_api_id' );
 
 		if ( ! $mla_api_id || empty( $mla_api_id ) ) {
 			_log( 'It doesn\'t look like this group has an MLA API ID. Not syncing.' );

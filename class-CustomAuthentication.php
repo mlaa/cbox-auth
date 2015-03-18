@@ -275,7 +275,7 @@ class CustomAuthentication extends MLAAPI {
 			// add group status to array if given. 
 			if ( array_key_exists( 'status', $groupData ) ) $newGroup['status'] = $groupData['status'];   
 
-			_log( 'About to create group with data: ', $newGroup ); 
+			_log( 'About to create group with data: ', $groupData ); 
 
 			$groupId = groups_create_group( $newGroup );
 
@@ -285,7 +285,12 @@ class CustomAuthentication extends MLAAPI {
 				_log( "Group created ID is: $groupId" ); 
 			} 
 
+			// Store MLA OID (convention code, old ID) in the group meta (BP DB). 
 			groups_update_groupmeta( $groupId, 'mla_oid', $groupData['oid'] );
+
+			// Store MLA API ID (new ID) in the group meta. We'll need this for syncing below. 
+			groups_update_groupmeta( $groupId, 'mla_api_id', $groupData['mla_api_id'] );
+
 			groups_join_group( $groupId, $userId );
 
 			// Now sync the group memebership data using the new MLAGroup class.
@@ -530,11 +535,12 @@ class CustomAuthentication extends MLAAPI {
 				//[role] =>
 				//[name] => Age Studies
 				//[status] => public
-				'oid'  => $group['convention_code'],
-				'role' => $group['position'],
-				'type' => $group['type'],
-				'name' => $group['name'],
-				'status' => $group['status'],
+				'oid'        => $group['convention_code'],
+				'mla_api_id' => $group['id'],
+				'role'       => $group['position'],
+				'type'       => $group['type'],
+				'name'       => $group['name'],
+				'status'     => $group['status'],
 			);
 		}
 

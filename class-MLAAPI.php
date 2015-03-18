@@ -120,6 +120,19 @@ abstract class MLAAPI {
 		return $response; 
 	} 
 
+
+	public function get_mla_group_data_from_api() { 
+		$http_method = 'GET';
+		$base_url = 'https://apidev.mla.org/1/';
+		$simple_query = 'organizations/' . $this->group_mla_api_id;
+		$request_url = $base_url . $simple_query;
+		$params = array( 'joined_commons' => 'Y' );
+		$response = $this->send_request( $http_method, $request_url, $params );
+
+		return $response; 
+	} 
+
+
 	/*
 	 * Gets a BuddyPress group ID if given the group's MLA OID.
 	 * @param $mla_oid str, the MLA OID, i.e. D086

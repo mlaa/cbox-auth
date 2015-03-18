@@ -117,18 +117,16 @@ class MLAGroup extends MLAAPI {
 			return false;
 		}
 
-		$http_method = 'GET';
-		$base_url = 'https://apidev.mla.org/1/';
-		$simple_query = 'organizations/' . $this->group_mla_api_id;
-		$request_url = $base_url . $simple_query;
-		$params = array( 'joined_commons' => 'Y' );
-		$response = $this->send_request( $http_method, $request_url, $params );
+		// Abstracting this part out so that it can work better with 
+		// mock data. 
+		$response = $this->get_mla_group_data_from_api(); 
 
 		if ( 200 != $response['code'] ) {
 			_log( 'Something went wrong when polling the api with URL:', $request_url );
 			_log( 'Here\'s what the API says:', $response );
 			return false;
 		}
+
 
 		$decoded = json_decode( $response['body'] );
 		$data = $decoded->data;

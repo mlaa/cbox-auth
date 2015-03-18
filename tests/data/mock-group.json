@@ -1,0 +1,23 @@
+{
+  "meta": {
+    "status": "success",
+    "code": "API-1000",
+    "message": ""
+  },
+  "data": [
+    {
+      "id": "157",
+      "name": "Hungarian",
+      "type": "Forum",
+      "convention_code": "G016",
+      "exclude_from_commons": "",
+      "members": [
+        {
+	  "id": "999999",
+          "username": "exampleuser",
+          "position": "Chair"
+        }
+      ]
+    }
+  ]
+} 

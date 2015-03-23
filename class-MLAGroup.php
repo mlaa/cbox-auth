@@ -15,6 +15,9 @@ class MLAGroup extends MLAAPI {
 		// while instantiating this class.
 		$this->debug = $debug;
 
+		//Turn on verbose for now. 
+		$this->debug = 'verbose';
+
 		_log( "Instantiated the MLAGroup class. Here's some information about this group." );
 
 		// If a group ID is passed, assume we're logging in, and go 
@@ -181,6 +184,7 @@ class MLAGroup extends MLAAPI {
 		}
 		$bp_members_list_count = count( $bp_members_list );
 		_log( "BP members list has $bp_members_list_count members." );
+		_log( 'BP members for this group are:', $bp_members_list ); 
 
 		return $bp_members_list;
 	}
@@ -232,34 +236,46 @@ class MLAGroup extends MLAAPI {
 		// look pretty much like this:
 		//
 		// -- $diff --          |  -- $bp-diff --
-		// [49] => chair        |  [49] => admin
-		// [60] => liaison      |  [60] => admin
+		// [49] => admin        |  [49] => admin
+		// [60] => admin        |  [60] => admin
 		// [] => member         |  [] =>
-		// [40] => mla staff    |  [40] => member
+		// [40] => member       |  [40] => member
 		//
 		// Now we need to go through this list and make sure this differences are actually
 		// differences we care about, and make the appropriate adjustments.
-		foreach ( $diff as $member_id => $role ) {
+		foreach ( $diff as $member_username => $mla_role ) {
 			// We don't want no scrubs.
 			// Ignore records with empty IDs.
-			if ( '' == $member_id ) {
+			if ( '' == $member_username ) {
 				continue;
 			}
 
-			// First translate this to something BP can understand.
-			$mla_role = $this->translate_mla_role( $role );
+			_log( "Now handling member with username: $member_username and role: $mla_role" ); 
+
+			// Get the member ID for this member from the username. 
+			$member_id = bp_core_get_userid( $member_username ); 
+
+			// I don't think I need to translate the MLA role here, because the data
+			// we get is already translated.   
+			//// First translate this to something BP can understand.
+			//$mla_role = $this->translate_mla_role( $role );
 
 			// And look up the corresponding role in BP's records.
-			if ( array_key_exists( $member_id, $bp_diff ) ) {
-				$bp_role = $bp_diff[ $member_id ];
+			if ( array_key_exists( $member_username, $bp_diff ) ) {
+				$bp_role = $bp_diff[ $member_username ];
 			} else {
 				// If MLA member isn't a member of the BuddyPress group, add them.
-				_log( "Member $member_id not found in this BP group. Adding to group $group_id and assigning the role of $mla_role." );
-				groups_join_group( $group_id, $member_id );
+				_log( "Member $member_username not found in this BP group. Adding member ID $member_id to group $group_id and assigning the role of $mla_role." );
+				
+				$success = groups_join_group( $group_id, $member_id );
+
+				if ( $success ) _log( 'Success!' ); else _log( 'Failed!' ); 
+
 				// Also add it to our list so that we can compare the
-				// roles below.
-				$bp_diff[ $member_id ] = $mla_role;
-				$bp_role = $mla_role;
+				// roles below. Newly-added members are automatically given the role of member. 
+				// We can promote or demote them as necessary later. 
+				$bp_diff[ $member_username ] = 'member';  
+				$bp_role = 'member'; 
 			}
 
 			if ( $mla_role == $bp_role ) {
@@ -271,14 +287,14 @@ class MLAGroup extends MLAAPI {
 			if ( 'admin' == $mla_role && 'member' == $bp_role ) {
 				// User has been promoted at MLA, but not on BP.
 				// Promote them on BP.
-				_log( "Member $member_id has a higher role in the MLA DB than in BP. Promoting." );
+				_log( "Member $member_username has a higher role in the MLA DB than in BP. Promoting." );
 				groups_promote_member( $member_id, $group_id, 'admin' );
 			}
 
 			if ( 'member' == $mla_role && 'admin' == $bp_role ) {
 				// User has been demoted at MLA, but not on BP.
 				// Demote them on BP.
-				_log( "Member $member_id has a higher role in BP than the MLA API reflects. Demoting." );
+				_log( "Member $member_username has a higher role in BP than the MLA API reflects. Demoting." );
 				groups_demote_member( $member_id, $group_id );
 			}
 		}

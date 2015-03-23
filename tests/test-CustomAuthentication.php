@@ -198,7 +198,7 @@ class CustomAuthenticationTest extends Base {
 		  "name" => "Interdisciplinary Approaches to Culture and Society",
 		  "type" => "Forum",
 		  "convention_code" => "G017",
-		  "position" => "Member", 
+		  "position" => "Chair", 
 		  "exclude_from_commons" => "",
 	  ); 
 
@@ -211,13 +211,90 @@ class CustomAuthenticationTest extends Base {
 
 	  // Now take the array and feed it to `manageGroups()`, which is going to add
 	  // groups that don't exist (i.e. the one we just added). 
+	  // Assumes our new user has ID of 2. 
 	  $method = $this->getMethod('manageGroups');
-	  $retval = $method->invoke( $this->testClass, $member_array['id'], $member_array['groups'] );
+	  $retval = $method->invoke( $this->testClass, 2, $member_array['groups'] );
 
 	  // Now we should see our new forum appear in slot 6. 
 	  $interdisciplinary = groups_get_id( 'interdisciplinary-approaches-to-culture-and-society' ); 
 
 	  $this->assertTrue( $interdisciplinary > 0 ); 
   } 
+
+  /* 
+   * OK, now that we've tested the creation of a new forum, that creation
+   * should've also synced the group using `MLAGroup::sync()`. If that's
+   * the case, then our beloved member `exampleuser` should be a member of that group. 
+   */ 
+  public function testGroupMemberSync() { 
+	  $interdisciplinary = groups_get_id( 'interdisciplinary-approaches-to-culture-and-society' ); 
+	  // We assume that our example user has the BP user ID of 2. 
+	  _log( "Checking that user 2 is member of group id: $interdisciplinary" ); 
+	  $membership_id = groups_is_user_member( 2, $interdisciplinary ); 
+
+	  // groups_is_user_member() returns membership ID (int) or NULL, 
+	  // so let's check for that. 
+	  $this->assertTrue( is_int( $membership_id ) ); 
+  } 
+
+  /* 
+   * But since our member is actually the chair of this new group, let's test
+   * that our member is, in fact, a chair of the corresponding BuddyPress group. 
+   */ 
+  public function testGroupMemberStatus() { 
+	  $interdisciplinary = groups_get_id( 'interdisciplinary-approaches-to-culture-and-society' ); 
+	  // We assume that our example user has the BP user ID of 2. 
+	  _log( "Checking that user 2 is admin of group id: $interdisciplinary" ); 
+	  $is_admin = groups_is_user_admin( 2, $interdisciplinary ); 
+
+	  // groups_is_user_admin() returns membership ID (int) or NULL, 
+	  // so let's check for that. 
+	  $this->assertTrue( is_int( $is_admin ) ); 
+  } 
+  /* 
+   * This one is very much like testNewForum() above, but it checks to see whether
+   * cbox-auth correctly demotes a user that has been demoted in the MLA database.  
+   * Here, the crucial distinction here is that "position" is "Member" instead of "Chair." 
+   */ 
+  public function testDemotedUser() { 
+	  $member_json = $this->member_json;
+	  
+	  $newForum = array( 
+		  "id" => "215",
+		  "name" => "Interdisciplinary Approaches to Culture and Society",
+		  "type" => "Forum",
+		  "convention_code" => "G017",
+		  "position" => "Member", 
+		  "exclude_from_commons" => "",
+	  ); 
+
+	  // add new forum to mock user's list of forums
+	  $member_json['organizations'][] = $newForum; 
+
+	  // Get test data and convert it to an array. 
+	  $convertermethod = $this->getMethod('memberJSONToArray');
+	  $member_array = $convertermethod->invoke($this->testClass, $member_json, 'test');
+
+	  // Now take the array and feed it to `manageGroups()`, which should hopefully 
+	  // detect that there is a difference in roles among the two groups, and 
+	  // demote our user accordingly.  
+	  _log( 'Now managing groups again with our demoted user.' ); 
+	  $method = $this->getMethod('manageGroups');
+	  $retval = $method->invoke( $this->testClass, 2, $member_array['groups'] );
+
+	  // Now we should see our new forum appear in slot 6. 
+	  $interdisciplinary = groups_get_id( 'interdisciplinary-approaches-to-culture-and-society' ); 
+
+	  // We assume that our example user has the BP user ID of 2. 
+	  _log( "Checking that user 2 is NOT an admin of group id: $interdisciplinary" ); 
+	  $is_admin = groups_is_user_admin( 2, $interdisciplinary ); 
+
+	  _log( '$is_admin returns:', $is_admin ); 
+
+	  // groups_is_user_admin() returns membership ID (int) or NULL, 
+	  // so let's check for that. 
+	  $this->assertFalse( is_int( $is_admin ) ); 
+  } 
+
 }
 ?>

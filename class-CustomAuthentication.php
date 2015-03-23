@@ -76,11 +76,17 @@ class CustomAuthentication extends MLAAPI {
 				_log( 'Getting a customLoginError.' );
 				return $customLoginError;
 			}
+
+			_log( 'New user! Creating user with data:', $customUserData ); 
+
 			$userdata = $this->createWpUser( $customUserData );
+
 			if ( $userdata instanceof WP_Error ) {
 				_log( 'Error creating WP User!' );
 				return $userdata;
 			}
+
+			_log( 'Created new user that has data:', $userdata ); 
 
 			// Send welcome email
 			$user_id = $userdata->data->ID; 
@@ -126,6 +132,8 @@ class CustomAuthentication extends MLAAPI {
 
 		// At this point $userdata is a WP_User
 		$this->mergeWpUser( $userdata->ID, $customUserData );
+
+		_log( 'Here is the userdata at this point:', $userdata ); 
 
 		// Create/join/leave groups.
 		$this->manageGroups( $userdata->ID, $customUserData['groups'] );
@@ -222,6 +230,8 @@ class CustomAuthentication extends MLAAPI {
 	protected function manageGroups( $userId, array $groupsData ) {
 		global $wpdb, $bp;
 
+		_log( "Managing groups with userID: $userId!" ); 
+
 		// Get BP groups with OIDs and their associated BP group IDs.
 		$custom_groups = $wpdb->get_results( $wpdb->prepare( 'SELECT group_id, meta_value FROM ' . $bp->groups->table_name_groupmeta . ' WHERE meta_key = %s', 'mla_oid' ) );
 
@@ -233,6 +243,8 @@ class CustomAuthentication extends MLAAPI {
 
 		// Loop through each BP group and add/remove/promote/demote the user as needed.
 		foreach ( $custom_groups as $custom_group ) {
+
+			_log( 'Now looking at group:', $custom_group ); 
 
 			$groupId = $custom_group->group_id;
 			$customOid = $custom_group->meta_value;
@@ -246,6 +258,20 @@ class CustomAuthentication extends MLAAPI {
 				// No-Op if user is already a member
 				groups_join_group( $groupId, $userId );
 
+				_log( 'User role appears to be:', $groupData['role'] ); 
+
+				// If a user is a chair, liaison, etc, promote them. 
+				// If not, demote them. 
+				if ( isset( $groupData['role'] )  && ( 'admin' == $this->translate_mla_role( strtolower( $groupData['role'] ) ) ) ) { 
+					_log( 'User is admin! Promoting.' ); 
+					groups_promote_member( $userId, $groupId, 'admin' );
+				} else {
+					_log( "User is regular member! Demoting user $userId in group $groupId." ); 
+					groups_demote_member( $userId, $groupId );
+				}
+
+				/* Old Way! 
+				 *
 				// If a user has the role 'chair', 'liaison', 'liason' [sic],
 				// 'secretary', 'executive', or 'program-chair', then promote
 				// the user to admin. Otherwise, demote the user.
@@ -255,6 +281,8 @@ class CustomAuthentication extends MLAAPI {
 				} else {
 					groups_demote_member( $userId, $groupId );
 				}
+				*/ 
+
 			} elseif ( ! $this->isForumGroup( $customOid ) ) {
 				// Remove the user from the group.
 				groups_leave_group( $groupId, $userId );

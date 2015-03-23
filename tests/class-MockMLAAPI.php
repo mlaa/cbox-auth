@@ -35,6 +35,9 @@ class MLAAPI {
 	 * @return $bp_role str the BP role, like 'admin', 'member.'
 	 */
 	public function translate_mla_role( $mla_role ){
+
+		$mla_role = strtolower( $mla_role); 
+
 		// list of MLA group roles that count as admins, stolen from
 		// class-CustomAuthentication.php:232
 		$mla_admin_roles = array('chair', 'liaison', 'liason', 'secretary', 'executive', 'program-chair');

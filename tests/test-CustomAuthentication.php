@@ -144,7 +144,7 @@ class CustomAuthenticationTest extends Base {
 	  // Now take the array and feed it to `manageGroups()`, which is going to add
 	  // groups that don't exist (i.e. all of them). 
 	  $method = $this->getMethod('manageGroups');
-	  $retval = $method->invoke( $this->testClass, $member_array['id'], $member_array['groups'] );
+	  $retval = $method->invoke( $this->testClass, 2, $member_array['groups'] );
 
 	  // Now since our test data has a bunch of test groups in it, 
 	  // and since our database doesn't currently have these groups, 
@@ -278,7 +278,7 @@ class CustomAuthenticationTest extends Base {
 	  // Now take the array and feed it to `manageGroups()`, which should hopefully 
 	  // detect that there is a difference in roles among the two groups, and 
 	  // demote our user accordingly.  
-	  _log( 'Now managing groups again with our demoted user.' ); 
+	  //_log( 'Now managing groups again with our demoted user.' ); 
 	  $method = $this->getMethod('manageGroups');
 	  $retval = $method->invoke( $this->testClass, 2, $member_array['groups'] );
 
@@ -286,22 +286,12 @@ class CustomAuthenticationTest extends Base {
 	  $interdisciplinary = groups_get_id( 'interdisciplinary-approaches-to-culture-and-society' ); 
 
 	  // We assume that our example user has the BP user ID of 2. 
-	  _log( "Checking that user 2 is NOT an admin of group id: $interdisciplinary" ); 
+	  //_log( "Checking that user 2 is NOT an admin of group id: $interdisciplinary" ); 
 	  $is_admin = groups_is_user_admin( 2, $interdisciplinary ); 
 
-	  _log( '$is_admin returns:', $is_admin ); 
-	  _log( '$is_admin is type:', gettype( $is_admin ) ); 
-	  if ( TRUE === $is_admin ) _log( 'TRUE' ); 
-	  else if ( FALSE === $is_admin ) _log( 'FALSE' ); 
-	  else if ( NULL === $is_admin ) _log( 'NULL' ); 
-	  else if ( ! isset( $is_admin ) ) _log( 'not set!' ); 
-	  else if ( 0 === $is_admin ) _log( 'is zero!' ); 
-	  else if ( 1 === $is_admin ) _log( 'is one!' ); 
-	  else _log( '???' ); 
-
-	  // groups_is_user_admin() returns membership ID (int) or NULL, 
-	  // so let's check for that. 
-	  $this->assertFalse( is_int( $is_admin ) ); 
+	  // groups_is_user_admin() returns membership ID (int) if user is admin, 
+	  // and returns 0 or NULL, it seems, if user is not. 
+	  $this->assertFalse( ( is_int( $is_admin ) && $is_admin > 0 ) ); 
   } 
 
 }

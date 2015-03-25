@@ -244,7 +244,7 @@ class CustomAuthentication extends MLAAPI {
 		// Loop through each BP group and add/remove/promote/demote the user as needed.
 		foreach ( $custom_groups as $custom_group ) {
 
-			_log( 'Now looking at group:', $custom_group ); 
+			//_log( 'Now looking at group:', $custom_group ); 
 
 			$groupId = $custom_group->group_id;
 			$customOid = $custom_group->meta_value;
@@ -258,31 +258,22 @@ class CustomAuthentication extends MLAAPI {
 				// No-Op if user is already a member
 				groups_join_group( $groupId, $userId );
 
-				_log( 'User role appears to be:', $groupData['role'] ); 
+				//_log( 'User role appears to be:', $groupData['role'] ); 
+
+				// First we need to tell BP we're an admin. 
+				bp_update_is_item_admin( true, 'groups' );
 
 				// If a user is a chair, liaison, etc, promote them. 
 				// If not, demote them. 
 				if ( 'admin' == $this->translate_mla_role( $groupData['role'] ) ) { 
-					_log( "User is admin! Promoting user $userId in group $groupId." ); 
+					//_log( "User is admin! Promoting user $userId in group $groupId." ); 
 					$success = groups_promote_member( $userId, $groupId, 'admin' );
-				 	if ( $success ) _log( 'Great success!' ); else _log( 'Couldn\'t promote user!' ); 
+					 //if ( $success ) _log( 'Great success!' ); else _log( 'Couldn\'t promote user!' ); 
 				} else {
-					_log( "User is regular member! Demoting user $userId in group $groupId." ); 
-					groups_demote_member( $userId, $groupId );
+					//_log( "User is regular member! Demoting user $userId in group $groupId." ); 
+					$success = groups_demote_member( $userId, $groupId );
+					 //if ( $success ) _log( 'Great success!' ); else _log( 'Couldn\'t demote user!' ); 
 				}
-
-				/* Old Way! 
-				 *
-				// If a user has the role 'chair', 'liaison', 'liason' [sic],
-				// 'secretary', 'executive', or 'program-chair', then promote
-				// the user to admin. Otherwise, demote the user.
-				bp_update_is_item_admin( true, 'groups' );
-				if ( isset( $groupData['role'] ) && ( $groupData['role'] == 'chair' || $groupData['role'] == 'liaison' || $groupData['role'] == 'liason' || $groupData['role'] == 'secretary' || $groupData['role'] == 'executive' || $groupData['role'] == 'program-chair' ) ) {
-					groups_promote_member( $userId, $groupId, 'admin' );
-				} else {
-					groups_demote_member( $userId, $groupId );
-				}
-				*/ 
 
 			} elseif ( ! $this->isForumGroup( $customOid ) ) {
 				// Remove the user from the group.
@@ -304,15 +295,15 @@ class CustomAuthentication extends MLAAPI {
 			// add group status to array if given. 
 			if ( array_key_exists( 'status', $groupData ) ) $newGroup['status'] = $groupData['status'];   
 
-			_log( 'About to create group with data: ', $groupData ); 
+			//_log( 'About to create group with data: ', $groupData ); 
 
 			$groupId = groups_create_group( $newGroup );
 
-			if ( ! $groupId ) { 
-				_log( 'Warning! No group created!' ); 
-			} else {  
-				_log( "Group created ID is: $groupId" ); 
-			} 
+			//if ( ! $groupId ) { 
+				//_log( 'Warning! No group created!' ); 
+			//} else {  
+				//_log( "Group created ID is: $groupId" ); 
+			//} 
 
 			// Store MLA OID (convention code, old ID) in the group meta (BP DB). 
 			groups_update_groupmeta( $groupId, 'mla_oid', $groupData['oid'] );

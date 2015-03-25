@@ -69,7 +69,6 @@ class CustomAuthentication extends MLAAPI {
 			if ( $_POST['preferred'] != '' && !validate_username( $_POST['preferred'] ) ) {
 				return new WP_Error( 'invalid_username', __( '<strong>Error (' . __LINE__ . '):</strong> User names must be between four and twenty characters in length and must contain at least one letter. Only lowercase letters, numbers, and underscores are allowed.' ) );
 			}
-			_log( 'Username valid!' );
 
 			if ( $customLoginError ) {
 				// The user doesn't exist yet anywhere. Don't allow login.
@@ -77,16 +76,12 @@ class CustomAuthentication extends MLAAPI {
 				return $customLoginError;
 			}
 
-			_log( 'New user! Creating user with data:', $customUserData ); 
-
 			$userdata = $this->createWpUser( $customUserData );
 
 			if ( $userdata instanceof WP_Error ) {
 				_log( 'Error creating WP User!' );
 				return $userdata;
 			}
-
-			_log( 'Created new user that has data:', $userdata ); 
 
 			// Send welcome email
 			$user_id = $userdata->data->ID; 
@@ -230,7 +225,7 @@ class CustomAuthentication extends MLAAPI {
 	protected function manageGroups( $userId, array $groupsData ) {
 		global $wpdb, $bp;
 
-		_log( "Managing groups with userID: $userId!" ); 
+		//_log( "Managing groups with userID: $userId!" ); 
 
 		// Get BP groups with OIDs and their associated BP group IDs.
 		$custom_groups = $wpdb->get_results( $wpdb->prepare( 'SELECT group_id, meta_value FROM ' . $bp->groups->table_name_groupmeta . ' WHERE meta_key = %s', 'mla_oid' ) );
@@ -242,6 +237,9 @@ class CustomAuthentication extends MLAAPI {
 		}
 
 		// Loop through each BP group and add/remove/promote/demote the user as needed.
+		// @todo: I should probably be instantiating MLAMember here instead of doing all this stuff, 
+		// just to keep it all in one place, but I'm keeping this here for the moment, 
+		// because I suspect that it might be more efficient than instantiating the class. 
 		foreach ( $custom_groups as $custom_group ) {
 
 			//_log( 'Now looking at group:', $custom_group ); 
@@ -320,9 +318,11 @@ class CustomAuthentication extends MLAAPI {
 			// If a user has the role 'chair', 'liaison', 'liason' [sic],
 			// 'secretary', 'executive', or 'program-chair', then promote
 			// the user to admin. Otherwise, demote the user.
-			if ( isset( $groupData['role'] ) && ( $groupData['role'] == 'chair' || $groupData['role'] == 'liaison' || $groupData['role'] == 'liason' || $groupData['role'] == 'secretary' || $groupData['role'] == 'executive' || $groupData['role'] == 'program-chair' ) ) {
-				groups_promote_member( $userId, $groupId, 'admin' );
-			}
+			if ( isset( $groupData['role'] ) ) { 
+				if ( 'admin' == $this->translate_mla_role( $groupData['role'] ) ) { 
+					groups_promote_member( $userId, $groupId, 'admin' );
+				} 
+			} 
 		}
 
 		return null;

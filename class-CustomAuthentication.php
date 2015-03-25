@@ -262,9 +262,10 @@ class CustomAuthentication extends MLAAPI {
 
 				// If a user is a chair, liaison, etc, promote them. 
 				// If not, demote them. 
-				if ( isset( $groupData['role'] )  && ( 'admin' == $this->translate_mla_role( strtolower( $groupData['role'] ) ) ) ) { 
-					_log( 'User is admin! Promoting.' ); 
-					groups_promote_member( $userId, $groupId, 'admin' );
+				if ( 'admin' == $this->translate_mla_role( $groupData['role'] ) ) { 
+					_log( "User is admin! Promoting user $userId in group $groupId." ); 
+					$success = groups_promote_member( $userId, $groupId, 'admin' );
+				 	if ( $success ) _log( 'Great success!' ); else _log( 'Couldn\'t promote user!' ); 
 				} else {
 					_log( "User is regular member! Demoting user $userId in group $groupId." ); 
 					groups_demote_member( $userId, $groupId );

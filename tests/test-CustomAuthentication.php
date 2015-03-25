@@ -290,6 +290,14 @@ class CustomAuthenticationTest extends Base {
 	  $is_admin = groups_is_user_admin( 2, $interdisciplinary ); 
 
 	  _log( '$is_admin returns:', $is_admin ); 
+	  _log( '$is_admin is type:', gettype( $is_admin ) ); 
+	  if ( TRUE === $is_admin ) _log( 'TRUE' ); 
+	  else if ( FALSE === $is_admin ) _log( 'FALSE' ); 
+	  else if ( NULL === $is_admin ) _log( 'NULL' ); 
+	  else if ( ! isset( $is_admin ) ) _log( 'not set!' ); 
+	  else if ( 0 === $is_admin ) _log( 'is zero!' ); 
+	  else if ( 1 === $is_admin ) _log( 'is one!' ); 
+	  else _log( '???' ); 
 
 	  // groups_is_user_admin() returns membership ID (int) or NULL, 
 	  // so let's check for that. 

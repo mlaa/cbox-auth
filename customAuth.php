@@ -50,3 +50,29 @@ function activateCustomAuthentication() {
 	$myCustomAuthentication = new CustomAuthentication();
 	$myCustomAuthentication->activate();
 }
+
+/** 
+ * Sniffs the refering URL and stores it in a cookie 
+ * so that we can use it later as the target of our redirect. 
+ */ 
+function mla_sniff_referer() { 
+	_log( 'Saving referer for later reference. Referer is: ', wp_get_referer() );  
+
+	if ( !empty( $_SERVER['HTTPS'] ) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443 ) {
+		$secure_connection = true;
+	} else {
+		$secure_connection = false;
+	}
+
+	if ( ! defined( 'RUNNING_TESTS' ) ) { 
+		if ( false == strpos( $mla_referer, 'wp-login' ) ) { 
+			_log( 'Me set cookie!' ); 
+			setcookie( 'MLAReferer', $mla_referer, time() + ( 20 * 365 * 24 * 60 * 60 ), null, null, $secure_connection );
+		} else { 
+			_log( 'Not setting redirect cookie, since referer is wp-login.' ); 
+		} 
+	} else { 
+		_log( 'Running tests, so not setting cookies.' ); 
+	} 
+} 
+add_action( 'login_head', 'mla_sniff_referer' ); 

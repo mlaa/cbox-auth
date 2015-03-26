@@ -90,9 +90,6 @@ class CustomAuthentication extends MLAAPI {
 			// Catch terms acceptance on first login.
 			update_user_meta( $userdata->ID, 'accepted_terms', $_POST['acceptance'] );
 
-			// Send welcome email. 
-			//$this->send_welcome_email( $to_user['email'] ); 
-
 			add_filter( 'login_redirect', array( $this, 'redirect_to_profile' ), 10, 3 );
 		} else {
 			// Stolen from wp_authenticate_username_password
@@ -128,13 +125,14 @@ class CustomAuthentication extends MLAAPI {
 		// At this point $userdata is a WP_User
 		$this->mergeWpUser( $userdata->ID, $customUserData );
 
-		_log( 'Here is the userdata at this point:', $userdata ); 
-
 		// Create/join/leave groups.
 		$this->manageGroups( $userdata->ID, $customUserData['groups'] );
 
 		// Special activities for special users.
 		$this->specialCases( $userdata->ID, $customUserData['id'] );
+
+		// Try to redirect user to last viewed page. 
+		add_filter( 'login_redirect', array( $this, 'redirect_to_last_viewed_page' ), 10, 3 );
 
 		return $userdata;
 	}
@@ -216,6 +214,32 @@ class CustomAuthentication extends MLAAPI {
 			return $redirect_to;
 		}
 	}
+
+	/**
+	 * A filter for redirecting users to the last page they were reading before logging in. 
+	 */ 
+	public function redirect_to_last_viewed_page( $redirect_to = null, $request = null, $user = null ) { 
+		if ( ! empty( $_COOKIE ) ) { 
+			if ( ! empty( $_COOKIE['MLAReferer'] ) ) { 
+				_log( 'Found cookie: ', $_COOKIE['MLAReferer'] ); 
+				if ( false == strpos( $_COOKIE['MLAReferer'], 'wp-login' ) ) { 
+					if ( $user != null ) {
+						return $_COOKIE['MLAReferer'];
+					} else {
+						_log( 'User is null!' ); 
+						return $redirect_to;
+					}
+				} else { 
+					_log( 'Referer is wp-login!' ); 
+				} 
+			} else { 
+				_log( 'No MLAReferer in cookies!' ); 
+			} 
+		} else { 
+			_log( 'No cookies! Can\'t redirect to previous page.' ); 
+		} 
+		return home_url(); 
+	} 
 
 	/**
 	 * @param $userId
@@ -490,7 +514,7 @@ class CustomAuthentication extends MLAAPI {
 		$request_body = "{ \"username\": \"$newname\" }";
 
 		if ( 'verbose' == $this->debug ) {
-			_log( 'changing username with params: ' );
+			_log( 'Changing username with params: ' );
 			_log( 'base_url: ', $base_url );
 			_log( 'request body: ', $request_body );
 		}

@@ -16,7 +16,7 @@ class MLAGroup extends MLAAPI {
 		$this->debug = $debug;
 
 		//Turn on verbose for now. 
-		$this->debug = 'verbose';
+		//$this->debug = 'verbose';
 
 		_log( "Instantiated the MLAGroup class. Here's some information about this group." );
 
@@ -250,7 +250,7 @@ class MLAGroup extends MLAAPI {
 				continue;
 			}
 
-			_log( "Now handling member with username: $member_username and role: $mla_role" ); 
+			if ( 'verbose' == $this->debug ) _log( "Now handling member with username: $member_username and role: $mla_role" ); 
 
 			// Get the member ID for this member from the username. 
 			$member_id = bp_core_get_userid( $member_username ); 
@@ -265,7 +265,7 @@ class MLAGroup extends MLAAPI {
 				$bp_role = $bp_diff[ $member_username ];
 			} else {
 				// If MLA member isn't a member of the BuddyPress group, add them.
-				_log( "Member $member_username not found in this BP group. Adding member ID $member_id to group $group_id and assigning the role of $mla_role." );
+				if ( 'verbose' == $this->debug ) _log( "Member $member_username not found in this BP group. Adding member ID $member_id to group $group_id and assigning the role of $mla_role." );
 				
 				$success = groups_join_group( $group_id, $member_id );
 
@@ -287,14 +287,14 @@ class MLAGroup extends MLAAPI {
 			if ( 'admin' == $mla_role && 'member' == $bp_role ) {
 				// User has been promoted at MLA, but not on BP.
 				// Promote them on BP.
-				_log( "Member $member_username has a higher role in the MLA DB than in BP. Promoting." );
+				if ( 'verbose' == $this->debug ) _log( "Member $member_username has a higher role in the MLA DB than in BP. Promoting." );
 				groups_promote_member( $member_id, $group_id, 'admin' );
 			}
 
 			if ( 'member' == $mla_role && 'admin' == $bp_role ) {
 				// User has been demoted at MLA, but not on BP.
 				// Demote them on BP.
-				_log( "Member $member_username has a higher role in BP than the MLA API reflects. Demoting." );
+				if ( 'verbose' == $this->debug ) _log( "Member $member_username has a higher role in BP than the MLA API reflects. Demoting." );
 				groups_demote_member( $member_id, $group_id );
 			}
 		}

@@ -229,7 +229,7 @@ class CustomAuthenticationTest extends Base {
   public function testGroupMemberSync() { 
 	  $interdisciplinary = groups_get_id( 'interdisciplinary-approaches-to-culture-and-society' ); 
 	  // We assume that our example user has the BP user ID of 2. 
-	  _log( "Checking that user 2 is member of group id: $interdisciplinary" ); 
+	  if ( 'verbose' == $this->debug ) _log( "Checking that user 2 is member of group id: $interdisciplinary" ); 
 	  $membership_id = groups_is_user_member( 2, $interdisciplinary ); 
 
 	  // groups_is_user_member() returns membership ID (int) or NULL, 
@@ -244,7 +244,7 @@ class CustomAuthenticationTest extends Base {
   public function testGroupMemberStatus() { 
 	  $interdisciplinary = groups_get_id( 'interdisciplinary-approaches-to-culture-and-society' ); 
 	  // We assume that our example user has the BP user ID of 2. 
-	  _log( "Checking that user 2 is admin of group id: $interdisciplinary" ); 
+	  if ( 'verbose' == $this->debug ) _log( "Checking that user 2 is admin of group id: $interdisciplinary" ); 
 	  $is_admin = groups_is_user_admin( 2, $interdisciplinary ); 
 
 	  // groups_is_user_admin() returns membership ID (int) or NULL, 

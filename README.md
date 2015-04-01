@@ -81,29 +81,30 @@ define('CBOX_AUTH_DEBUG_LOG', '/log/file/location/username_%t.log');
  * [x] 0220 11:20 Set up Travis
 
 ### Testing Round 2
- * [ ] User logs in with correct password. 
+ * [x] 0326 16:01 User logs in with correct password. 
   - Should successfully log user in, if user has already logged in at least once. 
-  - [ ] User logs in for the first time. 
+  - [x] 0326 16:04 User logs in for the first time. 
     - Should present user with username change screen. 
-    - [ ] User chooses a username that is already taken. 
+    - [x] 0326 16:05 User chooses a username that is already taken. 
       - Should present user with message explaining that the name is taken. 
-    - [ ] User chooses an username with invalid characters. 
+    - [x] 0326 16:05 User chooses an username with invalid characters. 
       - Should present user with message explaining that some characters are not allowed. 
     - [ ] User choose a username with too many characters
       - Should throw error
     - [ ] User enters nothing in the username box. 
       - Should successfully log user in. 
- * [ ] User tries to log in with incorrect password. 
+
+ * [x] 0326 16:02 User tries to log in with incorrect password. 
   - Should disallow log-in and present user with an error message saying so. 
  * [ ] User's password has changed in Oracle, and user logs in with new password. 
   - Should successfully log user in. 
- * [ ] Oracle user becomes inactive, and user tries to log in. 
+ * [x] 0326 16:09 Oracle user becomes inactive, and user tries to log in. 
   - Should disallow the user to log in, and return an error about the user's membership status. 
-  - Can't test, since API doesn't seem to have the capability to change a member's status.
-    - [ ] tested with PHPUnit 
- * [ ] New user created in Oracle, with some groups excluded from Commons. 
+    - [x] 0326 16:09 tested with PHPUnit 
+ * [x] 0327 09:52 New user created in Oracle, with some groups excluded from Commons. 
   - Should create user in WP, add to all relevant groups, except those excluded from Commons. 
- * [ ] User added to forum(s) in Oracle, some of which are excluded from Commons. 
+  - tested with phpunit
+ * [x] 0327 09:52 User added to forum(s) in Oracle, some of which are excluded from Commons. 
   - Should add the user to those forums in BP, omitting those forums that are excluded from the Commons. 
     - Syncs in My Commons -> Groups, but the badge count next to the tab is out of sync for one page load.
     - Doesn't sync in Groups -> My Groups tab
@@ -114,12 +115,14 @@ define('CBOX_AUTH_DEBUG_LOG', '/log/file/location/username_%t.log');
   - Should create that forum in BP and add all members to it, except for those members that are not yet on the Commons. 
     - Can't test, since API doesn't seem to have the capability to add an organization.
       - opened cbox-auth #9 about this. 
-  - [ ] New forum created in Oracle, excluded from Commons. 
+  - [x] 0326 16:11 New forum created in Oracle, excluded from Commons. 
     - Nothing should happen on Commons side. 
     - Can't test, API doesn't have this ability.
       - opened cbox-auth #10 for this.  
+      - [x] 0326 16:11 tested in phpunit
  * [ ] BP user leaves a committee or discussion group. 
   - If that group exists in Oracle, the user should be removed from the group in Oracle. 
+  - Opened mlaa/oracle-api#50 about this, and mlaa/cbox-auth#16
  * [ ] BP user joins a discussion group or committee. 
   - If that group exists in Oracle, the user should be added to the group in Oracle. 
  * [ ] User visits his or her own Portfolio page. 
@@ -129,7 +132,7 @@ define('CBOX_AUTH_DEBUG_LOG', '/log/file/location/username_%t.log');
  * [ ] User visits a group page.
   - If that page is a committee or discussion group, membership data should be synced with Oracle every hour.  
     - **Works, but the members count in the badge is out of sync with the count at the bottom.**
- * [ ] Set up Travis
+ * [x] 0326 16:03 Set up Travis
 
 ### License
 

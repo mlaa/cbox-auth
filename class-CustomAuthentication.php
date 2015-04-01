@@ -4,6 +4,7 @@ class CustomAuthentication extends MLAAPI {
 
 	function __construct() { 
 		if ( ! isset ( $this->debug ) ) $this->debug = false; 
+		$this->debug = 'verbose'; // Lots of debugging messages! 
 	} 
 
 	# AUTHENTICATION FUNCTIONS ( PHASE 1 )
@@ -796,6 +797,7 @@ class CustomAuthentication extends MLAAPI {
 	 * @param int $user_id
 	 */
 	public function remove_user_from_group( $group_id, $user_id = 0 ) {
+		if ( 'verbose' == $this->debug ) _log( 'Now attempting to remove user from group!' );  
 		$this->send_group_action( 'DELETE', $group_id, $user_id );
 	}
 
@@ -806,6 +808,7 @@ class CustomAuthentication extends MLAAPI {
 	 * @param int $user_id
 	 */
 	public function add_user_to_group( $group_id, $user_id = 0 ) {
+		if ( 'verbose' == $this->debug ) _log( 'Now attempting to add user from group!' );  
 		$this->send_group_action( 'POST', $group_id, $user_id );
 	}
 
@@ -861,6 +864,7 @@ class CustomAuthentication extends MLAAPI {
 
 		if ( 'verbose' == $this->debug ) {
 			_log( 'now sending requests with params:' );
+			_log( 'method is:', $method );
 			_log( 'base_url is:', $base_url );
 			_log( 'query is:', $query );
 			_log( 'body is:', $body );

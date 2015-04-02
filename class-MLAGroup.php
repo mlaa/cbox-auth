@@ -238,7 +238,7 @@ class MLAGroup extends MLAAPI {
 		// -- $diff --          |  -- $bp-diff --
 		// [49] => admin        |  [49] => admin
 		// [60] => admin        |  [60] => admin
-		// [] => member         |  [] =>
+		// []   => member       |  []   =>
 		// [40] => member       |  [40] => member
 		//
 		// Now we need to go through this list and make sure this differences are actually
@@ -267,9 +267,13 @@ class MLAGroup extends MLAAPI {
 				// If MLA member isn't a member of the BuddyPress group, add them.
 				if ( 'verbose' == $this->debug ) _log( "Member $member_username not found in this BP group. Adding member ID $member_id to group $group_id and assigning the role of $mla_role." );
 				
-				$success = groups_join_group( $group_id, $member_id );
-
-				if ( $success ) _log( 'Success!' ); else _log( 'Failed!' ); 
+				// Can't use the regular groups_join_group here, since we're hooking
+				// into that action in customAuth.php, so we roll our own.  
+				if ( ! $this->mla_groups_join_group( $group_id, $member_id ) ) { 
+					_log( "Couldn\'t add user $member_username to BP group $group_id!" ); 
+				} else { 
+					_log( "Successfully added user $member_username to group $group_id." ); 
+				} 
 
 				// Also add it to our list so that we can compare the
 				// roles below. Newly-added members are automatically given the role of member. 
@@ -299,8 +303,87 @@ class MLAGroup extends MLAAPI {
 			}
 		}
 
+
+		// BUT! array_diff_assoc() only diffs in one direction. From the manual: 
+		// "Returns an array containing all the values from array1 that are not present in 
+		// any of the other arrays." So we actually have to do another diff to find 
+		// those members that exist in BP but not in the member database. This time, 
+		// we'll use array_diff_key(), since we're not concerned with the values (member roles)
+		// anymore, just whether the member exists. If a member exists in BP, but not in the 
+		// member database, we will assume that member has been removed on the 
+		// Oracle side, and we will therefore remove them on the BP side to reflect that. 
+		
+		$removed = array_diff_key( $this->bp_members_list, $this->mla_members_list ); 
+		if ( 'verbose' == $this->debug ) _log( 'Reverse diff of arrays (removed):', $removed );
+
+		foreach ( $removed as $removed_member_username => $removed_member_role ) { 
+			$removed_member_id = bp_core_get_userid( $removed_member_username ); 
+			if ( 'verbose' == $this->debug ) _log( "Now removing member: $removed_member_username with ID: $removed_member_id from group $group_id." ); 
+
+			// We can't use groups_leave_group() here, because we're hooking into that
+			// action in customAuth.php, so we have to remove the user from the group 
+			// semi-manually. 
+			if ( ! groups_uninvite_user( $removed_member_id, $group_id ) ) {
+				_log( 'Couldn\'t remove member from group!' ); 
+			} else { 
+			       _log( 'Successfully removed member from BP group!' ); 	
+			} 
+		} 
+
 		$this->update_last_updated_time();
 
 		return true;
 	}
+	/** 
+	 * We can't use the normal groups_join_group() function, since we're hooking into it
+	 * in customAuth.php, so we roll our own, based on `groups_join_group()`. 
+	 * @param int $group_id ID of the group.
+	 * @param int $user_id Optional. ID of the user. 
+	 * @return bool True on success, false on failure.
+	 */ 
+	function mla_groups_join_group( $group_id, $user_id ) { 
+
+		global $bp;
+
+		// Check if the user has an outstanding invite. If so, delete it.
+		if ( groups_check_user_has_invite( $user_id, $group_id ) )
+			groups_delete_invite( $user_id, $group_id );
+
+		// Check if the user has an outstanding request. If so, delete it.
+		if ( groups_check_for_membership_request( $user_id, $group_id ) )
+			groups_delete_membership_request( $user_id, $group_id );
+
+		// User is already a member, just return true
+		if ( groups_is_user_member( $user_id, $group_id ) )
+			return true;
+
+		$new_member                = new BP_Groups_Member;
+		$new_member->group_id      = $group_id;
+		$new_member->user_id       = $user_id;
+		$new_member->inviter_id    = 0;
+		$new_member->is_admin      = 0;
+		$new_member->user_title    = '';
+		$new_member->date_modified = bp_core_current_time();
+		$new_member->is_confirmed  = 1;
+
+		if ( !$new_member->save() )
+			return false;
+
+		if ( !isset( $bp->groups->current_group ) || !$bp->groups->current_group || $group_id != $bp->groups->current_group->id )
+			$group = groups_get_group( array( 'group_id' => $group_id ) );
+		else
+			$group = $bp->groups->current_group;
+
+		// Record this in activity streams
+		groups_record_activity( array(
+			'type'    => 'joined_group',
+			'item_id' => $group_id,
+			'user_id' => $user_id,
+		) );
+
+		// Modify group meta
+		groups_update_groupmeta( $group_id, 'last_activity', bp_core_current_time() );
+
+		return true;
+	} 
 }

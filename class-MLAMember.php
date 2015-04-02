@@ -44,9 +44,7 @@ class MLAMember extends MLAAPI {
 		$last_updated = (integer) get_user_meta( $this->user_id, 'last_updated' );
 
 		// never skip updating while debugging
-		if ( $this->debug ) {
-			return true;
-		}
+		if ( $this->debug ) return true;
 
 		if ( ! $last_updated ) {
 			return true; /* never updated, so, it's too old. */

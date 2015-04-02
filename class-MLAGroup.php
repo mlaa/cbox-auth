@@ -323,7 +323,7 @@ class MLAGroup extends MLAAPI {
 			// We can't use groups_leave_group() here, because we're hooking into that
 			// action in customAuth.php, so we have to remove the user from the group 
 			// semi-manually. 
-			if ( ! mla_groups_leave_group( $removed_member_id, $group_id ) ) {
+			if ( ! $this->mla_groups_leave_group( $group_id, $removed_member_id ) ) {
 				_log( 'Couldn\'t remove member from group!' ); 
 			} else { 
 				_log( 'Successfully removed member from BP group!' ); 	

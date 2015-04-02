@@ -39,6 +39,59 @@ class MLAAPI extends MLAAPIRequest {
 		} 
 	}
 
+	/** 
+	 * We can't use the normal groups_join_group() function, since we're hooking into it
+	 * in customAuth.php, so we roll our own, based on `groups_join_group()`. 
+	 * @param int $group_id ID of the group.
+	 * @param int $user_id Optional. ID of the user. 
+	 * @return bool True on success, false on failure.
+	 */ 
+	function mla_groups_join_group( $group_id, $user_id ) { 
+
+		global $bp;
+
+		// Check if the user has an outstanding invite. If so, delete it.
+		if ( groups_check_user_has_invite( $user_id, $group_id ) )
+			groups_delete_invite( $user_id, $group_id );
+
+		// Check if the user has an outstanding request. If so, delete it.
+		if ( groups_check_for_membership_request( $user_id, $group_id ) )
+			groups_delete_membership_request( $user_id, $group_id );
+
+		// User is already a member, just return true
+		if ( groups_is_user_member( $user_id, $group_id ) )
+			return true;
+
+		$new_member                = new BP_Groups_Member;
+		$new_member->group_id      = $group_id;
+		$new_member->user_id       = $user_id;
+		$new_member->inviter_id    = 0;
+		$new_member->is_admin      = 0;
+		$new_member->user_title    = '';
+		$new_member->date_modified = bp_core_current_time();
+		$new_member->is_confirmed  = 1;
+
+		if ( !$new_member->save() )
+			return false;
+
+		if ( !isset( $bp->groups->current_group ) || !$bp->groups->current_group || $group_id != $bp->groups->current_group->id )
+			$group = groups_get_group( array( 'group_id' => $group_id ) );
+		else
+			$group = $bp->groups->current_group;
+
+		// Record this in activity streams
+		groups_record_activity( array(
+			'type'    => 'joined_group',
+			'item_id' => $group_id,
+			'user_id' => $user_id,
+		) );
+
+		// Modify group meta
+		groups_update_groupmeta( $group_id, 'last_activity', bp_core_current_time() );
+
+		return true;
+	} 
+
 	/**
 	 * Translate MLA roles like 'chair', 'liaison,' 'mla staff', into
 	 * the corresponding BP role, like 'admin', member.

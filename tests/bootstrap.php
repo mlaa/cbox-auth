@@ -14,12 +14,19 @@ if ( ! getenv( 'BP_TESTS_DIR' ) ) {
 } 
 
 function _manually_load_plugin() {
+	// Load BuddyPress!
 	require BP_TESTS_DIR . '/includes/loader.php';
 
+	// We'll need this so that we can use `_log()`. 
 	require dirname( __FILE__ ) . '/debug.php';
-	// overrides to get mock data
-	require dirname( __FILE__ ) . '/class-MockMLAAPI.php'; 
-	// don't get the whole plugin now, just a few classes, because 
+
+	// Override API communications to insert mock data.
+	// Used in place of the class MLAAPIRequest. 
+	require dirname( __FILE__ ) . '/class-MockMLAAPIRequest.php'; 
+	// get the functions commons to both the MLAGroup and MLAMember classes. 
+	require dirname( __FILE__ ) . '/class-MLAAPI.php'; 
+
+	// Don't get the whole plugin now, just a few classes, because 
 	// to test them individually we feed them mock data above. 
 	require dirname( __FILE__ ) . '/../class-CustomAuthentication.php';
 	require dirname( __FILE__ ) . '/../class-MLAGroup.php';

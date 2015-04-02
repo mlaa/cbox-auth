@@ -198,7 +198,7 @@ class MLAMember extends MLAAPI {
 		} 
 		groups_update_groupmeta( $group_id, 'mla_oid', $groupData['convention_code'] );
 		groups_update_groupmeta( $group_id, 'mla_api_id', $groupData['id'] );
-		groups_join_group( $group_id, $this->user_id );
+		$this->mla_groups_join_group( $group_id, $this->user_id );
 
 		if ( 'admin' === translate_mla_role( $group_data['position'] ) ) { 
 			groups_promote_member( $user_id, $group_id, 'admin' );
@@ -330,7 +330,7 @@ class MLAMember extends MLAAPI {
 			// If the user isn't yet a member of the BP group, add them and promote them as necessary. 
 			if ( ! $bp_role ) {
 				_log( "$group_id not found in this user's membership list. Adding user $this->user_id to group $group_id" );
-				groups_join_group( $group_id, $this->user_id );
+				$this->mla_groups_join_group( $group_id, $this->user_id );
 
 				// Now promote user if user is chair or equivalent.
 				// Should user be a BP admin according to the MLA API? 
@@ -365,7 +365,7 @@ class MLAMember extends MLAAPI {
 				} 
 
 				_log( 'Assuming member has been removed from this group on the MLA API, so removing this user from the Commons group.' );
-				groups_leave_group( $group_id, $this->user_id );
+				$this->mla_groups_leave_group( $group_id, $this->user_id );
 			}
 		}
 

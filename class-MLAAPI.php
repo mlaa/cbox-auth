@@ -93,6 +93,32 @@ class MLAAPI extends MLAAPIRequest {
 	} 
 
 	/**
+	 * We also can't use `groups_leave_group()`, since we've hooked into
+	 * that action in customAuth.php. But no problem, we'll just do that
+	 * sort of thing ourselves.
+	 */ 
+	public function mla_groups_leave_group( $group_id, $user_id ) {
+		global $bp;
+
+		// Don't let single admins leave the group.
+		if ( count( groups_get_group_admins( $group_id ) ) < 2 ) {
+			if ( groups_is_user_admin( $user_id, $group_id ) ) {
+				bp_core_add_message( __( 'As the only admin, you cannot leave the group.', 'buddypress' ), 'error' );
+				return false;
+			}
+		}
+
+		// This is exactly the same as deleting an invite, just is_confirmed = 1 NOT 0.
+		if ( !groups_uninvite_user( $user_id, $group_id ) ) {
+			return false;
+		}
+
+		bp_core_add_message( __( 'You successfully left the group.', 'buddypress' ) );
+
+		return true;
+	} 
+
+	/**
 	 * Translate MLA roles like 'chair', 'liaison,' 'mla staff', into
 	 * the corresponding BP role, like 'admin', member.
 	 *

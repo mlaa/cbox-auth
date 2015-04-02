@@ -66,29 +66,7 @@ class MLAMember extends MLAAPI {
 	 */
 	private function get_mla_member_data() {
 
-		// dummy data
-		//$this->affiliation = 'Modern Language Association';
-		//$this->first_name = 'Jonathan';
-		//$this->last_name = 'Reeve';
-		//$this->nickname = 'Jonathan Reeve';
-		//$this->fullname = 'Jonathan Reeve';
-		//$this->title = 'Web Developer';
-
-		//$this->mla_groups_list = array(
-			//'17' 	=> 'member',
-			//'44'   => 'member',
-			//'46'   => 'member',
-		//);
-
-		//return true; // debugging. 
-
-		$request_method = 'GET';
-		$query_domain = 'members';
-		// this is for queries that come directly after the query domain,
-		// like https://apidev.mla.org/1/members/168880
-		$simple_query = '/' . $this->mla_user_id;
-		$base_url = 'https://apidev.mla.org/1/' . $query_domain . $simple_query;
-		$response = $this->send_request( $request_method, $base_url );
+		$response = $this->get_member( $this->mla_user_id ); 
 
 		if ( 'verbose' === $this->debug ) { 
 			_log( 'Response from API is: ', $response ); 

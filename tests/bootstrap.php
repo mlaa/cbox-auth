@@ -23,9 +23,9 @@ function _manually_load_plugin() {
 	// Override API communications to insert mock data.
 	// Used in place of the class MLAAPIRequest. 
 	require dirname( __FILE__ ) . '/class-MockMLAAPIRequest.php'; 
-	// get the functions commons to both the MLAGroup and MLAMember classes. 
-	require dirname( __FILE__ ) . '/class-MLAAPI.php'; 
 
+	// get the functions common to both the MLAGroup and MLAMember classes. 
+	require dirname( __FILE__ ) . '/../class-MLAAPI.php'; 
 	// Don't get the whole plugin now, just a few classes, because 
 	// to test them individually we feed them mock data above. 
 	require dirname( __FILE__ ) . '/../class-CustomAuthentication.php';

@@ -99,17 +99,6 @@ class MLAAPIRequest {
 		return $response;
 	}
 
-	/** 
-	 * Get mock data from local JSON files to simulate API 
-	 * responses for debugging. 
-	 */ 
-	private function get_mock_data( $http_method, $base_url, $parameters = array(), $request_body = '' ) { 
-
-		// @todo: fill this out 
-		
-		return $response;  
-	} 
-
 	/**
 	 * Get a member from the member database API. 
 	 * @param $username can be either ID number (e.g. 168880) 

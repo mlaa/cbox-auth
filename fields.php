@@ -5,10 +5,6 @@
  */
 
 class CustomAuthenticationCustomFields {
-	function __construct() { 
-		_log( 'instantiated CustomAuthenticationCustomFields class.' ); 
-	} 
-
     /**
      * Show custom user fields in the profile
      *

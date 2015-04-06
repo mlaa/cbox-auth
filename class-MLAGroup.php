@@ -246,14 +246,17 @@ class MLAGroup extends MLAAPI {
 		foreach ( $diff as $member_username => $mla_role ) {
 			// We don't want no scrubs.
 			// Ignore records with empty IDs.
-			if ( '' == $member_username ) {
-				continue;
-			}
+			if ( '' == $member_username ) continue;
 
 			if ( 'verbose' == $this->debug ) _log( "Now handling member with username: $member_username and role: $mla_role" ); 
 
 			// Get the member ID for this member from the username. 
 			$member_id = bp_core_get_userid( $member_username ); 
+
+			// If we can't look up the member ID, 
+			// this might not be a member that has joined the commons. 
+			// Ergo, nothing to do.  
+			if ( ! $member_id || 0 == $member_id ) continue; 
 
 			// I don't think I need to translate the MLA role here, because the data
 			// we get is already translated.   

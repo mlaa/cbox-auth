@@ -11,7 +11,7 @@ class MLAMember extends MLAAPI {
 	public $debug = false; // debugging mode
 
 	// number of seconds below which to force update of group membership data.
-	public static $update_interval = 3600;
+	public $update_interval = 3600;
 
 	// get the displayed user ID and username right from the beginning
 	function __construct( $debug = false ) {
@@ -34,12 +34,30 @@ class MLAMember extends MLAAPI {
 	}
 
 	/**
+	 * Checks when the group member data was last updated,
+	 * so that it doesn't reload it from the member API
+	 * unnecessarily.
+	 *
+	 * @return bool
+	 */
+	private function is_too_old() {
+		$last_updated = (integer) get_user_meta( $this->user_id, 'last_updated' );
+
+		// never skip updating while debugging
+		if ( $this->debug ) return true;
+
+		if ( ! $last_updated ) {
+			return true; /* never updated, so, it's too old. */
+		} else {
+			return ( time() - $last_updated > $this->update_interval );
+		}
+	}
+
+	/**
 	 * After a sync, we have to update the user meta with the last updated time.
 	 */
 	private function update_last_updated_time() {
-		_log( 'Now updating last updated time with time:', time() ); 
-		$success = update_user_meta( $this->user_id, 'last_updated', time() );
-		_log( ( $success ? 'Updated Successfully.' : 'Not updated!' ) ); 
+		update_user_meta( $displayed_user_id, 'last_updated', time() );
 	}
 
 	/**
@@ -230,9 +248,7 @@ class MLAMember extends MLAAPI {
 	 */
 	public function sync() {
 		// don't sync unless the data is already too old
-		_log( "About to sync member with user_id: $this->user_id" ); 
-		if ( ! $this->is_too_old( 'member', $this->user_id ) ) {
-			_log( 'This member has been recently synced, so not syncing now.' ); 
+		if ( ! $this->is_too_old() ) {
 			return;
 		}
 

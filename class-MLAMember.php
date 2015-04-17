@@ -41,14 +41,17 @@ class MLAMember extends MLAAPI {
 	 * @return bool
 	 */
 	private function is_too_old() {
-		$last_updated = (integer) get_user_meta( $this->user_id, 'last_updated' );
+		_log( 'Checking to see whether this member has been recently updated.' ); 
+		$last_updated = (integer) get_user_meta( $this->user_id, 'last_updated', true );
 
 		// never skip updating while debugging
-		if ( $this->debug ) return true;
+		//if ( $this->debug ) return true;
 
 		if ( ! $last_updated ) {
+			_log( 'This member has never been updated. Updating.' ); 
 			return true; /* never updated, so, it's too old. */
 		} else {
+			_log( "This member was last updated at $last_updated, which was this many seconds ago: ", time() - $last_updated ); 
 			return ( time() - $last_updated > $this->update_interval );
 		}
 	}
@@ -57,7 +60,7 @@ class MLAMember extends MLAAPI {
 	 * After a sync, we have to update the user meta with the last updated time.
 	 */
 	private function update_last_updated_time() {
-		update_user_meta( $displayed_user_id, 'last_updated', time() );
+		update_user_meta( $this->user_id, 'last_updated', time() );
 	}
 
 	/**

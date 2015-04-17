@@ -49,22 +49,24 @@ class MLAGroup extends MLAAPI {
 	}
 
 	/**
-	 * Checks when the group member data was last updated,
+	 * Checks when the group data was last updated,
 	 * so that it doesn't reload it from the member API
 	 * unnecessarily.
 	 *
 	 * @return bool
 	 */
 	public function is_too_old() {
-		$last_updated = groups_get_groupmeta( $this->group_bp_id, 'last_updated' );
+		_log( 'Checking to see whether this group has been recently updated.' ); 
+		$last_updated = (integer) groups_get_groupmeta( $this->group_bp_id, 'last_updated', true );
 
-		if ( $this->debug ) {
-			return true; // always enable for debugging
-		}
+		// never skip updating while debugging
+		//if ( $this->debug ) return true; 
 
 		if ( ! $last_updated ) {
+			_log( 'This group has never been updated. Updating.' ); 
 			return true; /* never updated, so, it's too old. */
 		} else {
+			_log( "This group was last updated at $last_updated, which was this many seconds ago: ", time() - $last_updated ); 
 			return ( time() - $last_updated > $this->update_interval );
 		}
 	}

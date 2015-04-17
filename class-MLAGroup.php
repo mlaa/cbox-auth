@@ -7,8 +7,12 @@
 class MLAGroup extends MLAAPI {
 	public $group_bp_id = 0;
 	public $group_mla_oid = 0;
-	public $members = array(); // guessing that members list is going to be an array of member IDs
-	private $update_interval = 3600; // number of seconds below which to force update of group membership data.
+	
+	// members list is going to be an array of usernames
+	public $members = array(); 
+
+	// number of seconds below which to force update of group membership data.
+	private static $update_interval = 3600; 
 
 	public function __construct( $debug = false, $group_bp_id = 0 ) {
 		// Allow debugging to be turned on by passing a parameter
@@ -45,27 +49,6 @@ class MLAGroup extends MLAAPI {
 			}
 		} else {
 			_log( "Looks like this group already has a recorded MLA API ID, and it's: $this->group_mla_api_id" );
-		}
-	}
-
-	/**
-	 * Checks when the group member data was last updated,
-	 * so that it doesn't reload it from the member API
-	 * unnecessarily.
-	 *
-	 * @return bool
-	 */
-	public function is_too_old() {
-		$last_updated = groups_get_groupmeta( $this->group_bp_id, 'last_updated' );
-
-		if ( $this->debug ) {
-			return true; // always enable for debugging
-		}
-
-		if ( ! $last_updated ) {
-			return true; /* never updated, so, it's too old. */
-		} else {
-			return ( time() - $last_updated > $this->update_interval );
 		}
 	}
 
@@ -196,7 +179,7 @@ class MLAGroup extends MLAAPI {
 	 */
 	public function sync() {
 
-		if ( ! $this->is_too_old() ) {
+		if ( ! $this->is_too_old( 'group', $this->group_bp_id ) ) {
 			//_log( 'No need to sync this group, since it\'s apparently been synced within the last hour.' );
 			return false;
 		}

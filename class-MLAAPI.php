@@ -6,6 +6,37 @@
 class MLAAPI extends MLAAPIRequest {
 
 	/**
+	 * Checks when the group or member data was last updated,
+	 * so that it doesn't reload it from the member API
+	 * unnecessarily.
+	 *
+	 * @param $group_or_member str either 'group' or 'member' 
+	 * @param $id the ID of the group or member
+	 * @return bool
+	 */
+	protected function is_too_old( $group_or_member, $id ) {
+
+		_log( "Checking to see whether this $group_or_member with ID $id is too old." ); 
+
+		if ( 'group' == $group_or_member ) { 
+			$last_updated = groups_get_groupmeta( $id, 'last_updated', true );
+		} else { 
+			$last_updated = (integer) get_user_meta( $id, 'last_updated', true );
+		}
+
+		// never skip updating while debugging
+		//if ( $this->debug ) return true;
+
+		if ( ! $last_updated ) {
+			_log( 'Never updated! Updating.' ); 
+			return true; /* never updated, so, it's too old. */
+		} else {
+			_log( 'Last updated:', $last_updated ); 
+			_log( 'That was this many seconds ago:', time() - $last_updated ); 
+			return ( time() - $last_updated > $this->update_interval );
+		}
+	}
+	/**
 	 * Gets a BuddyPress group ID if given the group's MLA OID.
 	 * @param $mla_oid str, the MLA OID, i.e. D086
 	 * @return int BuddyPress group ID, i.e. 86

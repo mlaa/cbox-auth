@@ -4,7 +4,7 @@ class CustomAuthentication extends MLAAPI {
 
 	function __construct() { 
 		if ( ! isset ( $this->debug ) ) $this->debug = false; 
-		$this->debug = 'verbose'; // Lots of debugging messages! 
+		//$this->debug = 'verbose'; // Lots of debugging messages! 
 	} 
 
 	# AUTHENTICATION FUNCTIONS ( PHASE 1 )

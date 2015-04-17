@@ -95,6 +95,7 @@ class MLAMember extends MLAAPI {
 		$this->last_name  = $decoded->general->last_name;
 		$this->fullname  = $this->first_name . ' ' . $this->last_name;
 		$this->nickname  = $this->fullname;
+		$this->email = $decoded->general->email; 
 		$this->affiliation = $decoded->addresses[0]->affiliation; // assuming primary affiliation is at 0
 		$this->title = $decoded->addresses[0]->rank;
 
@@ -112,11 +113,11 @@ class MLAMember extends MLAAPI {
 			_log( 'now looking at group: ', $group ); 
 			// groups array is in the form 'group_id' => role
 			$group_id = (string) $this->get_group_id_from_mla_oid( $group->convention_code );
-			if ( false == $group_id ) { 
-				// this means the MLA API group doesn't have a 
+			if ( false == $group_id ) {
+				// this means the MLA API group doesn't have a
 				// corresponding BP group, and we need to create
-				// a BP group, provided that the group isn't 
-				// explicitly excluded from the Commons. 
+				// a BP group, provided that the group isn't
+				// explicitly excluded from the Commons.
 				if ( ! 'Y' === $group->exclude_from_commons ) { 
 					_log( "This group doesn\'t have a BP id, which means it's a new group that should be created." ); 
 					// create group
@@ -290,6 +291,13 @@ class MLAMember extends MLAAPI {
 				}
 			}
 		}
+	
+		if ( $this->email ) { 
+			_log( "Now updating user email address with: $this->email." ); 
+			$success = wp_update_user( array( 'ID' => $this->user_id, 'user_email' => $this->email ) );
+			if ( $success instanceof WP_Error ) _log( 'Couldn\'t update user email address!' );
+			else _log( 'Successfully updated user email address.' ); 	
+		} 
 
 		// Now sync member groups. Loop through MLA groups and add new ones to BP
 		if ( 'verbose' === $this->debug ) { 

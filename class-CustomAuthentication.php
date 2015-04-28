@@ -4,7 +4,7 @@ class CustomAuthentication extends MLAAPI {
 
 	function __construct() { 
 		if ( ! isset ( $this->debug ) ) $this->debug = false; 
-		$this->debug = 'verbose'; // Lots of debugging messages! 
+		//$this->debug = 'verbose'; // Lots of debugging messages! 
 	} 
 
 	# AUTHENTICATION FUNCTIONS ( PHASE 1 )
@@ -222,22 +222,22 @@ class CustomAuthentication extends MLAAPI {
 	public function redirect_to_last_viewed_page( $redirect_to = null, $request = null, $user = null ) { 
 		if ( ! empty( $_COOKIE ) ) { 
 			if ( ! empty( $_COOKIE['MLAReferer'] ) ) { 
-				_log( 'Found cookie: ', $_COOKIE['MLAReferer'] ); 
+				//_log( 'Found cookie: ', $_COOKIE['MLAReferer'] ); 
 				if ( false == strpos( $_COOKIE['MLAReferer'], 'wp-login' ) ) { 
 					if ( $user != null ) {
 						return $_COOKIE['MLAReferer'];
 					} else {
-						_log( 'User is null!' ); 
+						//_log( 'User is null!' ); 
 						return $redirect_to;
 					}
 				} else { 
-					_log( 'Referer is wp-login!' ); 
+					//_log( 'Referer is wp-login!' ); 
 				} 
 			} else { 
-				_log( 'No MLAReferer in cookies!' ); 
+				//_log( 'No MLAReferer in cookies!' ); 
 			} 
 		} else { 
-			_log( 'No cookies! Can\'t redirect to previous page.' ); 
+			//_log( 'No cookies! Can\'t redirect to previous page.' ); 
 		} 
 		return home_url(); 
 	} 

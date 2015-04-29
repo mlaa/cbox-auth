@@ -9,7 +9,7 @@
  */ 
 class MLAAPIRequest { 
 
-	private $api_url = 'https://apidev.mla.org/1/';
+	private $api_url = 'https://api.mla.org/1/';
 
 	/*
 	 * sendRequest

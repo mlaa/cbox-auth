@@ -9,7 +9,7 @@
  */ 
 class MLAAPIRequest { 
 
-	private $api_url = 'https://api.mla.org/1/';
+	private $api_url = CBOX_AUTH_API_URL;
 
 	/*
 	 * sendRequest

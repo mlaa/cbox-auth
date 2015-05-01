@@ -1,0 +1,102 @@
+{
+  "meta": {
+    "status": "success",
+    "code": "API-1000",
+    "message": ""
+  },
+  "data": [
+    {
+      "id": "999999",
+      "authentication": {
+        "username": "exampleuser",
+        "password": "$2a$10$qlENatXA3e3HHFRrdq3sTe8235lOq/0ADDPNlEYen3bdx7i4hELK2",
+        "membership_status": "active"
+      },
+      "general": {
+        "title": "Ms",
+        "first_name": "Jennifer",
+        "last_name": "Smith",
+        "suffix": "",
+        "email": "jsmith@example.com", 
+	"web_site": "http://www.example.com", 
+	"joined_commons": "Y"
+      },
+      "addresses": [
+        {
+          "id": "16",
+          "type": "primary",
+          "hidden": "",
+          "send_mail": "Y",
+          "affiliation": "Mod Lang Association",
+          "department": "1912",
+          "department_other": "",
+          "rank": "Drone",
+          "line1": "",
+          "line2": "3rd Floor",
+          "line3": "26 Broadway",
+          "city": "New York",
+          "state": "NY",
+          "zip": "10004",
+          "country_code": ""
+        }
+      ],
+      "organizations": [
+        {
+          "id": "156",
+          "name": "Hebrew",
+          "convention_code": "G015",
+          "position": "Member",
+          "type": "Forum",
+          "exclude_from_commons": ""
+        },
+        {
+          "id": "157",
+          "name": "Hungarian",
+          "convention_code": "G016",
+          "position": "Member",
+          "type": "Forum",
+          "exclude_from_commons": ""
+        },
+        {
+          "id": "177",
+          "name": "Travel Writing",
+          "convention_code": "G045",
+          "position": "Member",
+          "type": "Forum",
+          "exclude_from_commons": ""
+        },
+        {
+          "id": "332",
+          "name": "Advisory Comm. on Foreign Lang. Programs",
+          "convention_code": "H012",
+          "position": "Member",
+          "type": "Historical Entity",
+          "exclude_from_commons": ""
+        },
+        {
+          "id": "181",
+          "name": "Committee on the Status of Women in the Profession",
+          "convention_code": "M004",
+          "position": "Chair",
+          "type": "MLA Organization",
+          "exclude_from_commons": ""
+        },
+        {
+          "id": "182",
+          "name": "Office of Research",
+          "convention_code": "M050",
+          "position": "Member",
+          "type": "MLA Organization",
+          "exclude_from_commons": "Y"
+        }
+      ],
+      "languages": [
+        {
+          "code": "400",
+          "name": "Other languages",
+          "primary": "Y"
+        }
+      ] 
+    }
+  ]
+}

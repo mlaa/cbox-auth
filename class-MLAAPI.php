@@ -113,7 +113,7 @@ class MLAAPI extends MLAAPIRequest {
 			return false;
 		}
 
-		bp_core_add_message( __( 'You successfully left the group.', 'buddypress' ) );
+		//bp_core_add_message( __( 'You successfully left the group.', 'buddypress' ) );
 
 		return true;
 	} 

@@ -109,7 +109,9 @@ class CustomAuthentication extends MLAAPI {
 
 			if ( $customLoginError ) {
 				// See if the WP user is an admin. If so, grant access immediately. Otherwise, return errors.
-				if ( wp_check_password( $password, $userdata->user_pass, $userdata->ID ) && ( array_search( 'administrator', $userdata->roles ) !== false || is_super_admin( $userdata->ID ) ) ) {
+				if ( wp_check_password( $password, $userdata->user_pass, $userdata->ID )
+					&& ( 'yes' == get_user_meta( $userdata->ID, 'mla_nonmember', $single = true )
+					|| is_super_admin( $userdata->ID ) ) ) {
 					// Add a cookie to speed up the login process for non-first-time users
 					$this->setRememberCookie( $username );
 					return $userdata;

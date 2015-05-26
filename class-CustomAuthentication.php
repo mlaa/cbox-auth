@@ -2,10 +2,10 @@
 
 class CustomAuthentication extends MLAAPI {
 
-	function __construct() { 
-		if ( ! isset ( $this->debug ) ) $this->debug = false; 
-		//$this->debug = 'verbose'; // Lots of debugging messages! 
-	} 
+	function __construct() {
+		if ( ! isset ( $this->debug ) ) $this->debug = false;
+		//$this->debug = 'verbose'; // Lots of debugging messages!
+	}
 
 	# AUTHENTICATION FUNCTIONS ( PHASE 1 )
 	#####################################################################
@@ -85,8 +85,8 @@ class CustomAuthentication extends MLAAPI {
 			}
 
 			// Send welcome email
-			$user_id = $userdata->data->ID; 
-			wpmu_welcome_user_notification( $user_id, $password='' ); 
+			$user_id = $userdata->data->ID;
+			wpmu_welcome_user_notification( $user_id, $password='' );
 
 			// Catch terms acceptance on first login.
 			update_user_meta( $userdata->ID, 'accepted_terms', $_POST['acceptance'] );
@@ -132,7 +132,7 @@ class CustomAuthentication extends MLAAPI {
 		// Special activities for special users.
 		$this->specialCases( $userdata->ID, $customUserData['id'] );
 
-		// Try to redirect user to last viewed page. 
+		// Try to redirect user to last viewed page.
 		add_filter( 'login_redirect', array( $this, 'redirect_to_last_viewed_page' ), 10, 3 );
 
 		return $userdata;
@@ -144,9 +144,9 @@ class CustomAuthentication extends MLAAPI {
 		} else {
 			$secure_connection = false;
 		}
-		if ( ! defined( 'RUNNING_TESTS' ) ) { 
+		if ( ! defined( 'RUNNING_TESTS' ) ) {
 			setcookie( 'MLABeenHereBefore', md5( $value ), time() + ( 20 * 365 * 24 * 60 * 60 ), null, null, $secure_connection );
-		} 
+		}
 	}
 
 	/**
@@ -217,30 +217,30 @@ class CustomAuthentication extends MLAAPI {
 	}
 
 	/**
-	 * A filter for redirecting users to the last page they were reading before logging in. 
-	 */ 
-	public function redirect_to_last_viewed_page( $redirect_to = null, $request = null, $user = null ) { 
-		if ( ! empty( $_COOKIE ) ) { 
-			if ( ! empty( $_COOKIE['MLAReferer'] ) ) { 
-				//_log( 'Found cookie: ', $_COOKIE['MLAReferer'] ); 
-				if ( false == strpos( $_COOKIE['MLAReferer'], 'wp-login' ) ) { 
+	 * A filter for redirecting users to the last page they were reading before logging in.
+	 */
+	public function redirect_to_last_viewed_page( $redirect_to = null, $request = null, $user = null ) {
+		if ( ! empty( $_COOKIE ) ) {
+			if ( ! empty( $_COOKIE['MLAReferer'] ) ) {
+				//_log( 'Found cookie: ', $_COOKIE['MLAReferer'] );
+				if ( false == strpos( $_COOKIE['MLAReferer'], 'wp-login' ) ) {
 					if ( $user != null ) {
 						return $_COOKIE['MLAReferer'];
 					} else {
-						//_log( 'User is null!' ); 
+						//_log( 'User is null!' );
 						return $redirect_to;
 					}
-				} else { 
-					//_log( 'Referer is wp-login!' ); 
-				} 
-			} else { 
-				//_log( 'No MLAReferer in cookies!' ); 
-			} 
-		} else { 
-			//_log( 'No cookies! Can\'t redirect to previous page.' ); 
-		} 
-		return home_url(); 
-	} 
+				} else {
+					//_log( 'Referer is wp-login!' );
+				}
+			} else {
+				//_log( 'No MLAReferer in cookies!' );
+			}
+		} else {
+			//_log( 'No cookies! Can\'t redirect to previous page.' );
+		}
+		return home_url();
+	}
 
 	/**
 	 * @param $userId
@@ -250,7 +250,7 @@ class CustomAuthentication extends MLAAPI {
 	protected function manageGroups( $userId, array $groupsData ) {
 		global $wpdb, $bp;
 
-		//_log( "Managing groups with userID: $userId!" ); 
+		//_log( "Managing groups with userID: $userId!" );
 
 		// Get BP groups with OIDs and their associated BP group IDs.
 		$custom_groups = $wpdb->get_results( $wpdb->prepare( 'SELECT group_id, meta_value FROM ' . $bp->groups->table_name_groupmeta . ' WHERE meta_key = %s', 'mla_oid' ) );
@@ -262,12 +262,12 @@ class CustomAuthentication extends MLAAPI {
 		}
 
 		// Loop through each BP group and add/remove/promote/demote the user as needed.
-		// @todo: I should probably be instantiating MLAMember here instead of doing all this stuff, 
-		// just to keep it all in one place, but I'm keeping this here for the moment, 
-		// because I suspect that it might be more efficient than instantiating the class. 
+		// @todo: I should probably be instantiating MLAMember here instead of doing all this stuff,
+		// just to keep it all in one place, but I'm keeping this here for the moment,
+		// because I suspect that it might be more efficient than instantiating the class.
 		foreach ( $custom_groups as $custom_group ) {
 
-			//_log( 'Now looking at group:', $custom_group ); 
+			//_log( 'Now looking at group:', $custom_group );
 
 			$groupId = $custom_group->group_id;
 			$customOid = $custom_group->meta_value;
@@ -281,21 +281,21 @@ class CustomAuthentication extends MLAAPI {
 				// No-Op if user is already a member
 				groups_join_group( $groupId, $userId );
 
-				//_log( 'User role appears to be:', $groupData['role'] ); 
+				//_log( 'User role appears to be:', $groupData['role'] );
 
-				// First we need to tell BP we're an admin. 
+				// First we need to tell BP we're an admin.
 				bp_update_is_item_admin( true, 'groups' );
 
-				// If a user is a chair, liaison, etc, promote them. 
-				// If not, demote them. 
-				if ( 'admin' == $this->translate_mla_role( $groupData['role'] ) ) { 
-					//_log( "User is admin! Promoting user $userId in group $groupId." ); 
+				// If a user is a chair, liaison, etc, promote them.
+				// If not, demote them.
+				if ( 'admin' == $this->translate_mla_role( $groupData['role'] ) ) {
+					//_log( "User is admin! Promoting user $userId in group $groupId." );
 					$success = groups_promote_member( $userId, $groupId, 'admin' );
-					 //if ( $success ) _log( 'Great success!' ); else _log( 'Couldn\'t promote user!' ); 
+					 //if ( $success ) _log( 'Great success!' ); else _log( 'Couldn\'t promote user!' );
 				} else {
-					//_log( "User is regular member! Demoting user $userId in group $groupId." ); 
+					//_log( "User is regular member! Demoting user $userId in group $groupId." );
 					$success = groups_demote_member( $userId, $groupId );
-					 //if ( $success ) _log( 'Great success!' ); else _log( 'Couldn\'t demote user!' ); 
+					 //if ( $success ) _log( 'Great success!' ); else _log( 'Couldn\'t demote user!' );
 				}
 
 			} elseif ( ! $this->isForumGroup( $customOid ) ) {
@@ -307,7 +307,7 @@ class CustomAuthentication extends MLAAPI {
 		// Groups still in the user_groups array need to be created.
 		foreach ( $user_groups as $groupData ) {
 
-			$groupData['name'] = $groupData['name'] ? $groupData['name'] : ''; 
+			$groupData['name'] = $groupData['name'] ? $groupData['name'] : '';
 
 			$newGroup = array(
 				'creator_id' => 1, // Chris can be the group creator.
@@ -315,39 +315,39 @@ class CustomAuthentication extends MLAAPI {
 				'name' => $groupData['name'],
 			);
 
-			// add group status to array if given. 
-			if ( array_key_exists( 'status', $groupData ) ) $newGroup['status'] = $groupData['status'];   
+			// add group status to array if given.
+			if ( array_key_exists( 'status', $groupData ) ) $newGroup['status'] = $groupData['status'];
 
-			//_log( 'About to create group with data: ', $groupData ); 
+			//_log( 'About to create group with data: ', $groupData );
 
 			$groupId = groups_create_group( $newGroup );
 
-			//if ( ! $groupId ) { 
-				//_log( 'Warning! No group created!' ); 
-			//} else {  
-				//_log( "Group created ID is: $groupId" ); 
-			//} 
+			//if ( ! $groupId ) {
+				//_log( 'Warning! No group created!' );
+			//} else {
+				//_log( "Group created ID is: $groupId" );
+			//}
 
-			// Store MLA OID (convention code, old ID) in the group meta (BP DB). 
+			// Store MLA OID (convention code, old ID) in the group meta (BP DB).
 			groups_update_groupmeta( $groupId, 'mla_oid', $groupData['oid'] );
 
-			// Store MLA API ID (new ID) in the group meta. We'll need this for syncing below. 
+			// Store MLA API ID (new ID) in the group meta. We'll need this for syncing below.
 			groups_update_groupmeta( $groupId, 'mla_api_id', $groupData['mla_api_id'] );
 
 			groups_join_group( $groupId, $userId );
 
 			// Now sync the group memebership data using the new MLAGroup class.
-			$sync_obj = new MLAGroup( $debug = true, $id = $groupId ); 
-			$sync_obj->sync(); 
+			$sync_obj = new MLAGroup( $debug = true, $id = $groupId );
+			$sync_obj->sync();
 
 			// If a user has the role 'chair', 'liaison', 'liason' [sic],
 			// 'secretary', 'executive', or 'program-chair', then promote
 			// the user to admin. Otherwise, demote the user.
-			if ( isset( $groupData['role'] ) ) { 
-				if ( 'admin' == $this->translate_mla_role( $groupData['role'] ) ) { 
+			if ( isset( $groupData['role'] ) ) {
+				if ( 'admin' == $this->translate_mla_role( $groupData['role'] ) ) {
 					groups_promote_member( $userId, $groupId, 'admin' );
-				} 
-			} 
+				}
+			}
 		}
 
 		return null;
@@ -385,7 +385,7 @@ class CustomAuthentication extends MLAAPI {
 	 */
 	protected function findCustomUser( $username, $password ) {
 
-		$response = $this->get_member( $username ); 
+		$response = $this->get_member( $username );
 
 		if ( $response === false || $response == '' ) {
 			// This only happens if we can't access the API server.
@@ -505,7 +505,7 @@ class CustomAuthentication extends MLAAPI {
 		$groups = array();
 		$affiliations = array();
 
-		//_log( 'incoming json to memberJSONToArray:', $json ); 
+		//_log( 'incoming json to memberJSONToArray:', $json );
 
 		foreach ( $json['addresses'] as $address ) {
 			if ( array_key_exists( 'affiliation', $address ) ) {
@@ -515,15 +515,15 @@ class CustomAuthentication extends MLAAPI {
 
 		foreach ( $json['organizations'] as $group ) {
 
-			// Don't parse groups that have been excluded from the Commons. 
-			if ( 'Y' == $group['exclude_from_commons'] ) continue; 
+			// Don't parse groups that have been excluded from the Commons.
+			if ( 'Y' == $group['exclude_from_commons'] ) continue;
 
-			// Committees and other MLA organizations should be private groups. 
-			if ( $this->isCommitteeGroup( $group['convention_code'] ) || 'MLA Organization' == $group['type']  ) { 
-				$group['status'] = 'private'; 
-			} else { 
-				$group['status'] = 'public'; 
-			} 
+			// Committees and other MLA organizations should be private groups.
+			if ( $this->isCommitteeGroup( $group['convention_code'] ) || 'MLA Organization' == $group['type']  ) {
+				$group['status'] = 'private';
+			} else {
+				$group['status'] = 'public';
+			}
 
 			$groups[] = array(
 				//[oid] => G049
@@ -556,7 +556,7 @@ class CustomAuthentication extends MLAAPI {
 			'groups' => $groups,
 			'role' => 'subscriber',
 		 );
-		return $return; 
+		return $return;
 	}
 
 	/**
@@ -740,11 +740,11 @@ class CustomAuthentication extends MLAAPI {
 
 	}
 
-	protected function send_welcome_email( $to_user ) { 
+	protected function send_welcome_email( $to_user ) {
 		// $subject = '';
-		// $message = ''; 
-		// wp_mail( $to_user, $subject, $message ); 
-	} 
+		// $message = '';
+		// wp_mail( $to_user, $subject, $message );
+	}
 
 
 	# UTILITY FUNCTIONS

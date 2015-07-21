@@ -88,6 +88,19 @@ class CustomAuthentication extends MLAAPI {
 			$user_id = $userdata->data->ID;
 			wpmu_welcome_user_notification( $user_id, $password='' );
 
+
+			// Post activity item for new member.
+			_log( 'Now attempting to add activity.' );
+			$component = buddypress()->members->id;
+			$success = bp_activity_add( array(
+				'user_id'   => $user_id,
+				'component' => $component,
+				'type'      => 'new_member'
+			) );
+
+			if ( ! $success ) _log( 'Failed to add activity item for new member.' ); else _log( "Successfully added new activity item for new member at id: $success" );
+
+
 			// Catch terms acceptance on first login.
 			update_user_meta( $userdata->ID, 'accepted_terms', $_POST['acceptance'] );
 

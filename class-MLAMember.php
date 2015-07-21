@@ -69,6 +69,11 @@ class MLAMember extends MLAAPI {
 	 */
 	private function get_mla_member_data() {
 
+		if ( ! $this->mla_user_id ) {
+			_log( 'This user doesn\'t have an MLA OID in the database. This is probably either Chris or a non-member. Not syncing.' );
+			return false;
+		}
+
 		$response = $this->get_member( $this->mla_user_id ); 
 
 		if ( 'verbose' === $this->debug ) { 

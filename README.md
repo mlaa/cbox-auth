@@ -1,10 +1,10 @@
 # WordPress/CBOX Authentication Plugin
 
-![Is the build passing?](https://travis-ci.org/mlaa/cbox-auth.svg?branch=develop)
+[![Build status][build-status]][travis-ci]
 
 This plugin allows authentication against an external propietary API. The API
 response provides user metadata which is used to populate the user in or out
-of groups within an installation of [Commons-in-a-Box][1], including roles
+of groups within an installation of [Commons-in-a-Box][cbox], including roles
 within the group.
 
 ### Installation
@@ -33,4 +33,6 @@ define('CBOX_AUTH_DEBUG_LOG', '/log/file/location/username_%t.log');
 
 The source code of this plugin is released under the GPLv2 (see LICENSE.txt).
 
-[1]: http://commonsinabox.org
+[travis-ci]: https://travis-ci.org/mlaa/cbox-auth
+[build-status]: https://travis-ci.org/mlaa/cbox-auth.svg?branch=develop
+[cbox]: http://commonsinabox.org

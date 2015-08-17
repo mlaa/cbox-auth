@@ -1,93 +1,59 @@
 #!/usr/bin/env bash
 
-if [ $# -lt 3 ]; then
-	echo "usage: $0 <db-name> <db-user> <db-pass> [db-host] [wp-version]"
-	exit 1
-fi
-
-DB_NAME=$1
-DB_USER=$2
-DB_PASS=$3
-DB_HOST=${4-localhost}
-WP_VERSION=${5-latest}
-BP_VERSION=${6-latest}
-
-WP_TESTS_DIR=${WP_TESTS_DIR-/tmp/wordpress-tests-lib}
-WP_CORE_DIR=${WP_CORE_DIR-/tmp/wordpress/}
-BP_CORE_DIR=${BP_CORE_DIR-/tmp/buddypress}
-
 set -ex
 
-install_wp() {
-	mkdir -p $WP_CORE_DIR
+WP_VERSION=${1-latest}
+BP_VERSION=${2-latest}
 
-	if [ $WP_VERSION == 'latest' ]; then
-		local ARCHIVE_NAME='latest'
-	else
-		local ARCHIVE_NAME="wordpress-$WP_VERSION"
-	fi
+WP_DIR=/tmp/wordpress
+BP_DIR=/tmp/buddypress
+WP_SVN=https://develop.svn.wordpress.org
+BP_SVN=https://buddypress.svn.wordpress.org
+MYSQLI_PLUGIN_URL=https://raw.github.com/markoheijnen/wp-mysqli/master/db.php
 
-	wget -nv -O /tmp/wordpress.tar.gz https://wordpress.org/${ARCHIVE_NAME}.tar.gz
-	tar --strip-components=1 -zxmf /tmp/wordpress.tar.gz -C $WP_CORE_DIR
+# Don't change these values; they are for the test database and are hard-coded
+# into wp-tests-config.php. This assumes the database is running on localhost
+# and the user running this script can connect to MySQL without a password.
+DB_NAME=youremptytestdbnamehere
+DB_USER=yourusernamehere
+DB_PASS=yourpasswordhere
+DB_HOST=localhost
 
-	wget -nv -O $WP_CORE_DIR/wp-content/db.php https://raw.github.com/markoheijnen/wp-mysqli/master/db.php
-}
+# Set SVN paths.
+if [ "$WP_VERSION" = "latest" ]; then
+  WP_DIR="$WP_DIR/latest"
+  WP_SVN="$WP_SVN/trunk"
+else
+  WP_DIR="$WP_DIR/$WP_VERSION"
+  WP_SVN="$WP_SVN/tags/$WP_VERSION"
+fi
+if [ "$BP_VERSION" = "latest" ]; then
+  BP_DIR="$BP_DIR/latest"
+  BP_SVN="$BP_SVN/trunk"
+else
+  BP_DIR="$BP_DIR/$BP_VERSION"
+  BP_SVN="$BP_SVN/tags/$BP_VERSION"
+fi
 
-install_bp() {
-	mkdir -p $BP_CORE_DIR
+# Create directories.
+mkdir -p $WP_DIR $BP_DIR
 
-	if [ $BP_VERSION == 'latest' ]; then
-		svn co --quiet https://buddypress.svn.wordpress.org/trunk $BP_CORE_DIR
-	else
-		echo "This script can't yet handle BuddyPress versions other than the latest.";
-		exit
-	fi
+# Install WordPress and test suite. Replace ABSPATH definition with a constant
+# that we will supply in our bootstrap.php.
+if [ ! -f $WP_DIR/src/wp-content/db.php ]; then
+  svn co --quiet $WP_SVN $WP_DIR
+  sed "s:'ABSPATH', *dirname( __FILE__ ) . '/src/':'ABSPATH', getenv('WP_ABSPATH'):" $WP_DIR/wp-tests-config-sample.php > $WP_DIR/wp-tests-config.php
+  wget -nv -O $WP_DIR/src/wp-content/db.php $MYSQLI_PLUGIN_URL
+fi
 
-}
+# Install BuddyPress and test suite.
+if [ ! -d $BP_DIR/src ]; then
+  svn co --quiet $BP_SVN $BP_DIR
+fi
 
-install_test_suite() {
-	# portable in-place argument for both GNU sed and Mac OSX sed
-	if [[ $(uname -s) == 'Darwin' ]]; then
-		local ioption='-i .bak'
-	else
-		local ioption='-i'
-	fi
-
-	# set up testing suite
-	mkdir -p $WP_TESTS_DIR
-	cd $WP_TESTS_DIR
-	svn co --quiet https://develop.svn.wordpress.org/trunk/tests/phpunit/includes/
-
-	wget -nv -O wp-tests-config.php https://develop.svn.wordpress.org/trunk/wp-tests-config-sample.php
-	sed $ioption "s:dirname( __FILE__ ) . '/src/':'$WP_CORE_DIR':" wp-tests-config.php
-	sed $ioption "s/youremptytestdbnamehere/$DB_NAME/" wp-tests-config.php
-	sed $ioption "s/yourusernamehere/$DB_USER/" wp-tests-config.php
-	sed $ioption "s/yourpasswordhere/$DB_PASS/" wp-tests-config.php
-	sed $ioption "s|localhost|${DB_HOST}|" wp-tests-config.php
-}
-
-install_db() {
-	# parse DB_HOST for port or socket references
-	local PARTS=(${DB_HOST//\:/ })
-	local DB_HOSTNAME=${PARTS[0]};
-	local DB_SOCK_OR_PORT=${PARTS[1]};
-	local EXTRA=""
-
-	if ! [ -z $DB_HOSTNAME ] ; then
-		if [ $(echo $DB_SOCK_OR_PORT | grep -e '^[0-9]\{1,\}$') ]; then
-			EXTRA=" --host=$DB_HOSTNAME --port=$DB_SOCK_OR_PORT"
-		elif ! [ -z $DB_SOCK_OR_PORT ] ; then
-			EXTRA=" --socket=$DB_SOCK_OR_PORT"
-		elif ! [ -z $DB_HOSTNAME ] ; then
-			EXTRA=" --host=$DB_HOSTNAME"
-		fi
-	fi
-
-	# create database
-	mysqladmin create $DB_NAME --user="$DB_USER" --password="$DB_PASS"$EXTRA
-}
-
-install_wp
-install_test_suite
-install_db
-install_bp
+# Create WP database.
+mysql -u root << EOF
+create database IF NOT EXISTS $DB_NAME;
+grant usage on $DB_NAME.* to $DB_USER@$DB_HOST identified by "$DB_PASS";
+grant all privileges on $DB_NAME.* to $DB_USER@$DB_HOST;
+EOF

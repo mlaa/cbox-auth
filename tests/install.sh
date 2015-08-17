@@ -14,17 +14,14 @@ BP_VERSION=${6-latest}
 
 WP_TESTS_DIR=${WP_TESTS_DIR-/tmp/wordpress-tests-lib}
 WP_CORE_DIR=${WP_CORE_DIR-/tmp/wordpress/}
-
 BP_CORE_DIR=${BP_CORE_DIR-/tmp/buddypress}
-BP_SRC_DIR=${BP_SRC_DIR-/tmp/buddypress/src}
-BP_TESTS_DIR=${BP_TESTS_DIR-/tmp/buddypress/tests}
 
 set -ex
 
 install_wp() {
 	mkdir -p $WP_CORE_DIR
 
-	if [ $WP_VERSION == 'latest' ]; then 
+	if [ $WP_VERSION == 'latest' ]; then
 		local ARCHIVE_NAME='latest'
 	else
 		local ARCHIVE_NAME="wordpress-$WP_VERSION"
@@ -39,10 +36,10 @@ install_wp() {
 install_bp() {
 	mkdir -p $BP_CORE_DIR
 
-	if [ $BP_VERSION == 'latest' ]; then 
-		svn co https://buddypress.svn.wordpress.org/trunk $BP_CORE_DIR 
+	if [ $BP_VERSION == 'latest' ]; then
+		svn co --quiet https://buddypress.svn.wordpress.org/trunk $BP_CORE_DIR
 	else
-		echo "This script can't yet handle BuddyPress versions other than the latest."; 
+		echo "This script can't yet handle BuddyPress versions other than the latest.";
 		exit
 	fi
 

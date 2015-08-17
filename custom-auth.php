@@ -7,11 +7,11 @@
  * a remote database via an HTTPS API.
  */
 
-require_once plugin_dir_path( __FILE__ ).'class-MLAAPIRequest.php';
-require_once plugin_dir_path( __FILE__ ).'class-MLAAPI.php';
-require_once plugin_dir_path( __FILE__ ).'class-CustomAuthentication.php';
-require_once plugin_dir_path( __FILE__ ).'class-MLAMember.php';
-require_once plugin_dir_path( __FILE__ ).'class-MLAGroup.php';
+require_once plugin_dir_path( __FILE__ ).'class-mla-api-request.php';
+require_once plugin_dir_path( __FILE__ ).'class-mla-api.php';
+require_once plugin_dir_path( __FILE__ ).'class-custom-authentication.php';
+require_once plugin_dir_path( __FILE__ ).'class-mla-member.php';
+require_once plugin_dir_path( __FILE__ ).'class-mla-group.php';
 
 $myCustomAuthentication = new CustomAuthentication();
 

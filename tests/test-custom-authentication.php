@@ -22,7 +22,7 @@
 
 /* Dependencies */
 
-require_once 'class-CustomAuthentication.php';
+require_once 'class-custom-authentication.php';
 
 
 /*

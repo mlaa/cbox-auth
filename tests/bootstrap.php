@@ -34,15 +34,15 @@ function _manually_load_plugin() {
 
 	// Override API communications to insert mock data.
 	// Used in place of the class MLAAPIRequest.
-	require_once $_tests_dir . '/class-MockMLAAPIRequest.php';
+	require_once $_tests_dir . '/class-mock-mla-api-request.php';
 
 	// get the functions common to both the MLAGroup and MLAMember classes.
-	require_once $_tests_dir . '/../class-MLAAPI.php';
+	require_once $_tests_dir . '/../class-mla-api.php';
 
 	// Don't get the whole plugin now, just a few classes, because
 	// to test them individually we feed them mock data above.
-	require_once $_tests_dir . '/../class-CustomAuthentication.php';
-	require_once $_tests_dir . '/../class-MLAGroup.php';
+	require_once $_tests_dir . '/../class-custom-authentication.php';
+	require_once $_tests_dir . '/../class-mla-group.php';
 }
 tests_add_filter( 'muplugins_loaded', '_manually_load_plugin' );
 

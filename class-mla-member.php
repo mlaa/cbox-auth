@@ -1,6 +1,6 @@
 <?php
 /* The abstract API class is in another file. */
-require_once( 'class-MLAAPI.php' );
+require_once( 'class-mla-api.php' );
 
 /*
  * This class, MLA Member (not to be confused with MLAM ember) interfaces

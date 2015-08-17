@@ -3,13 +3,12 @@
 class CustomAuthentication extends MLAAPI {
 
 	function __construct() {
-		if ( ! isset ( $this->debug ) ) $this->debug = false;
-		//$this->debug = 'verbose'; // Lots of debugging messages!
+		if ( ! isset( $this->debug ) ) { $this->debug = false; }
+		// $this->debug = 'verbose'; // Lots of debugging messages!
 	}
 
-	# AUTHENTICATION FUNCTIONS ( PHASE 1 )
-	#####################################################################
-
+	// AUTHENTICATION FUNCTIONS ( PHASE 1 )
+	//
 	/**
 	 * This function is hooked into the 'authenticate' filter where
 	 * we can authenticate what the user submits to the login form.
@@ -21,7 +20,7 @@ class CustomAuthentication extends MLAAPI {
 	 */
 	public function authenticate_username_password( $ignored, $username, $password ) {
 
-		if ( 'verbose' == $this->debug ) _log( 'Starting authenticate_username_password()' );
+		if ( 'verbose' == $this->debug ) { _log( 'Starting authenticate_username_password()' ); }
 		// Stolen from wp_authenticate_username_password
 		if ( empty( $username ) || empty( $password ) ) {
 			return new WP_Error();
@@ -41,7 +40,7 @@ class CustomAuthentication extends MLAAPI {
 
 		// Get the user from the MLA database. If the user doesn't exist
 		// or the username/password is wrong, return the error
-		$customUserData = $this->findCustomUser( $username, $password );
+		$customUserData = $this->find_custom_user( $username, $password );
 
 		$customLoginError = null;
 		if ( $customUserData instanceof WP_Error ) {
@@ -63,11 +62,11 @@ class CustomAuthentication extends MLAAPI {
 				_log( 'Now validating username!' );
 				_log( 'Using value: $_POST[\'preferred\']', $_POST['preferred'] );
 			}
-			if ( $_POST['preferred'] != '' && username_exists( $_POST['preferred'] ) ) {
+			if ( '' !== $_POST['preferred'] && username_exists( $_POST['preferred'] ) ) {
 				return new WP_Error( 'invalid_username', __( '<strong>Error (' . __LINE__ . '):</strong> That user name already exists.' ) );
 			}
 
-			if ( $_POST['preferred'] != '' && !validate_username( $_POST['preferred'] ) ) {
+			if ( '' !== $_POST['preferred'] && ! validate_username( $_POST['preferred'] ) ) {
 				return new WP_Error( 'invalid_username', __( '<strong>Error (' . __LINE__ . '):</strong> User names must be between four and twenty characters in length and must contain at least one letter. Only lowercase letters, numbers, and underscores are allowed.' ) );
 			}
 
@@ -77,7 +76,7 @@ class CustomAuthentication extends MLAAPI {
 				return $customLoginError;
 			}
 
-			$userdata = $this->createWpUser( $customUserData );
+			$userdata = $this->create_wp_user( $customUserData );
 
 			if ( $userdata instanceof WP_Error ) {
 				_log( 'Error creating WP User!' );
@@ -86,8 +85,7 @@ class CustomAuthentication extends MLAAPI {
 
 			// Send welcome email
 			$user_id = $userdata->data->ID;
-			wpmu_welcome_user_notification( $user_id, $password='' );
-
+			wpmu_welcome_user_notification( $user_id, $password = '' );
 
 			// Post activity item for new member.
 			_log( 'Now attempting to add activity.' );
@@ -95,11 +93,11 @@ class CustomAuthentication extends MLAAPI {
 			$success = bp_activity_add( array(
 				'user_id'   => $user_id,
 				'component' => $component,
-				'type'      => 'new_member'
+				'type'      => 'new_member',
 			) );
 
-			if ( ! $success ) _log( 'Failed to add activity item for new member.' ); else _log( "Successfully added new activity item for new member at id: $success" );
-
+			if ( ! $success ) { _log( 'Failed to add activity item for new member.' );
+			} else { _log( "Successfully added new activity item for new member at id: $success" ); }
 
 			// Catch terms acceptance on first login.
 			update_user_meta( $userdata->ID, 'accepted_terms', $_POST['acceptance'] );
@@ -109,14 +107,14 @@ class CustomAuthentication extends MLAAPI {
 			// Stolen from wp_authenticate_username_password
 			if ( is_multisite() ) {
 				// Is user marked as spam?
-				if ( 1 == $userdata->spam )
-					return new WP_Error( 'invalid_username', __( '<strong>Error (' . __LINE__ . '):</strong> Your account has been marked as a spammer.' ) );
+				if ( 1 == $userdata->spam ) {
+					return new WP_Error( 'invalid_username', __( '<strong>Error (' . __LINE__ . '):</strong> Your account has been marked as a spammer.' ) ); }
 
 				// Is a user's blog marked as spam?
-				if ( !is_super_admin( $userdata->ID ) && isset( $userdata->primary_blog ) ) {
+				if ( ! is_super_admin( $userdata->ID ) && isset( $userdata->primary_blog ) ) {
 					$details = get_blog_details( $userdata->primary_blog );
-					if ( is_object( $details ) && $details->spam == 1 )
-						return new WP_Error( 'blog_suspended', __( '<strong>Error (' . __LINE__ . '):</strong> Your account has been suspended.' ) );
+					if ( is_object( $details ) && $details->spam == 1 ) {
+						return new WP_Error( 'blog_suspended', __( '<strong>Error (' . __LINE__ . '):</strong> Your account has been suspended.' ) ); }
 				}
 			}
 
@@ -126,7 +124,7 @@ class CustomAuthentication extends MLAAPI {
 					&& ( 'yes' == get_user_meta( $userdata->ID, 'mla_nonmember', $single = true )
 					|| is_super_admin( $userdata->ID ) ) ) {
 					// Add a cookie to speed up the login process for non-first-time users
-					$this->setRememberCookie( $username );
+					$this->set_remember_cookie( $username );
 					return $userdata;
 				} else {
 					return $customLoginError;
@@ -134,18 +132,17 @@ class CustomAuthentication extends MLAAPI {
 			}
 		}
 
-
 		// Add a cookie to speed up the login process for non-first-time users
-		$this->setRememberCookie( $username );
+		$this->set_remember_cookie( $username );
 
 		// At this point $userdata is a WP_User
-		$this->mergeWpUser( $userdata->ID, $customUserData );
+		$this->merge_wp_user( $userdata->ID, $customUserData );
 
 		// Create/join/leave groups.
-		$this->manageGroups( $userdata->ID, $customUserData['groups'] );
+		$this->manage_groups( $userdata->ID, $customUserData['groups'] );
 
 		// Special activities for special users.
-		$this->specialCases( $userdata->ID, $customUserData['id'] );
+		$this->special_cases( $userdata->ID, $customUserData['id'] );
 
 		// Try to redirect user to last viewed page.
 		add_filter( 'login_redirect', array( $this, 'redirect_to_last_viewed_page' ), 10, 3 );
@@ -153,8 +150,8 @@ class CustomAuthentication extends MLAAPI {
 		return $userdata;
 	}
 
-	private function setRememberCookie( $value ) {
-		if ( !empty( $_SERVER['HTTPS'] ) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443 ) {
+	private function set_remember_cookie( $value ) {
+		if ( ! empty( $_SERVER['HTTPS'] ) && 'off' !== $_SERVER['HTTPS'] || 443 === $_SERVER['SERVER_PORT'] ) {
 			$secure_connection = true;
 		} else {
 			$secure_connection = false;
@@ -170,10 +167,10 @@ class CustomAuthentication extends MLAAPI {
 	public function ajax_test_user() {
 		$result = false;
 		$guess = '';
-		$customUserData = $this->findCustomUser( $_POST['username'], $_POST['password'] );
-		if ( !$customUserData instanceof WP_Error ) {
+		$customUserData = $this->find_custom_user( $_POST['username'], $_POST['password'] );
+		if ( ! $customUserData instanceof WP_Error ) {
 			$userdata = get_user_by( 'login', $customUserData['user_name'] );
-			if ( !$userdata ) {
+			if ( ! $userdata ) {
 				$result = true;
 				if ( $customUserData['id'] != $customUserData['user_name'] ) {
 					$guess = $customUserData['user_name'];
@@ -201,7 +198,7 @@ class CustomAuthentication extends MLAAPI {
 				// don't allow characters that aren't lowercase letters, numbers, underscores
 				$message = $error_message;
 			} else {
-				$res = $this->changeCustomUsername( $username, $password, $preferred );
+				$res = $this->change_custom_username( $username, $password, $preferred );
 				if ( $res instanceof WP_Error ) {
 					$message = $res->get_error_message( 'name_change_error' );
 				} else {
@@ -224,7 +221,7 @@ class CustomAuthentication extends MLAAPI {
 	 * @return null|string|void
 	 */
 	public function redirect_to_profile( $redirect_to = null, $request = null, $user = null ) {
-		if ( $user != null ) {
+		if ( null !== $user ) {
 			return home_url( "members/$user->user_login/profile/edit" );
 		} else {
 			return $redirect_to;
@@ -237,43 +234,42 @@ class CustomAuthentication extends MLAAPI {
 	public function redirect_to_last_viewed_page( $redirect_to = null, $request = null, $user = null ) {
 		if ( ! empty( $_COOKIE ) ) {
 			if ( ! empty( $_COOKIE['MLAReferer'] ) ) {
-				//_log( 'Found cookie: ', $_COOKIE['MLAReferer'] );
+				// _log( 'Found cookie: ', $_COOKIE['MLAReferer'] );
 				if ( false == strpos( $_COOKIE['MLAReferer'], 'wp-login' ) ) {
-					if ( $user != null ) {
+					if ( null !== $user ) {
 						return $_COOKIE['MLAReferer'];
 					} else {
-						//_log( 'User is null!' );
+						// _log( 'User is null!' );
 						return $redirect_to;
 					}
 				} else {
-					//_log( 'Referer is wp-login!' );
+					// _log( 'Referer is wp-login!' );
 				}
 			} else {
-				//_log( 'No MLAReferer in cookies!' );
+				// _log( 'No MLAReferer in cookies!' );
 			}
 		} else {
-			//_log( 'No cookies! Can\'t redirect to previous page.' );
+			// _log( 'No cookies! Can\'t redirect to previous page.' );
 		}
 		return home_url();
 	}
 
 	/**
 	 * @param $userId
-	 * @param array $groupsData
+	 * @param array  $groupsData
 	 * @return null
 	 */
-	protected function manageGroups( $userId, array $groupsData ) {
+	protected function manage_groups( $userId, array $groupsData ) {
 		global $wpdb, $bp;
 
-		//_log( "Managing groups with userID: $userId!" );
-
+		// _log( "Managing groups with userID: $userId!" );
 		// Get BP groups with OIDs and their associated BP group IDs.
 		$custom_groups = $wpdb->get_results( $wpdb->prepare( 'SELECT group_id, meta_value FROM ' . $bp->groups->table_name_groupmeta . ' WHERE meta_key = %s', 'mla_oid' ) );
 
 		// Make an efficient copy of the user's groups.
 		$user_groups = array();
 		foreach ( $groupsData as $groupData ) {
-			$user_groups[$groupData['oid']] = $groupData;
+			$user_groups[ $groupData['oid'] ] = $groupData;
 		}
 
 		// Loop through each BP group and add/remove/promote/demote the user as needed.
@@ -282,38 +278,35 @@ class CustomAuthentication extends MLAAPI {
 		// because I suspect that it might be more efficient than instantiating the class.
 		foreach ( $custom_groups as $custom_group ) {
 
-			//_log( 'Now looking at group:', $custom_group );
-
+			// _log( 'Now looking at group:', $custom_group );
 			$groupId = $custom_group->group_id;
 			$customOid = $custom_group->meta_value;
 
-			if ( isset( $user_groups[$customOid] ) ) {
+			if ( isset( $user_groups[ $customOid ] ) ) {
 
 				// Copy user group data and delete it.
-				$groupData = $user_groups[$customOid];
-				unset( $user_groups[$customOid] );
+				$groupData = $user_groups[ $customOid ];
+				unset( $user_groups[ $customOid ] );
 
 				// No-Op if user is already a member
 				groups_join_group( $groupId, $userId );
 
-				//_log( 'User role appears to be:', $groupData['role'] );
-
+				// _log( 'User role appears to be:', $groupData['role'] );
 				// First we need to tell BP we're an admin.
 				bp_update_is_item_admin( true, 'groups' );
 
 				// If a user is a chair, liaison, etc, promote them.
 				// If not, demote them.
 				if ( 'admin' == $this->translate_mla_role( $groupData['role'] ) ) {
-					//_log( "User is admin! Promoting user $userId in group $groupId." );
+					// _log( "User is admin! Promoting user $userId in group $groupId." );
 					$success = groups_promote_member( $userId, $groupId, 'admin' );
-					 //if ( $success ) _log( 'Great success!' ); else _log( 'Couldn\'t promote user!' );
+					 // if ( $success ) _log( 'Great success!' ); else _log( 'Couldn\'t promote user!' );
 				} else {
-					//_log( "User is regular member! Demoting user $userId in group $groupId." );
+					// _log( "User is regular member! Demoting user $userId in group $groupId." );
 					$success = groups_demote_member( $userId, $groupId );
-					 //if ( $success ) _log( 'Great success!' ); else _log( 'Couldn\'t demote user!' );
+					 // if ( $success ) _log( 'Great success!' ); else _log( 'Couldn\'t demote user!' );
 				}
-
-			} elseif ( ! $this->isForumGroup( $customOid ) ) {
+			} elseif ( ! $this->is_forum_group( $customOid ) ) {
 				// Remove the user from the group.
 				groups_leave_group( $groupId, $userId );
 			}
@@ -331,18 +324,16 @@ class CustomAuthentication extends MLAAPI {
 			);
 
 			// add group status to array if given.
-			if ( array_key_exists( 'status', $groupData ) ) $newGroup['status'] = $groupData['status'];
+			if ( array_key_exists( 'status', $groupData ) ) { $newGroup['status'] = $groupData['status']; }
 
-			//_log( 'About to create group with data: ', $groupData );
-
+			// _log( 'About to create group with data: ', $groupData );
 			$groupId = groups_create_group( $newGroup );
 
-			//if ( ! $groupId ) {
-				//_log( 'Warning! No group created!' );
-			//} else {
-				//_log( "Group created ID is: $groupId" );
-			//}
-
+			// if ( ! $groupId ) {
+				// _log( 'Warning! No group created!' );
+			// } else {
+				// _log( "Group created ID is: $groupId" );
+			// }
 			// Store MLA OID (convention code, old ID) in the group meta (BP DB).
 			groups_update_groupmeta( $groupId, 'mla_oid', $groupData['oid'] );
 
@@ -373,7 +364,7 @@ class CustomAuthentication extends MLAAPI {
 	 * @param $customUserId
 	 * @return null
 	 */
-	protected function specialCases( $userId, $customUserId ) {
+	protected function special_cases( $userId, $customUserId ) {
 		global $wpdb, $bp;
 
 		switch ( $customUserId ) {
@@ -398,11 +389,11 @@ class CustomAuthentication extends MLAAPI {
 	 * @param $password
 	 * @return array|WP_Error
 	 */
-	protected function findCustomUser( $username, $password ) {
+	protected function find_custom_user( $username, $password ) {
 
 		$response = $this->get_member( $username );
 
-		if ( $response === false || $response == '' ) {
+		if ( false === $response || '' === $response ) {
 			// This only happens if we can't access the API server.
 			_log( 'Authentication Plugin: is API server down?' );
 			return new WP_Error( 'server_error', __( '<strong>Error (' . __LINE__ . '):</strong> There was a problem verifying your member credentials. Please try again later.' ) );
@@ -411,7 +402,7 @@ class CustomAuthentication extends MLAAPI {
 		if ( ! array_key_exists( 'code', $response ) ) {
 			_log( 'Didn\'t get a code in the response. Is the API server down?' );
 			return new WP_Error( 'server_error', __( '<strong>Error (' . __LINE__ . '):</strong> There was a problem verifying your member credentials. Please try again later.' ) );
-		} else if ( $response['code'] != 200 ) {
+		} else if ( 200 !== $response['code'] ) {
 			_log( 'Authentication plugin: got a code other than 200. Here\'s what the server said:' );
 			_log( $response );
 			return new WP_Error( 'server_error', __( '<strong>Error (' . __LINE__ . '):</strong> There was a problem verifying your member credentials. Please try again later.' ) );
@@ -424,9 +415,9 @@ class CustomAuthentication extends MLAAPI {
 			return new WP_Error( 'server_error', __( '<strong>Error (' . __LINE__ . '):</strong> Because of a temporary problem, we cannot verify your member credentials at this time. Please try again in a few minutes.' ) );
 		}
 
-		if ( 'verbose' == $this->debug ) _log( 'Decoded JSON is: ', $decoded );
+		if ( 'verbose' == $this->debug ) { _log( 'Decoded JSON is: ', $decoded ); }
 
-		if ( $decoded['meta']['status'] != 'success' ) {
+		if ( 'success' !== $decoded['meta']['status'] ) {
 			_log( 'Authentication plugin: member lookup was not a success. Server says:', $decoded->meta );
 			return new WP_Error( 'not_authorized', sprintf( __( '<strong>Error (' . __LINE__ . '):</strong> Your user name and password could not be verified. Please try again.' ), wp_lostpassword_url() ) );
 		}
@@ -440,7 +431,7 @@ class CustomAuthentication extends MLAAPI {
 
 		$json_data = $json_data[0]; // There should only be one now.
 
-		//Authenticate with password!
+		// Authenticate with password!
 		$our_password = crypt( $password, $json_data['authentication']['password'] ); // salt it and hash it appropriately
 		$their_password = $json_data['authentication']['password'];
 
@@ -451,12 +442,12 @@ class CustomAuthentication extends MLAAPI {
 
 		$json_member_data = $decoded['data'][0];
 
-		$json_array = $this->memberJSONToArray( $json_member_data, $password );
+		$json_array = $this->member_json_to_array( $json_member_data, $password );
 
-		if ( 'verbose' == $this->debug ) _log( '$json_array is as follows', $json_array );
+		if ( 'verbose' == $this->debug ) { _log( '$json_array is as follows', $json_array ); }
 
 		// Make sure the user is active and of the allowed types ( i.e. 'member' )
-		if ( !$this->validateCustomUser( $json_array, $username, $error ) ) {
+		if ( ! $this->validate_custom_user( $json_array, $username, $error ) ) {
 			return $error;
 		}
 
@@ -464,7 +455,7 @@ class CustomAuthentication extends MLAAPI {
 
 	}
 
-	protected function mergeWpUser( $userId, $member ) {
+	protected function merge_wp_user( $userId, $member ) {
 		wp_update_user( array( 'ID' => $userId, 'user_email' => $member['email'] ) );
 		update_user_meta( $userId, 'languages', $member['languages'] );
 		update_user_meta( $userId, 'affiliations', $member['affiliations'] );
@@ -477,10 +468,10 @@ class CustomAuthentication extends MLAAPI {
 	 * @param $member
 	 * @return WP_Error|WP_User
 	 */
-	protected function createWpUser( $member ) {
-		if ( $_POST['preferred'] != '' && $member['user_name'] != $_POST['preferred'] ) {
-			$result = $this->changeCustomUsername( $member['user_name'], $member['password'], $_POST['preferred'] );
-			if ( !$result instanceof WP_Error ) {
+	protected function create_wp_user( $member ) {
+		if ( '' !== $_POST['preferred'] && $member['user_name'] !== $_POST['preferred'] ) {
+			$result = $this->change_custom_username( $member['user_name'], $member['password'], $_POST['preferred'] );
+			if ( ! $result instanceof WP_Error ) {
 				$username = $_POST['preferred'];
 			} else {
 				return $result;
@@ -514,14 +505,13 @@ class CustomAuthentication extends MLAAPI {
 	 * @param $password
 	 * @return array
 	 */
-	protected function memberJSONToArray( $json, $password ) {
+	protected function member_json_to_array( $json, $password ) {
 		$languages = array();
 		$affiliations = array();
 		$groups = array();
 		$affiliations = array();
 
-		//_log( 'incoming json to memberJSONToArray:', $json );
-
+		// _log( 'incoming json to member_json_to_array:', $json );
 		foreach ( $json['addresses'] as $address ) {
 			if ( array_key_exists( 'affiliation', $address ) ) {
 				$affiliations[] = $address['affiliation'];
@@ -531,20 +521,20 @@ class CustomAuthentication extends MLAAPI {
 		foreach ( $json['organizations'] as $group ) {
 
 			// Don't parse groups that have been excluded from the Commons.
-			if ( 'Y' == $group['exclude_from_commons'] ) continue;
+			if ( 'Y' == $group['exclude_from_commons'] ) { continue; }
 
 			// Committees and other MLA organizations should be private groups.
-			if ( $this->isCommitteeGroup( $group['convention_code'] ) || 'MLA Organization' == $group['type']  ) {
+			if ( $this->is_committee_group( $group['convention_code'] ) || 'MLA Organization' == $group['type']  ) {
 				$group['status'] = 'private';
 			} else {
 				$group['status'] = 'public';
 			}
 
 			$groups[] = array(
-				//[oid] => G049
-				//[role] =>
-				//[name] => Age Studies
-				//[status] => public
+				// [oid] => G049
+				// [role] =>
+				// [name] => Age Studies
+				// [status] => public
 				'oid'        => $group['convention_code'],
 				'mla_api_id' => $group['id'],
 				'role'       => $group['position'],
@@ -559,7 +549,7 @@ class CustomAuthentication extends MLAAPI {
 			'user_name' => $json['authentication']['username'],
 			'status' => $json['authentication']['membership_status'],
 			// ???
-			//'type' => trim( $xml->member->type ),
+			// 'type' => trim( $xml->member->type ),
 			'password' => $password,
 			'email' => trim( $json['general']['email'] ),
 			'first_name' => trim( $json['general']['first_name'] ),
@@ -577,17 +567,17 @@ class CustomAuthentication extends MLAAPI {
 	/**
 	 * Pulls group info from the xml element
 	 *
-	 * @param array $groups
+	 * @param array      $groups
 	 * @param $xmlElement
 	 */
-	private function extractGroups( array &$groups, $xmlElement ) {
-		foreach( $xmlElement as $item ) {
+	private function extract_groups( array &$groups, $xmlElement ) {
+		foreach ( $xmlElement as $item ) {
 			$attrs = $item->attributes();
 			$groups[] = array(
-				'oid' => ( string ) $attrs['oid'],
-				'role' => ( string ) $attrs['role'],
-				'name' => ( string ) $item[0],
-				'status' => $this->isDivisionOrDiscussionGroup( $attrs['oid'] ) ? 'public' : 'private',
+				'oid' => (string) $attrs['oid'],
+				'role' => (string) $attrs['role'],
+				'name' => (string) $item[0],
+				'status' => $this->is_division_or_discussion_group( $attrs['oid'] ) ? 'public' : 'private',
 			 );
 		}
 	}
@@ -599,18 +589,18 @@ class CustomAuthentication extends MLAAPI {
 	 *
 	 * @param $member
 	 * @param $id
-	 * @param null $error
+	 * @param null   $error
 	 * @return bool
 	 */
-	protected function validateCustomUser( $member, $id, &$error = null ) {
+	protected function validate_custom_user( $member, $id, &$error = null ) {
 
-		if ( $id !== $member['id'] && $id !== urlencode( strtolower( $member['user_name'] ) ) ) {
+		if ( $id !== $member['id'] && urlencode( strtolower( $member['user_name'] ) ) !== $id ) {
 			// This should not happen since the API gives us the member based on the ID or Username. Nonetheless, it's worth checking.
 			$error = new WP_Error( 'server_error', __( '<strong>Error (' . __LINE__ . '):</strong> There was a problem verifying your member credentials. Please try again later.' ) );
 			return false;
 		}
 
-		if ( $member['status'] !== 'active' ) {
+		if ( 'active' !== $member['status'] ) {
 			$error = new WP_Error( 'server_error', __( '<strong>Error (' . __LINE__ . '):</strong> Your membership is not active.' ) );
 			return false;
 		}
@@ -621,23 +611,22 @@ class CustomAuthentication extends MLAAPI {
 
 
 
-	# GROUP MANAGEMENT FUNCTIONS ( PHASE 2 )
-	#####################################################################
-
+	// GROUP MANAGEMENT FUNCTIONS ( PHASE 2 )
+	//
 	public function activate() {
 		$allGroups = groups_get_groups( array( 'per_page' => null ) );
 
-		foreach( $allGroups['groups'] as $group ) {
+		foreach ( $allGroups['groups'] as $group ) {
 			$group_custom_oid = groups_get_groupmeta( $group->id, 'mla_oid', true );
 			if ( empty( $group_custom_oid ) ) {
 				continue;
 			}
-			if ( $this->isDivisionOrDiscussionGroup( $group_custom_oid ) ) {
-				$this->changeGroupStatus( $group, 'public' );
+			if ( $this->is_division_or_discussion_group( $group_custom_oid ) ) {
+				$this->change_group_status( $group, 'public' );
 				continue;
 			}
-			if ( $this->isCommitteeGroup( $group_custom_oid ) ) {
-				$this->changeGroupStatus( $group, 'private' );
+			if ( $this->is_committee_group( $group_custom_oid ) ) {
+				$this->change_group_status( $group, 'private' );
 			}
 		}
 	}
@@ -648,12 +637,12 @@ class CustomAuthentication extends MLAAPI {
 	 * @param stdClass $group
 	 * @param $status
 	 */
-	private function changeGroupStatus( stdClass $group, $status ) {
+	private function change_group_status( stdClass $group, $status ) {
 		global $wpdb, $bp;
 
 		if ( $group->status != $status ) {
 			// Have to use SQL because buddypress isn't all set up at this point
-			$wpdb->query( $wpdb->prepare( "UPDATE ".$bp->groups->table_name." SET status=%s WHERE id=%d", $status, $group->id ) );
+			$wpdb->query( $wpdb->prepare( 'UPDATE '.$bp->groups->table_name.' SET status=%s WHERE id=%d', $status, $group->id ) );
 		}
 	}
 
@@ -670,7 +659,7 @@ class CustomAuthentication extends MLAAPI {
 		$group_custom_oid = groups_get_groupmeta( $group->id, 'mla_oid', true );
 
 		// Don't show request membership if it's an MLA group ( probably a committee, since only committees are private )
-		if ( !empty( $group_custom_oid ) && ( $this->isDivisionOrDiscussionGroup( $group_custom_oid ) || $this->isCommitteeGroup( $group_custom_oid ) ) ) {
+		if ( ! empty( $group_custom_oid ) && ( $this->is_division_or_discussion_group( $group_custom_oid ) || $this->is_committee_group( $group_custom_oid ) ) ) {
 			return;
 		}
 
@@ -689,7 +678,7 @@ class CustomAuthentication extends MLAAPI {
 		$group_custom_oid = groups_get_groupmeta( $group->id, 'mla_oid', true );
 
 		// Don't show request membership if it's an MLA group ( probably a committee, since only committees are private )
-		if ( !empty( $group_custom_oid ) && $this->isCommitteeGroup( $group_custom_oid ) ) {
+		if ( ! empty( $group_custom_oid ) && $this->is_committee_group( $group_custom_oid ) ) {
 			return;
 		}
 
@@ -711,7 +700,7 @@ class CustomAuthentication extends MLAAPI {
 		$group_custom_oid = groups_get_groupmeta( $group->id, 'mla_oid', true );
 
 		// Don't show privacy or invitation settings if it's an MLA group
-		if ( !empty( $group_custom_oid ) && ( $this->isDivisionOrDiscussionGroup( $group_custom_oid ) || $this->isCommitteeGroup( $group_custom_oid ) ) ) {
+		if ( ! empty( $group_custom_oid ) && ( $this->is_division_or_discussion_group( $group_custom_oid ) || $this->is_committee_group( $group_custom_oid ) ) ) {
 			return;
 		}
 
@@ -748,10 +737,9 @@ class CustomAuthentication extends MLAAPI {
 		$user_id = bp_loggedin_user_id();
 
 		// Render as normal if it's not an MLA group or it's a division or discussion group and user is not admin of group
-		if ( empty( $group_custom_oid ) || $this->isForumGroup( $group_custom_oid ) || ( $group_custom_oid && $this->isDivisionOrDiscussionGroup( $group_custom_oid ) && !groups_is_user_admin( $user_id, $group->id ) ) ) {
+		if ( empty( $group_custom_oid ) || $this->is_forum_group( $group_custom_oid ) || ( $group_custom_oid && $this->is_division_or_discussion_group( $group_custom_oid ) && ! groups_is_user_admin( $user_id, $group->id ) ) ) {
 			return bp_group_join_button( $group );
 		}
-
 
 	}
 
@@ -762,18 +750,17 @@ class CustomAuthentication extends MLAAPI {
 	}
 
 
-	# UTILITY FUNCTIONS
-	#####################################################################
-
+	// UTILITY FUNCTIONS
+	//
 	/**
 	 * Determine if the group is a division or discussion
 	 *
 	 * @param string $group_custom_oid
 	 * @return bool
 	 */
-	protected function isDivisionOrDiscussionGroup( $group_custom_oid ) {
+	protected function is_division_or_discussion_group( $group_custom_oid ) {
 		$flag = substr( $group_custom_oid, 0, 1 );
-		if ( $flag != 'D' && $flag != 'G' ) {
+		if ( 'D' !== $flag && 'G' !== $flag ) {
 			return false;
 		}
 		return true;
@@ -785,9 +772,9 @@ class CustomAuthentication extends MLAAPI {
 	 * @param string $group_custom_oid
 	 * @return bool
 	 */
-	protected function isCommitteeGroup( $group_custom_oid ) {
+	protected function is_committee_group( $group_custom_oid ) {
 		$flag = substr( $group_custom_oid, 0, 1 );
-		if ( $flag != 'M' ) {
+		if ( 'M' !== $flag ) {
 			return false;
 		}
 		return true;
@@ -799,9 +786,9 @@ class CustomAuthentication extends MLAAPI {
 	 * @param string $group_custom_oid
 	 * @return bool
 	 */
-	protected function isForumGroup( $group_custom_oid ) {
+	protected function is_forum_group( $group_custom_oid ) {
 		$flag = substr( $group_custom_oid, 0, 1 );
-		if ( $flag != 'F' ) {
+		if ( 'F' !== $flag ) {
 			return false;
 		}
 		return true;

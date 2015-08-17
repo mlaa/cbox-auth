@@ -1,9 +1,12 @@
 <?php
-
-/* This class, MLA Group, is primarily used to update group memberships,
+/**
+ * Class MLAGroup
+ * @package cbox-auth
+ * This class, MLA Group, is primarily used to update group memberships,
  * so that when there is a group membership change, these are updated
  * more frequently than when the user logs out and logs back in.
  */
+
 class MLAGroup extends MLAAPI {
 	public $group_bp_id = 0;
 	public $group_mla_oid = 0;
@@ -15,15 +18,14 @@ class MLAGroup extends MLAAPI {
 		// while instantiating this class.
 		$this->debug = $debug;
 
-		//Turn on verbose for now. 
-		//$this->debug = 'verbose';
-
+		// Turn on verbose for now.
+		// $this->debug = 'verbose';
 		_log( "Instantiated the MLAGroup class. Here's some information about this group." );
 
-		// If a group ID is passed, assume we're logging in, and go 
-		// with the passed value. If not, assume we're on a page, 
-		// and get the group ID from context. 
-		$this->group_bp_id = $group_bp_id ? $group_bp_id : bp_get_group_id(); 
+		// If a group ID is passed, assume we're logging in, and go
+		// with the passed value. If not, assume we're on a page,
+		// and get the group ID from context.
+		$this->group_bp_id = $group_bp_id ? $group_bp_id : bp_get_group_id();
 
 		_log( "This group's BP ID is: $this->group_bp_id" );
 
@@ -56,17 +58,16 @@ class MLAGroup extends MLAAPI {
 	 * @return bool
 	 */
 	public function is_too_old() {
-		_log( 'Checking to see whether this group has been recently updated.' ); 
+		_log( 'Checking to see whether this group has been recently updated.' );
 		$last_updated = (integer) groups_get_groupmeta( $this->group_bp_id, 'last_updated', true );
 
 		// never skip updating while debugging
-		//if ( $this->debug ) return true; 
-
+		// if ( $this->debug ) return true;
 		if ( ! $last_updated ) {
-			_log( 'This group has never been updated. Updating.' ); 
+			_log( 'This group has never been updated. Updating.' );
 			return true; /* never updated, so, it's too old. */
 		} else {
-			_log( "This group was last updated at $last_updated, which was this many seconds ago: ", time() - $last_updated ); 
+			_log( "This group was last updated at $last_updated, which was this many seconds ago: ", time() - $last_updated );
 			return ( time() - $last_updated > $this->update_interval );
 		}
 	}
@@ -122,9 +123,9 @@ class MLAGroup extends MLAAPI {
 			return false;
 		}
 
-		// Abstracting this part out so that it can work better with 
-		// mock data. 
-		$response = $this->get_mla_group_data_from_api(); 
+		// Abstracting this part out so that it can work better with
+		// mock data.
+		$response = $this->get_mla_group_data_from_api();
 
 		if ( 200 != $response['code'] ) {
 			_log( 'Something went wrong when polling the api with URL:', $request_url );
@@ -132,14 +133,12 @@ class MLAGroup extends MLAAPI {
 			return false;
 		}
 
-
 		$decoded = json_decode( $response['body'] );
 		$data = $decoded->data;
-		//_log( 'Get ready for the raw group data!', $data );
-
+		// _log( 'Get ready for the raw group data!', $data );
 		// get the members with their MLA API IDs
 		$members_list = $data[0]->members;
-		//_log( 'Members list is:',  $members_list );
+		// _log( 'Members list is:',  $members_list );
 		$members_count = count( $members_list );
 		_log( "Members list from MLA API has $members_count members, (filtered by joined_commons)." );
 
@@ -186,7 +185,7 @@ class MLAGroup extends MLAAPI {
 		}
 		$bp_members_list_count = count( $bp_members_list );
 		_log( "BP members list has $bp_members_list_count members." );
-		_log( 'BP members for this group are:', $bp_members_list ); 
+		_log( 'BP members for this group are:', $bp_members_list );
 
 		return $bp_members_list;
 	}
@@ -199,7 +198,7 @@ class MLAGroup extends MLAAPI {
 	public function sync() {
 
 		if ( ! $this->is_too_old() ) {
-			//_log( 'No need to sync this group, since it\'s apparently been synced within the last hour.' );
+			// _log( 'No need to sync this group, since it\'s apparently been synced within the last hour.' );
 			return false;
 		}
 
@@ -218,11 +217,10 @@ class MLAGroup extends MLAAPI {
 
 		$group_id = $this->group_bp_id;
 
-		//_log( 'Now syncing with mla_members_list:', $this->mla_members_list );
-		//_log( 'Now syncing with bp_members_list:', $this->bp_members_list );
-
+		// _log( 'Now syncing with mla_members_list:', $this->mla_members_list );
+		// _log( 'Now syncing with bp_members_list:', $this->bp_members_list );
 		$diff = array_diff_assoc( $this->mla_members_list, $this->bp_members_list );
-		if ( 'verbose' == $this->debug ) _log( 'Diff of arrays:', $diff );
+		if ( 'verbose' == $this->debug ) { _log( 'Diff of arrays:', $diff ); }
 
 		// BuddyPress values for those diffed members.
 		$bp_diff = array();
@@ -231,7 +229,7 @@ class MLAGroup extends MLAAPI {
 				$bp_diff[ $member ] = $this->bp_members_list[ $member ];
 			}
 		}
-		if ( 'verbose' == $this->debug ) _log( 'BP\'s version of those members:', $bp_diff );
+		if ( 'verbose' == $this->debug ) { _log( 'BP\'s version of those members:', $bp_diff ); }
 
 		// At this point we should have two associative arrays that reflect differences
 		// in the MLA API group membership and the BuddyPress group membership. They should
@@ -248,43 +246,42 @@ class MLAGroup extends MLAAPI {
 		foreach ( $diff as $member_username => $mla_role ) {
 			// We don't want no scrubs.
 			// Ignore records with empty IDs.
-			if ( '' == $member_username ) continue;
+			if ( '' == $member_username ) { continue; }
 
-			if ( 'verbose' == $this->debug ) _log( "Now handling member with username: $member_username and role: $mla_role" ); 
+			if ( 'verbose' == $this->debug ) { _log( "Now handling member with username: $member_username and role: $mla_role" ); }
 
-			// Get the member ID for this member from the username. 
-			$member_id = bp_core_get_userid( $member_username ); 
+			// Get the member ID for this member from the username.
+			$member_id = bp_core_get_userid( $member_username );
 
-			// If we can't look up the member ID, 
-			// this might not be a member that has joined the commons. 
-			// Ergo, nothing to do.  
-			if ( ! $member_id || 0 == $member_id ) continue; 
+			// If we can't look up the member ID,
+			// this might not be a member that has joined the commons.
+			// Ergo, nothing to do.
+			if ( ! $member_id || 0 == $member_id ) { continue; }
 
 			// I don't think I need to translate the MLA role here, because the data
-			// we get is already translated.   
-			//// First translate this to something BP can understand.
-			//$mla_role = $this->translate_mla_role( $role );
-
+			// we get is already translated.
+			// First translate this to something BP can understand.
+			// $mla_role = $this->translate_mla_role( $role );
 			// And look up the corresponding role in BP's records.
 			if ( array_key_exists( $member_username, $bp_diff ) ) {
 				$bp_role = $bp_diff[ $member_username ];
 			} else {
 				// If MLA member isn't a member of the BuddyPress group, add them.
-				if ( 'verbose' == $this->debug ) _log( "Member $member_username not found in this BP group. Adding member ID $member_id to group $group_id and assigning the role of $mla_role." );
-				
+				if ( 'verbose' == $this->debug ) { _log( "Member $member_username not found in this BP group. Adding member ID $member_id to group $group_id and assigning the role of $mla_role." ); }
+
 				// Can't use the regular groups_join_group here, since we're hooking
-				// into that action in customAuth.php, so we roll our own.  
-				if ( ! $this->mla_groups_join_group( $group_id, $member_id ) ) { 
-					_log( "Couldn\'t add user $member_username to BP group $group_id!" ); 
-				} else { 
-					_log( "Successfully added user $member_username to group $group_id." ); 
-				} 
+				// into that action in customAuth.php, so we roll our own.
+				if ( ! $this->mla_groups_join_group( $group_id, $member_id ) ) {
+					_log( "Couldn\'t add user $member_username to BP group $group_id!" );
+				} else {
+					_log( "Successfully added user $member_username to group $group_id." );
+				}
 
 				// Also add it to our list so that we can compare the
-				// roles below. Newly-added members are automatically given the role of member. 
-				// We can promote or demote them as necessary later. 
-				$bp_diff[ $member_username ] = 'member';  
-				$bp_role = 'member'; 
+				// roles below. Newly-added members are automatically given the role of member.
+				// We can promote or demote them as necessary later.
+				$bp_diff[ $member_username ] = 'member';
+				$bp_role = 'member';
 			}
 
 			if ( $mla_role == $bp_role ) {
@@ -296,44 +293,42 @@ class MLAGroup extends MLAAPI {
 			if ( 'admin' == $mla_role && 'member' == $bp_role ) {
 				// User has been promoted at MLA, but not on BP.
 				// Promote them on BP.
-				if ( 'verbose' == $this->debug ) _log( "Member $member_username has a higher role in the MLA DB than in BP. Promoting." );
+				if ( 'verbose' == $this->debug ) { _log( "Member $member_username has a higher role in the MLA DB than in BP. Promoting." ); }
 				groups_promote_member( $member_id, $group_id, 'admin' );
 			}
 
 			if ( 'member' == $mla_role && 'admin' == $bp_role ) {
 				// User has been demoted at MLA, but not on BP.
 				// Demote them on BP.
-				if ( 'verbose' == $this->debug ) _log( "Member $member_username has a higher role in BP than the MLA API reflects. Demoting." );
+				if ( 'verbose' == $this->debug ) { _log( "Member $member_username has a higher role in BP than the MLA API reflects. Demoting." ); }
 				groups_demote_member( $member_id, $group_id );
 			}
 		}
 
-
-		// BUT! array_diff_assoc() only diffs in one direction. From the manual: 
-		// "Returns an array containing all the values from array1 that are not present in 
-		// any of the other arrays." So we actually have to do another diff to find 
-		// those members that exist in BP but not in the member database. This time, 
+		// BUT! array_diff_assoc() only diffs in one direction. From the manual:
+		// "Returns an array containing all the values from array1 that are not present in
+		// any of the other arrays." So we actually have to do another diff to find
+		// those members that exist in BP but not in the member database. This time,
 		// we'll use array_diff_key(), since we're not concerned with the values (member roles)
-		// anymore, just whether the member exists. If a member exists in BP, but not in the 
-		// member database, we will assume that member has been removed on the 
-		// Oracle side, and we will therefore remove them on the BP side to reflect that. 
-		
-		$removed = array_diff_key( $this->bp_members_list, $this->mla_members_list ); 
-		if ( 'verbose' == $this->debug ) _log( 'Reverse diff of arrays (removed):', $removed );
+		// anymore, just whether the member exists. If a member exists in BP, but not in the
+		// member database, we will assume that member has been removed on the
+		// Oracle side, and we will therefore remove them on the BP side to reflect that.
+		$removed = array_diff_key( $this->bp_members_list, $this->mla_members_list );
+		if ( 'verbose' == $this->debug ) { _log( 'Reverse diff of arrays (removed):', $removed ); }
 
-		foreach ( $removed as $removed_member_username => $removed_member_role ) { 
-			$removed_member_id = bp_core_get_userid( $removed_member_username ); 
-			if ( 'verbose' == $this->debug ) _log( "Now removing member: $removed_member_username with ID: $removed_member_id from group $group_id." ); 
+		foreach ( $removed as $removed_member_username => $removed_member_role ) {
+			$removed_member_id = bp_core_get_userid( $removed_member_username );
+			if ( 'verbose' == $this->debug ) { _log( "Now removing member: $removed_member_username with ID: $removed_member_id from group $group_id." ); }
 
 			// We can't use groups_leave_group() here, because we're hooking into that
-			// action in customAuth.php, so we have to remove the user from the group 
-			// semi-manually. 
+			// action in customAuth.php, so we have to remove the user from the group
+			// semi-manually.
 			if ( ! $this->mla_groups_leave_group( $group_id, $removed_member_id ) ) {
-				_log( 'Couldn\'t remove member from group!' ); 
-			} else { 
-				_log( 'Successfully removed member from BP group!' ); 	
-			} 
-		} 
+				_log( 'Couldn\'t remove member from group!' );
+			} else {
+				_log( 'Successfully removed member from BP group!' );
+			}
+		}
 
 		$this->update_last_updated_time();
 

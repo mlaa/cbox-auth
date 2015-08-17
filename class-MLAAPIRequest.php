@@ -4,10 +4,10 @@
  * with the MLA API. It's abstracted away from the MLAAPI class, so that MLAAPI
  * class can handle functions that are common to MLAGroup and MLAMember, but that
  * the functions for actually communicating are here. This way, we can rewrite
- * MLAAPIRequest in our tests and fill it with mock data, and not also have to 
- * rewrite MLAAPI. 
- */ 
-class MLAAPIRequest { 
+ * MLAAPIRequest in our tests and fill it with mock data, and not also have to
+ * rewrite MLAAPI.
+ */
+class MLAAPIRequest {
 
 	private $api_url = CBOX_AUTH_API_URL;
 
@@ -18,8 +18,8 @@ class MLAAPIRequest {
 	 */
 	public function send_request( $http_method, $base_url, $parameters = array(), $request_body = '' ) {
 
-		$api_key = CBOX_AUTH_API_KEY; 
-		$api_secret = CBOX_AUTH_API_SECRET; 
+		$api_key = CBOX_AUTH_API_KEY;
+		$api_secret = CBOX_AUTH_API_SECRET;
 
 		// Append current time to request parameters (seconds from UNIX epoch).
 		$parameters['key'] = $api_key;
@@ -43,11 +43,11 @@ class MLAAPIRequest {
 
 		$this->debug = 'verbose'; // turning on debugging output
 
-		if ( 'verbose' == $this->debug ) _log( 'Using request:', $request_url );
+		if ( 'verbose' === $this->debug ) { _log( 'Using request:', $request_url ); }
 
 		// Initialize a cURL session.
 		$ch = curl_init();
-		$headers = array('Accept: application/json');
+		$headers = array( 'Accept: application/json' );
 
 		// Set cURL options.
 		curl_setopt( $ch, CURLOPT_URL, $request_url );
@@ -57,9 +57,9 @@ class MLAAPIRequest {
 		curl_setopt( $ch, CURLOPT_SSL_VERIFYHOST, 2 );
 
 		// Set HTTP method.
-		if ( $http_method === 'PUT' || $http_method === 'DELETE' ) {
+		if ( 'PUT' === $http_method || 'DELETE' === $http_method ) {
 			curl_setopt( $ch, CURLOPT_CUSTOMREQUEST, $http_method );
-		} elseif ( $http_method === 'POST' ) {
+		} elseif ( 'POST' === $http_method ) {
 			curl_setopt( $ch, CURLOPT_POST, 1 );
 		}
 
@@ -79,7 +79,7 @@ class MLAAPIRequest {
 		if ( ! $response_text ) {
 			$response = array(
 				'code' => '500',
-				'body' => curl_error( $ch )
+				'body' => curl_error( $ch ),
 			);
 		} else {
 			$response = array(
@@ -93,30 +93,30 @@ class MLAAPIRequest {
 	}
 
 	/**
-	 * Get a member from the member database API. 
-	 * @param $username can be either ID number (e.g. 168880) 
-	 * or username (e.g. commonstest). 
-	 * @return response. Can be false, blank, or a member. 
-	 * @todo: put this in MLAMember? Factor out base URL to make it easier to switch to production? 
-	 */ 
-	public function get_member( $username ) { 
-		$this->debug='verbose'; 
-		if ( 'verbose' == $this->debug ) _log( 'Now getting the member from the API.' );
+	 * Get a member from the member database API.
+	 * @param $username can be either ID number (e.g. 168880)
+	 * or username (e.g. commonstest).
+	 * @return response. Can be false, blank, or a member.
+	 * @todo: put this in MLAMember? Factor out base URL to make it easier to switch to production?
+	 */
+	public function get_member( $username ) {
+		$this->debug = 'verbose';
+		if ( 'verbose' === $this->debug ) { _log( 'Now getting the member from the API.' ); }
 		$username = urlencode( $username );
 		$response = $this->send_request( 'GET', $this->api_url . 'members/' . $username );
-		if ( 'verbose' == $this->debug ) _log( 'API response was:', $response );
-		return $response; 
-	} 
+		if ( 'verbose' === $this->debug ) { _log( 'API response was:', $response ); }
+		return $response;
+	}
 
-	public function get_mla_group_data_from_api() { 
+	public function get_mla_group_data_from_api() {
 		$http_method = 'GET';
 		$simple_query = 'organizations/' . $this->group_mla_api_id;
 		$request_url = $this->api_url . $simple_query;
 		$params = array( 'joined_commons' => 'Y' );
 		$response = $this->send_request( $http_method, $request_url, $params );
 
-		return $response; 
-	} 
+		return $response;
+	}
 
 	/**
 	 * Remove user from the group in the MLA database
@@ -125,7 +125,7 @@ class MLAAPIRequest {
 	 * @param int $user_id
 	 */
 	public function remove_user_from_group( $group_id, $user_id = 0 ) {
-		if ( 'verbose' == $this->debug ) _log( 'Now attempting to remove user from group!' );  
+		if ( 'verbose' == $this->debug ) { _log( 'Now attempting to remove user from group!' ); }
 		$this->send_group_action( 'DELETE', $group_id, $user_id );
 	}
 
@@ -136,7 +136,7 @@ class MLAAPIRequest {
 	 * @param int $user_id
 	 */
 	public function add_user_to_group( $group_id, $user_id = 0 ) {
-		if ( 'verbose' == $this->debug ) _log( 'Now attempting to add user from group!' );  
+		if ( 'verbose' === $this->debug ) { _log( 'Now attempting to add user from group!' ); }
 		$this->send_group_action( 'POST', $group_id, $user_id );
 	}
 
@@ -144,8 +144,8 @@ class MLAAPIRequest {
 	 * Sends post data to the API to manage group memberships
 	 *
 	 * @param string $method
-	 * @param int $group_id
-	 * @param int $user_id
+	 * @param int    $group_id
+	 * @param int    $user_id
 	 */
 	protected function send_group_action( $method, $group_id, $user_id = 0 ) {
 		// Get user and group info
@@ -164,13 +164,13 @@ class MLAAPIRequest {
 		}
 
 		// Only division and discussion groups should be reflected in the MLA database
-		if ( !$this->isDivisionOrDiscussionGroup( $group_custom_oid ) ) {
+		if ( ! $this->is_division_or_discussion_group( $group_custom_oid ) ) {
 			_log( 'not a division or discussion group!' );
 			return;
 		}
 
 		// Don't try to do anything that uses a method we're not prepared for.
-		if ( ( 'POST' != $method ) && ( 'DELETE' != $method ) ) {
+		if ( ( 'POST' !== $method ) && ( 'DELETE' !== $method ) ) {
 			_log( 'not a recognized HTTP method!' );
 			_log( 'method is:', $method );
 			return;
@@ -184,13 +184,13 @@ class MLAAPIRequest {
 		$query = array( 'items' => $group_custom_oid );
 		$base_url = $this->api_url . $query_domain . $simple_query;
 		// There needs to be a request body for POSTs to work.
-		if ( 'POST' == $method ) {
+		if ( 'POST' === $method ) {
 			$body = '{"":""}';
 		} else {
 			$body = '';
 		}
 
-		if ( 'verbose' == $this->debug ) {
+		if ( 'verbose' === $this->debug ) {
 			_log( 'now sending requests with params:' );
 			_log( 'method is:', $method );
 			_log( 'base_url is:', $base_url );
@@ -198,33 +198,33 @@ class MLAAPIRequest {
 			_log( 'body is:', $body );
 		}
 		$response = $this->send_request( $method, $base_url, $query, $body );
-		if ( 'verbose' == $this->debug ) _log( 'response from API is:', $response );
+		if ( 'verbose' === $this->debug ) { _log( 'response from API is:', $response ); }
 	}
 
-	protected function changeCustomUsername( $username, $password, $newname ) {
+	protected function change_custom_username( $username, $password, $newname ) {
 
 		// If the new username is the same as the old, we can save ourselves
 		// a little bit of effort.
-		if ( $newname == $username ) return true;
+		if ( $newname === $username ) { return true; }
 
 		// First we need to get the user ID from the MLA API,
 		// because the API can't look up users by username,
 		// and we don't have the user's ID now.
 		// It sucks that we can't pass the User ID, but an AJAX function
 		// that calls this one doesn't have access to it.
-		$customUserData = $this->findCustomUser( $username, $password );
+		$customUserData = $this->find_custom_user( $username, $password );
 
 		$user_id = $customUserData['id'];
 
 		// now we change the username
-		// @todo refactor this. 
+		// @todo refactor this.
 		$request_method = 'PUT';
 		$query_domain = 'members';
 		$simple_query = '/' . $user_id . '/username';
 		$base_url = $this->api_url . $query_domain . $simple_query;
 		$request_body = "{ \"username\": \"$newname\" }";
 
-		if ( 'verbose' == $this->debug ) {
+		if ( 'verbose' === $this->debug ) {
 			_log( 'Changing username with params: ' );
 			_log( 'base_url: ', $base_url );
 			_log( 'request body: ', $request_body );
@@ -232,7 +232,7 @@ class MLAAPIRequest {
 
 		$response = $this->send_request( $request_method, $base_url, '', $request_body );
 
-		if ( 'verbose' == $this->debug ) _log( 'changing username. API response was:', $response );
+		if ( 'verbose' === $this->debug ) { _log( 'changing username. API response was:', $response ); }
 
 		if ( ( ! is_array( $response ) ) || ( ! array_key_exists( 'code', $response ) ) ) {
 			// This only happens if we can't access the API server.
@@ -241,7 +241,7 @@ class MLAAPIRequest {
 			return new WP_Error( 'server_error', __( '<strong>Error (' . __LINE__ . '):</strong> There was a problem changing your username. Please try again later.' ) );
 		}
 
-		if ( 200 != $response['code'] ) {
+		if ( 200 !== $response['code'] ) {
 			_log( 'On changing username, API gave a non-200 response. Something is kind of wrong!' );
 			_log( 'Response: ', $response );
 			return new WP_Error( 'server_error', __( '<strong>Error (' . __LINE__ . '):</strong> There was a problem changing your username. Please try again later.' ) );
@@ -249,4 +249,4 @@ class MLAAPIRequest {
 
 		return true;
 	}
-} 
+}

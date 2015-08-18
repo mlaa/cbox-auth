@@ -35,10 +35,6 @@ if ( ! function_exists( '_log' ) ) {
 	}
 }
 
-function _vlog( $var ) {
-	error_log( print_r( debug_backtrace(), true ) );
-}
-
 /* Don't write PHP Strict Standards error messages to debug.log.
  * Because apparently everything everywhere is a violation of a PHP
  * Strict Standard.

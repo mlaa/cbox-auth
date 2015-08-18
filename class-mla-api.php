@@ -77,7 +77,7 @@ class MLAAPI extends MLAAPIRequest {
 		if ( ! $new_member->save() ) {
 			return false; }
 
-		if ( ! isset( $bp->groups->current_group ) || ! $bp->groups->current_group || $group_id != $bp->groups->current_group->id ) {
+		if ( ! isset( $bp->groups->current_group ) || ! $bp->groups->current_group || $group_id !== $bp->groups->current_group->id ) {
 			$group = groups_get_group( array( 'group_id' => $group_id ) );
 		} else { 			$group = $bp->groups->current_group; }
 

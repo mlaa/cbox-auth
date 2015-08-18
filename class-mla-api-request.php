@@ -125,7 +125,7 @@ class MLAAPIRequest {
 	 * @param int $user_id
 	 */
 	public function remove_user_from_group( $group_id, $user_id = 0 ) {
-		if ( 'verbose' == $this->debug ) { _log( 'Now attempting to remove user from group!' ); }
+		if ( 'verbose' === $this->debug ) { _log( 'Now attempting to remove user from group!' ); }
 		$this->send_group_action( 'DELETE', $group_id, $user_id );
 	}
 

@@ -127,7 +127,7 @@ class MLAGroup extends MLAAPI {
 		// mock data.
 		$response = $this->get_mla_group_data_from_api();
 
-		if ( 200 != $response['code'] ) {
+		if ( 200 !== $response['code'] ) {
 			_log( 'Something went wrong when polling the api with URL:', $request_url );
 			_log( 'Here\'s what the API says:', $response );
 			return false;
@@ -179,8 +179,8 @@ class MLAGroup extends MLAAPI {
 
 		$bp_members_list = array();
 		foreach ( $this->bp_members['members'] as $member_obj ) {
-			$role = ( 1 == $member_obj->is_mod ) ? 'mod' : 'member';
-			$role = ( 1 == $member_obj->is_admin ) ? 'admin' : 'member';
+			$role = ( 1 === $member_obj->is_mod ) ? 'mod' : 'member';
+			$role = ( 1 === $member_obj->is_admin ) ? 'admin' : 'member';
 			$bp_members_list[ $member_obj->user_nicename ] = $role;
 		}
 		$bp_members_list_count = count( $bp_members_list );
@@ -220,7 +220,7 @@ class MLAGroup extends MLAAPI {
 		// _log( 'Now syncing with mla_members_list:', $this->mla_members_list );
 		// _log( 'Now syncing with bp_members_list:', $this->bp_members_list );
 		$diff = array_diff_assoc( $this->mla_members_list, $this->bp_members_list );
-		if ( 'verbose' == $this->debug ) { _log( 'Diff of arrays:', $diff ); }
+		if ( 'verbose' === $this->debug ) { _log( 'Diff of arrays:', $diff ); }
 
 		// BuddyPress values for those diffed members.
 		$bp_diff = array();
@@ -229,7 +229,7 @@ class MLAGroup extends MLAAPI {
 				$bp_diff[ $member ] = $this->bp_members_list[ $member ];
 			}
 		}
-		if ( 'verbose' == $this->debug ) { _log( 'BP\'s version of those members:', $bp_diff ); }
+		if ( 'verbose' === $this->debug ) { _log( 'BP\'s version of those members:', $bp_diff ); }
 
 		// At this point we should have two associative arrays that reflect differences
 		// in the MLA API group membership and the BuddyPress group membership. They should
@@ -246,9 +246,9 @@ class MLAGroup extends MLAAPI {
 		foreach ( $diff as $member_username => $mla_role ) {
 			// We don't want no scrubs.
 			// Ignore records with empty IDs.
-			if ( '' == $member_username ) { continue; }
+			if ( '' === $member_username ) { continue; }
 
-			if ( 'verbose' == $this->debug ) { _log( "Now handling member with username: $member_username and role: $mla_role" ); }
+			if ( 'verbose' === $this->debug ) { _log( "Now handling member with username: $member_username and role: $mla_role" ); }
 
 			// Get the member ID for this member from the username.
 			$member_id = bp_core_get_userid( $member_username );
@@ -256,7 +256,7 @@ class MLAGroup extends MLAAPI {
 			// If we can't look up the member ID,
 			// this might not be a member that has joined the commons.
 			// Ergo, nothing to do.
-			if ( ! $member_id || 0 == $member_id ) { continue; }
+			if ( ! $member_id || 0 === $member_id ) { continue; }
 
 			// I don't think I need to translate the MLA role here, because the data
 			// we get is already translated.
@@ -267,7 +267,7 @@ class MLAGroup extends MLAAPI {
 				$bp_role = $bp_diff[ $member_username ];
 			} else {
 				// If MLA member isn't a member of the BuddyPress group, add them.
-				if ( 'verbose' == $this->debug ) { _log( "Member $member_username not found in this BP group. Adding member ID $member_id to group $group_id and assigning the role of $mla_role." ); }
+				if ( 'verbose' === $this->debug ) { _log( "Member $member_username not found in this BP group. Adding member ID $member_id to group $group_id and assigning the role of $mla_role." ); }
 
 				// Can't use the regular groups_join_group here, since we're hooking
 				// into that action in customAuth.php, so we roll our own.
@@ -284,23 +284,23 @@ class MLAGroup extends MLAAPI {
 				$bp_role = 'member';
 			}
 
-			if ( $mla_role == $bp_role ) {
+			if ( $mla_role === $bp_role ) {
 				// Roles are actually the same.
 				// Move along, nothing to see here.
 				continue;
 			}
 
-			if ( 'admin' == $mla_role && 'member' == $bp_role ) {
+			if ( 'admin' === $mla_role && 'member' === $bp_role ) {
 				// User has been promoted at MLA, but not on BP.
 				// Promote them on BP.
-				if ( 'verbose' == $this->debug ) { _log( "Member $member_username has a higher role in the MLA DB than in BP. Promoting." ); }
+				if ( 'verbose' === $this->debug ) { _log( "Member $member_username has a higher role in the MLA DB than in BP. Promoting." ); }
 				groups_promote_member( $member_id, $group_id, 'admin' );
 			}
 
-			if ( 'member' == $mla_role && 'admin' == $bp_role ) {
+			if ( 'member' === $mla_role && 'admin' === $bp_role ) {
 				// User has been demoted at MLA, but not on BP.
 				// Demote them on BP.
-				if ( 'verbose' == $this->debug ) { _log( "Member $member_username has a higher role in BP than the MLA API reflects. Demoting." ); }
+				if ( 'verbose' === $this->debug ) { _log( "Member $member_username has a higher role in BP than the MLA API reflects. Demoting." ); }
 				groups_demote_member( $member_id, $group_id );
 			}
 		}
@@ -314,11 +314,11 @@ class MLAGroup extends MLAAPI {
 		// member database, we will assume that member has been removed on the
 		// Oracle side, and we will therefore remove them on the BP side to reflect that.
 		$removed = array_diff_key( $this->bp_members_list, $this->mla_members_list );
-		if ( 'verbose' == $this->debug ) { _log( 'Reverse diff of arrays (removed):', $removed ); }
+		if ( 'verbose' === $this->debug ) { _log( 'Reverse diff of arrays (removed):', $removed ); }
 
 		foreach ( $removed as $removed_member_username => $removed_member_role ) {
 			$removed_member_id = bp_core_get_userid( $removed_member_username );
-			if ( 'verbose' == $this->debug ) { _log( "Now removing member: $removed_member_username with ID: $removed_member_id from group $group_id." ); }
+			if ( 'verbose' === $this->debug ) { _log( "Now removing member: $removed_member_username with ID: $removed_member_id from group $group_id." ); }
 
 			// We can't use groups_leave_group() here, because we're hooking into that
 			// action in customAuth.php, so we have to remove the user from the group

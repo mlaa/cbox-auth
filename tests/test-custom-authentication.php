@@ -35,14 +35,14 @@ require_once 'class-custom-authentication.php';
 
 abstract class Base extends WP_UnitTestCase {
 
-	protected $testClass;
+	protected $test_class;
 	protected $reflection;
 
-	public function setUp () {
-		$this->reflection = new ReflectionClass( $this->testClass );
+	public function setup () {
+		$this->reflection = new ReflectionClass( $this->test_class );
 	}
 
-	public function getMethod ($method) {
+	public function get_method ($method) {
 		$method = $this->reflection->getMethod( $method );
 		$method->setAccessible( true );
 		return $method;
@@ -58,30 +58,30 @@ class CustomAuthenticationTest extends Base {
 	public $member_data;
 	public $member_json;
 
-	public function setUp () {
+	public function setup () {
 
-		$this->testClass = new CustomAuthentication();
-		parent::setUp();
+		$this->test_class = new CustomAuthentication();
+		parent::setup();
 
 		// Load mocked member data.
-		$this->member_data_raw = $this->testClass->get_member();
+		$this->member_data_raw = $this->test_class->get_member();
 		$this->member_data = json_decode( $this->member_data_raw['body'], true );
 		$this->member_json = $this->member_data['data'][0];
 	}
 
-	public function testClassProperties () {
+	public function test_class_properties () {
 		// Should be an instance of the MLAAPI abstract class
-		$this->assertInstanceOf( 'MLAAPI', $this->testClass );
+		$this->assertInstanceOf( 'MLAAPI', $this->test_class );
 	}
 
-	public function testMockDataLoaded() {
+	public function test_mock_data_loaded() {
 		$mockdata = $this->member_data;
 		$this->assertInternalType( 'array', $mockdata );
 	}
 
 	public function test_member_json_to_array() {
-		$method = $this->getMethod( 'member_json_to_array' );
-		$member_array = $method->invoke( $this->testClass, $this->member_json, 'test' );
+		$method = $this->get_method( 'member_json_to_array' );
+		$member_array = $method->invoke( $this->test_class, $this->member_json, 'test' );
 
 		// check that resulting array is in fact an array
 		$this->assertInternalType( 'array', $member_array );
@@ -93,58 +93,58 @@ class CustomAuthenticationTest extends Base {
 		}
 
 		// Mock member data should represent a valid, active member.
-		$method = $this->getMethod( 'validate_custom_user' );
-		$isValid = $method->invoke( $this->testClass, $member_array, 'exampleuser' );
+		$method = $this->get_method( 'validate_custom_user' );
+		$isValid = $method->invoke( $this->test_class, $member_array, 'exampleuser' );
 		$this->assertTrue( $isValid );
 
 		// Changing the membership status to inactive should throw an error.
 		// However, this currently generates a fatal error as WP_Error is not found.
 		$member_array['status'] = 'inactive';
-		$method = $this->getMethod( 'validate_custom_user' );
-		$isValid = $method->invoke( $this->testClass, $member_array, 'exampleuser' );
+		$method = $this->get_method( 'validate_custom_user' );
+		$isValid = $method->invoke( $this->test_class, $member_array, 'exampleuser' );
 		$this->assertFalse( $isValid );
 	}
 
-	public function testValidUserAuthentication() {
+	public function test_valid_user_authentication() {
 		$_POST['preferred'] = ''; // the function expects this to be set
 		$_POST['acceptance'] = false; // the function expects this to be set, too
 		$_SERVER['SERVER_PORT'] = 0; // the function expects this to be set, too
-		$method = $this->getMethod( 'authenticate_username_password' );
+		$method = $this->get_method( 'authenticate_username_password' );
 		// username should be `exampleuser`
 		$username = 'exampleuser';
 		// password should be `test`.
 		$password = 'test';
-		$retval = $method->invoke( $this->testClass, '', $username, $password );
+		$retval = $method->invoke( $this->test_class, '', $username, $password );
 		// this tests if the valid user (returned as valid from the API)
 		// is correctly added to the database, which should return an instance
 		// of WP_User from the function AuthenticateUsernamePassword.
 		$this->assertInstanceOf( 'WP_User', $retval );
 	}
 
-	public function testInvalidUserAuthentication() {
+	public function test_invalid_user_authentication() {
 		$_POST['preferred'] = ''; // the function expects this to be set
 		$_POST['acceptance'] = false; // the function expects this to be set, too
 		$_SERVER['SERVER_PORT'] = 0; // the function expects this to be set, too
-		$method = $this->getMethod( 'authenticate_username_password' );
+		$method = $this->get_method( 'authenticate_username_password' );
 		// credentials are bogus! Don't let this person in!
 		$username = 'notauser';
 		$password = 'whatever';
-		$retval = $method->invoke( $this->testClass, '', $username, $password );
+		$retval = $method->invoke( $this->test_class, '', $username, $password );
 		// this tests if the valid user (returned as valid from the API)
 		// is correctly added to the database, which should return an instance
 		// of WP_User from the function AuthenticateUsernamePassword.
 		$this->assertInstanceOf( 'WP_Error', $retval );
 
 	}
-	public function testGroupCreation() {
+	public function test_group_creation() {
 		// Get test data and convert it to an array.
-		$convertermethod = $this->getMethod( 'member_json_to_array' );
-		$member_array = $convertermethod->invoke( $this->testClass, $this->member_json, 'test' );
+		$convertermethod = $this->get_method( 'member_json_to_array' );
+		$member_array = $convertermethod->invoke( $this->test_class, $this->member_json, 'test' );
 
 		// Now take the array and feed it to `manage_groups()`, which is going to add
 		// groups that don't exist (i.e. all of them).
-		$method = $this->getMethod( 'manage_groups' );
-		$retval = $method->invoke( $this->testClass, 2, $member_array['groups'] );
+		$method = $this->get_method( 'manage_groups' );
+		$retval = $method->invoke( $this->test_class, 2, $member_array['groups'] );
 
 		// Now since our test data has a bunch of test groups in it,
 		// and since our database doesn't currently have these groups,
@@ -169,7 +169,7 @@ class CustomAuthenticationTest extends Base {
 		// "Office of Research" is excluded from the commons, so it shouldn't be in the database.
 		$this->assertEquals( 0, $research );
 	}
-	public function testCommitteeCreation() {
+	public function test_committee_creation() {
 		// Committees should be private groups.
 		$committee_id = groups_get_id( 'committee-on-the-status-of-women-in-the-profession' );
 		$committee_group = groups_get_group( array( 'group_id' => $committee_id ) );
@@ -183,7 +183,7 @@ class CustomAuthenticationTest extends Base {
 	* then make sure this forum is created in the database.
 	* This depends on all the prior tests to have run correctly.
 	*/
-	public function testNewForum() {
+	public function test_new_forum() {
 		$member_json = $this->member_json;
 
 		// When we're starting out, this group shouldn't already exist in the database.
@@ -206,14 +206,14 @@ class CustomAuthenticationTest extends Base {
 		$member_json['organizations'][] = $newForum;
 
 		// Get test data and convert it to an array.
-		$convertermethod = $this->getMethod( 'member_json_to_array' );
-		$member_array = $convertermethod->invoke( $this->testClass, $member_json, 'test' );
+		$convertermethod = $this->get_method( 'member_json_to_array' );
+		$member_array = $convertermethod->invoke( $this->test_class, $member_json, 'test' );
 
 		// Now take the array and feed it to `manage_groups()`, which is going to add
 		// groups that don't exist (i.e. the one we just added).
 		// Assumes our new user has ID of 2.
-		$method = $this->getMethod( 'manage_groups' );
-		$retval = $method->invoke( $this->testClass, 2, $member_array['groups'] );
+		$method = $this->get_method( 'manage_groups' );
+		$retval = $method->invoke( $this->test_class, 2, $member_array['groups'] );
 
 		// Now we should see our new forum appear in slot 6.
 		$interdisciplinary = groups_get_id( 'interdisciplinary-approaches-to-culture-and-society' );
@@ -226,7 +226,7 @@ class CustomAuthenticationTest extends Base {
 	* should've also synced the group using `MLAGroup::sync()`. If that's
 	* the case, then our beloved member `exampleuser` should be a member of that group.
 	*/
-	public function testGroupMemberSync() {
+	public function test_group_member_sync() {
 		$interdisciplinary = groups_get_id( 'interdisciplinary-approaches-to-culture-and-society' );
 		// We assume that our example user has the BP user ID of 2.
 		//_log( "Checking that user 2 is member of group id: $interdisciplinary" );
@@ -241,7 +241,7 @@ class CustomAuthenticationTest extends Base {
 	* But since our member is actually the chair of this new group, let's test
 	* that our member is, in fact, a chair of the corresponding BuddyPress group.
 	*/
-	public function testGroupMemberStatus() {
+	public function test_group_member_status() {
 		$interdisciplinary = groups_get_id( 'interdisciplinary-approaches-to-culture-and-society' );
 		// We assume that our example user has the BP user ID of 2.
 		//_log( "Checking that user 2 is admin of group id: $interdisciplinary" );
@@ -256,7 +256,7 @@ class CustomAuthenticationTest extends Base {
 	* cbox-auth correctly demotes a user that has been demoted in the MLA database.
 	* Here, the crucial distinction here is that "position" is "Member" instead of "Chair."
 	*/
-	public function testDemotedUser() {
+	public function test_demoted_user() {
 		$member_json = $this->member_json;
 
 		$newForum = array(
@@ -272,15 +272,15 @@ class CustomAuthenticationTest extends Base {
 		$member_json['organizations'][] = $newForum;
 
 		// Get test data and convert it to an array.
-		$convertermethod = $this->getMethod( 'member_json_to_array' );
-		$member_array = $convertermethod->invoke( $this->testClass, $member_json, 'test' );
+		$convertermethod = $this->get_method( 'member_json_to_array' );
+		$member_array = $convertermethod->invoke( $this->test_class, $member_json, 'test' );
 
 		// Now take the array and feed it to `manage_groups()`, which should hopefully
 		// detect that there is a difference in roles among the two groups, and
 		// demote our user accordingly.
 		//_log( 'Now managing groups again with our demoted user.' );
-		$method = $this->getMethod( 'manage_groups' );
-		$retval = $method->invoke( $this->testClass, 2, $member_array['groups'] );
+		$method = $this->get_method( 'manage_groups' );
+		$retval = $method->invoke( $this->test_class, 2, $member_array['groups'] );
 
 		// Now we should see our new forum appear in slot 6.
 		$interdisciplinary = groups_get_id( 'interdisciplinary-approaches-to-culture-and-society' );

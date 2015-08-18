@@ -86,7 +86,7 @@ class MLAMember extends MLAAPI {
 
 		$meta = json_decode( $response['body'] )->meta;
 
-		if ( 'API-1000' != $meta->code ) {
+		if ( 'API-1000' !== $meta->code ) {
 			_log( 'API has returned an error or exception. Message:', $meta );
 			return false;
 		}
@@ -117,7 +117,7 @@ class MLAMember extends MLAAPI {
 			_log( 'now looking at group: ', $group );
 			// groups array is in the form 'group_id' => role
 			$group_id = (string) $this->get_group_id_from_mla_oid( $group->convention_code );
-			if ( false == $group_id ) {
+			if ( false === $group_id ) {
 				// this means the MLA API group doesn't have a
 				// corresponding BP group, and we need to create
 				// a BP group, provided that the group isn't

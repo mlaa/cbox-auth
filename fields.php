@@ -90,7 +90,7 @@ class CustomAuthenticationCustomFields {
 ?>
         <tr>
             <th><label>Accepted Terms</label></th>
-            <td><?php if ( get_the_author_meta( 'accepted_terms', $user->ID ) == 'Yes' ) { echo 'Yes';
+            <td><?php if ( 'Yes' === get_the_author_meta( 'accepted_terms', $user->ID ) ) { echo 'Yes';
 } else { echo 'No'; }  ?></td>
         </tr>
 <?php

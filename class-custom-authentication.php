@@ -4,7 +4,6 @@ class CustomAuthentication extends MLAAPI {
 
 	function __construct() {
 		if ( ! isset( $this->debug ) ) { $this->debug = false; }
-		// $this->debug = 'verbose'; // Lots of debugging messages!
 	}
 
 	// AUTHENTICATION FUNCTIONS ( PHASE 1 )
@@ -20,7 +19,6 @@ class CustomAuthentication extends MLAAPI {
 	 */
 	public function authenticate_username_password( $ignored, $username, $password ) {
 
-		if ( 'verbose' === $this->debug ) { _log( 'Starting authenticate_username_password()' ); }
 		// Stolen from wp_authenticate_username_password
 		if ( empty( $username ) || empty( $password ) ) {
 			return new WP_Error();
@@ -58,10 +56,6 @@ class CustomAuthentication extends MLAAPI {
 
 		// If the user doesn't exist yet, create one.
 		if ( ! $userdata ) {
-			if ( 'verbose' === $this->debug ) {
-				_log( 'Now validating username!' );
-				_log( 'Using value: $_POST[\'preferred\']', $_POST['preferred'] );
-			}
 			if ( '' !== $_POST['preferred'] && username_exists( $_POST['preferred'] ) ) {
 				return new WP_Error( 'invalid_username', __( '<strong>Error (' . __LINE__ . '):</strong> That user name already exists.' ) );
 			}
@@ -409,8 +403,6 @@ class CustomAuthentication extends MLAAPI {
 			return new WP_Error( 'server_error', __( '<strong>Error (' . __LINE__ . '):</strong> Because of a temporary problem, we cannot verify your member credentials at this time. Please try again in a few minutes.' ) );
 		}
 
-		if ( 'verbose' === $this->debug ) { _log( 'Decoded JSON is: ', $decoded ); }
-
 		if ( 'success' !== $decoded['meta']['status'] ) {
 			_log( 'Authentication plugin: member lookup was not a success. Server says:', $decoded->meta );
 			return new WP_Error( 'not_authorized', sprintf( __( '<strong>Error (' . __LINE__ . '):</strong> Your user name and password could not be verified. Please try again.' ), wp_lostpassword_url() ) );
@@ -437,8 +429,6 @@ class CustomAuthentication extends MLAAPI {
 		$json_member_data = $decoded['data'][0];
 
 		$json_array = $this->member_json_to_array( $json_member_data, $password );
-
-		if ( 'verbose' === $this->debug ) { _log( '$json_array is as follows', $json_array ); }
 
 		// Make sure the user is active and of the allowed types ( i.e. 'member' )
 		if ( ! $this->validate_custom_user( $json_array, $username, $error ) ) {

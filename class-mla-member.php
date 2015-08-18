@@ -25,12 +25,6 @@ class MLAMember extends MLAAPI {
 		$mla_user_id_array = get_user_meta( $this->user_id, 'mla_oid' );
 		$this->mla_user_id = $mla_user_id_array[0];
 
-		if ( 'verbose' === $this->debug ) {
-			_log( 'Class MLAMember instantiated. Here\'s some information about this member.' );
-			_log( 'This user BP ID is is:', $this->user_id );
-			_log( 'Username is:', $this->username );
-			_log( 'MLA user ID is:', $this->mla_user_id );
-		}
 	}
 
 	/**
@@ -74,10 +68,6 @@ class MLAMember extends MLAAPI {
 		}
 
 		$response = $this->get_member( $this->mla_user_id );
-
-		if ( 'verbose' === $this->debug ) {
-			_log( 'Response from API is: ', $response );
-		}
 
 		if ( 200 !== $response['code'] ) {
 			_log( 'There was some kind of error while trying to get MLA member data. Here\'s what the API said:', $response );
@@ -200,7 +190,6 @@ class MLAMember extends MLAAPI {
 			'populate_extras' => true,
 		);
 		$this->bp_groups = groups_get_groups( $args );
-		if ( 'verbose' === $this->debug ) { _log( 'A full list of this member\'s groups:', $this->bp_groups ); }
 
 		if ( ! isset( $this->bp_groups ) || ! array_key_exists( 'total', $this->bp_groups ) || ! array_key_exists( 'groups', $this->bp_groups ) ) {
 			_log( 'Something went wrong while trying to get the BP groups for this user.' );
@@ -209,8 +198,6 @@ class MLAMember extends MLAAPI {
 
 		$admin_of = BP_Groups_Member::get_is_admin_of( $this->user_id );
 		$mod_of = BP_Groups_Member::get_is_mod_of( $this->user_id );
-		if ( 'verbose' === $this->debug ) { _log( 'This user is admin of:', $admin_of ); }
-		if ( 'verbose' === $this->debug ) { _log( 'This user is mod of:', $mod_of ); }
 
 		// now make a standard table for groups for which this user
 		// is an admin or a mod.
@@ -221,7 +208,6 @@ class MLAMember extends MLAAPI {
 		foreach ( $mod_of['groups'] as $group ) {
 			$admin_and_mod_of[ $group->id ] = 'mod';
 		}
-		if ( 'verbose' === $this->debug ) { _log( 'This user is admin or mod of:', $admin_and_mod_of ); }
 
 		// make an array containing groups and roles
 		$this->bp_groups_list = array();
@@ -304,12 +290,6 @@ class MLAMember extends MLAAPI {
 		}
 
 		// Now sync member groups. Loop through MLA groups and add new ones to BP.
-		if ( 'verbose' === $this->debug ) {
-			_log( 'About to sync using this mla_groups_list:' );
-			_log( $this->mla_groups_list );
-			_log( 'And about to sync using this bp_groups_list:' );
-			_log( $this->bp_groups_list );
-		}
 		$diff = array_diff_assoc( $this->mla_groups_list, $this->bp_groups_list );
 		_log( 'MLA API groups for this member that aren\'t in the BP member group list:', $diff );
 

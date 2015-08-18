@@ -41,10 +41,6 @@ class MLAAPIRequest {
 		// Append the signature to the request.
 		$request_url = $request_url . '&signature=' . $api_signature;
 
-		$this->debug = 'verbose'; // turning on debugging output
-
-		if ( 'verbose' === $this->debug ) { _log( 'Using request:', $request_url ); }
-
 		// Initialize a cURL session.
 		$ch = curl_init();
 		$headers = array( 'Accept: application/json' );
@@ -100,11 +96,8 @@ class MLAAPIRequest {
 	 * @todo: put this in MLAMember? Factor out base URL to make it easier to switch to production?
 	 */
 	public function get_member( $username ) {
-		$this->debug = 'verbose';
-		if ( 'verbose' === $this->debug ) { _log( 'Now getting the member from the API.' ); }
 		$username = urlencode( $username );
 		$response = $this->send_request( 'GET', $this->api_url . 'members/' . $username );
-		if ( 'verbose' === $this->debug ) { _log( 'API response was:', $response ); }
 		return $response;
 	}
 
@@ -125,7 +118,6 @@ class MLAAPIRequest {
 	 * @param int $user_id
 	 */
 	public function remove_user_from_group( $group_id, $user_id = 0 ) {
-		if ( 'verbose' === $this->debug ) { _log( 'Now attempting to remove user from group!' ); }
 		$this->send_group_action( 'DELETE', $group_id, $user_id );
 	}
 
@@ -136,7 +128,6 @@ class MLAAPIRequest {
 	 * @param int $user_id
 	 */
 	public function add_user_to_group( $group_id, $user_id = 0 ) {
-		if ( 'verbose' === $this->debug ) { _log( 'Now attempting to add user from group!' ); }
 		$this->send_group_action( 'POST', $group_id, $user_id );
 	}
 
@@ -190,15 +181,7 @@ class MLAAPIRequest {
 			$body = '';
 		}
 
-		if ( 'verbose' === $this->debug ) {
-			_log( 'now sending requests with params:' );
-			_log( 'method is:', $method );
-			_log( 'base_url is:', $base_url );
-			_log( 'query is:', $query );
-			_log( 'body is:', $body );
-		}
 		$response = $this->send_request( $method, $base_url, $query, $body );
-		if ( 'verbose' === $this->debug ) { _log( 'response from API is:', $response ); }
 	}
 
 	protected function change_custom_username( $username, $password, $newname ) {
@@ -224,15 +207,7 @@ class MLAAPIRequest {
 		$base_url = $this->api_url . $query_domain . $simple_query;
 		$request_body = "{ \"username\": \"$newname\" }";
 
-		if ( 'verbose' === $this->debug ) {
-			_log( 'Changing username with params: ' );
-			_log( 'base_url: ', $base_url );
-			_log( 'request body: ', $request_body );
-		}
-
 		$response = $this->send_request( $request_method, $base_url, '', $request_body );
-
-		if ( 'verbose' === $this->debug ) { _log( 'changing username. API response was:', $response ); }
 
 		if ( ( ! is_array( $response ) ) || ( ! array_key_exists( 'code', $response ) ) ) {
 			// This only happens if we can't access the API server.

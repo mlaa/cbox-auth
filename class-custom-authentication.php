@@ -138,9 +138,6 @@ class CustomAuthentication extends MLAAPI {
 		// Special activities for special users.
 		$this->special_cases( $userdata->ID, $customUserData['id'] );
 
-		// Try to redirect user to last viewed page.
-		add_filter( 'login_redirect', array( $this, 'redirect_to_last_viewed_page' ), 10, 3 );
-
 		return $userdata;
 	}
 
@@ -220,26 +217,6 @@ class CustomAuthentication extends MLAAPI {
 		} else {
 			return $redirect_to;
 		}
-	}
-
-	/**
-	 * A filter for redirecting users to the last page they were reading before logging in.
-	 */
-	public function redirect_to_last_viewed_page( $redirect_to = null, $request = null, $user = null ) {
-		if ( ! empty( $_COOKIE ) ) {
-			if ( ! empty( $_COOKIE['MLAReferer'] ) ) {
-				// _log( 'Found cookie: ', $_COOKIE['MLAReferer'] );
-				if ( false === strpos( $_COOKIE['MLAReferer'], 'wp-login' ) ) {
-					if ( null !== $user ) {
-						return $_COOKIE['MLAReferer'];
-					} else {
-						// _log( 'User is null!' );
-						return $redirect_to;
-					}
-				}
-			}
-		}
-		return home_url();
 	}
 
 	/**

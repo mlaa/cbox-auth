@@ -53,7 +53,6 @@ class MLAMember extends MLAAPI {
 	 * After a sync, we have to update the user meta with the last updated time.
 	 */
 	private function update_last_updated_time() {
-		return; // We only want user activity setting member last_updated.
 		update_user_meta( $this->user_id, 'last_updated', time() );
 	}
 
@@ -253,8 +252,6 @@ class MLAMember extends MLAAPI {
 		$success = $this->get_bp_member_groups();
 		if ( ! $success ) { return false; }
 
-		$member_updated = false;
-
 		// don't actually need to map these in an associative array,
 		// since they're already the names of their associates
 		$fields_to_sync = array( 'first_name', 'last_name', 'nickname', 'affiliations', 'title' );
@@ -263,7 +260,6 @@ class MLAMember extends MLAAPI {
 				update_user_meta( $this->user_id, $field, $this->$field );
 				_log( 'Setting user meta:', $field );
 				_log( 'with data:', $this->$field );
-				$member_updated = true;
 			}
 		}
 
@@ -280,7 +276,6 @@ class MLAMember extends MLAAPI {
 				$result = xprofile_set_field_data( $dest_field, $this->user_id, $this->$source_field );
 				if ( $result ) {
 					_log( "Successfully updated xprofile field $dest_field." );
-					$member_updated = true;
 				} else {
 					_log( 'Something went wrong while updating xprofile data from member database.' );
 				}
@@ -290,12 +285,8 @@ class MLAMember extends MLAAPI {
 		if ( $this->email ) {
 			_log( "Now updating user email address with: $this->email." );
 			$success = wp_update_user( array( 'ID' => $this->user_id, 'user_email' => $this->email ) );
-			if ( $success instanceof WP_Error ) {
-				_log( 'Couldn\'t update user email address!' );
-			} else {
-				_log( 'Successfully updated user email address.' );
-				$member_updated = true;
-			}
+			if ( $success instanceof WP_Error ) { _log( 'Couldn\'t update user email address!' );
+			} else { _log( 'Successfully updated user email address.' ); }
 		}
 
 		// Now sync member groups. Loop through MLA groups and add new ones to BP.
@@ -313,13 +304,11 @@ class MLAMember extends MLAAPI {
 			if ( ! $bp_role ) {
 				_log( "$group_id not found in this user's membership list. Adding user $this->user_id to group $group_id" );
 				$this->mla_groups_join_group( $group_id, $this->user_id );
-				$member_updated = true;
 
 				// Now promote user if user is chair or equivalent.
 				// Should user be a BP admin according to the MLA API?
 				if ( in_array( $member_role, $bp_admins ) ) {
 					groups_promote_member( $this->user_id, $group_id, 'admin' );
-					$member_updated = true;
 				}
 				continue; // Nothing more to do here.
 			} else {
@@ -329,7 +318,6 @@ class MLAMember extends MLAAPI {
 				// Is user a BP admin or mod, but shouldn't be?
 				if ( in_array( $this->bp_groups_list[ $group_id ], $bp_admins ) ) {
 					groups_demote_member( $this->user_id, $group_id );
-					$member_updated = true;
 				}
 			}
 		}
@@ -350,13 +338,10 @@ class MLAMember extends MLAAPI {
 
 				_log( 'Assuming member has been removed from this group on the MLA API, so removing this user from the Commons group.' );
 				$this->mla_groups_leave_group( $group_id, $this->user_id );
-				$member_updated = true;
 			}
 		}
 
-		if ( $member_updated ) {
-			$this->update_last_updated_time();
-		}
+		$this->update_last_updated_time();
 
 		return true;
 	}

@@ -74,7 +74,6 @@ class MLAGroup extends MLAAPI {
 	 * After a sync, we have to update the user meta with the last updated time.
 	 */
 	private function update_last_updated_time() {
-		return; // We only want user generated activity to cause group last_updated to be set.
 		groups_update_groupmeta( $this->group_bp_id, 'last_updated', time() );
 	}
 
@@ -215,7 +214,6 @@ class MLAGroup extends MLAAPI {
 		}
 
 		$group_id = $this->group_bp_id;
-		$group_updated = false;
 
 		// _log( 'Now syncing with mla_members_list:', $this->mla_members_list );
 		// _log( 'Now syncing with bp_members_list:', $this->bp_members_list );
@@ -269,7 +267,6 @@ class MLAGroup extends MLAAPI {
 					_log( "Couldn\'t add user $member_username to BP group $group_id!" );
 				} else {
 					_log( "Successfully added user $member_username to group $group_id." );
-					$group_updated = true;
 				}
 
 				// Also add it to our list so that we can compare the
@@ -289,14 +286,12 @@ class MLAGroup extends MLAAPI {
 				// User has been promoted at MLA, but not on BP.
 				// Promote them on BP.
 				groups_promote_member( $member_id, $group_id, 'admin' );
-				$group_updated = true;
 			}
 
 			if ( 'member' === $mla_role && 'admin' === $bp_role ) {
 				// User has been demoted at MLA, but not on BP.
 				// Demote them on BP.
 				groups_demote_member( $member_id, $group_id );
-				$group_updated = true;
 			}
 		}
 
@@ -320,14 +315,10 @@ class MLAGroup extends MLAAPI {
 				_log( 'Couldn\'t remove member from group!' );
 			} else {
 				_log( 'Successfully removed member from BP group!' );
-				$group_updated = true;
 			}
 		}
 
-
-		if ( $group_updated ) {
-			$this->update_last_updated_time();
-		}
+		$this->update_last_updated_time();
 
 		return true;
 	}

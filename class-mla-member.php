@@ -50,13 +50,6 @@ class MLAMember extends MLAAPI {
 	}
 
 	/**
-	 * After a sync, we have to update the user meta with the last updated time.
-	 */
-	private function update_last_updated_time() {
-		update_user_meta( $this->user_id, 'last_updated', time() );
-	}
-
-	/**
 	 * Gets the member data from the API and stores it in this class's
 	 * properties.
 	 */
@@ -340,8 +333,6 @@ class MLAMember extends MLAAPI {
 				$this->mla_groups_leave_group( $group_id, $this->user_id );
 			}
 		}
-
-		$this->update_last_updated_time();
 
 		return true;
 	}

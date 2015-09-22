@@ -71,13 +71,6 @@ class MLAGroup extends MLAAPI {
 	}
 
 	/**
-	 * After a sync, we have to update the user meta with the last updated time.
-	 */
-	private function update_last_updated_time() {
-		groups_update_groupmeta( $this->group_bp_id, 'last_updated', time() );
-	}
-
-	/**
 	 * Gets the MLA API ID, the ID for the group (organization)
 	 * used by the API, if given the MLA OID (convention_code).
 	 *
@@ -317,8 +310,6 @@ class MLAGroup extends MLAAPI {
 				_log( 'Successfully removed member from BP group!' );
 			}
 		}
-
-		$this->update_last_updated_time();
 
 		return true;
 	}

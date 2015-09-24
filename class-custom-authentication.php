@@ -481,11 +481,12 @@ class CustomAuthentication extends MLAAPI {
 
 		foreach ( $json['organizations'] as $group ) {
 
-			// Don't parse groups that have been excluded from the Commons.
+			// Don't parse groups that should not be reflected on the Commons.
+			if ( ! $this->is_mla_group( $group['convention_code'] ) ) { continue; }
 			if ( 'Y' === $group['exclude_from_commons'] ) { continue; }
 
 			// Committees and other MLA organizations should be private groups.
-			if ( $this->is_committee_group( $group['convention_code'] ) || 'MLA Organization' === $group['type']  ) {
+			if ( $this->is_committee_group( $group['convention_code'] ) ) {
 				$group['status'] = 'private';
 			} else {
 				$group['status'] = 'public';
@@ -620,7 +621,7 @@ class CustomAuthentication extends MLAAPI {
 		$group_custom_oid = groups_get_groupmeta( $group->id, 'mla_oid', true );
 
 		// Don't show request membership if it's an MLA group ( probably a committee, since only committees are private )
-		if ( ! empty( $group_custom_oid ) && ( $this->is_forum_group( $group_custom_oid ) || $this->is_committee_group( $group_custom_oid ) ) ) {
+		if ( ! empty( $group_custom_oid ) && $this->is_mla_group( $group_custom_oid ) ) {
 			return;
 		}
 
@@ -661,7 +662,7 @@ class CustomAuthentication extends MLAAPI {
 		$group_custom_oid = groups_get_groupmeta( $group->id, 'mla_oid', true );
 
 		// Don't show privacy or invitation settings if it's an MLA group
-		if ( ! empty( $group_custom_oid ) && ( $this->is_forum_group( $group_custom_oid ) || $this->is_committee_group( $group_custom_oid ) ) ) {
+		if ( ! empty( $group_custom_oid ) && $this->is_mla_group( $group_custom_oid ) ) {
 			return;
 		}
 
@@ -738,6 +739,19 @@ class CustomAuthentication extends MLAAPI {
 			return false;
 		}
 		return true;
+	}
+
+	/**
+	 * Determine if the group is an MLA group
+	 *
+	 * @param string $group_custom_oid
+	 * @return bool
+	 */
+	protected function is_mla_group( $group_custom_oid ) {
+        if ( $this->is_forum_group( $group_custom_oid ) || $this->is_committee_group( $group_custom_oid ) ) {
+			return true;
+		}
+		return false;
 	}
 
 	/**

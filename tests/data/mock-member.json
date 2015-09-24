@@ -88,6 +88,14 @@
           "position": "Member",
           "type": "MLA Organization",
           "exclude_from_commons": "Y"
+        },
+        {
+          "id": "349",
+          "name": "Very Good Literature",
+          "convention_code": "A022",
+          "position": "Head",
+          "type": "Allied Organization",
+          "exclude_from_commons": ""
         }
       ],
       "languages": [

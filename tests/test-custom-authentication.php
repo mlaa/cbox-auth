@@ -159,15 +159,17 @@ class CustomAuthenticationTest extends Base {
 		$advisory = groups_get_id( 'advisory-comm-on-foreign-lang-programs' );
 		$women = groups_get_id( 'committee-on-the-status-of-women-in-the-profession' );
 		$research = groups_get_id( 'office-of-research' );
+		$very_good = groups_get_id( 'very-good-literature' );
 
 		$this->assertEquals( 1, $hebrew );
 		$this->assertEquals( 2, $hungarian );
 		$this->assertEquals( 3, $travel_writing );
-		$this->assertEquals( 4, $advisory );
-		$this->assertEquals( 5, $women );
+		$this->assertEquals( 4, $women );
 
-		// "Office of Research" is excluded from the commons, so it shouldn't be in the database.
+		// Groups that are not committees or forums should not be added.
 		$this->assertEquals( 0, $research );
+		$this->assertEquals( 0, $advisory );
+		$this->assertEquals( 0, $very_good );
 	}
 	public function test_committee_creation() {
 		// Committees should be private groups.

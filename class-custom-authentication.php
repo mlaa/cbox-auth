@@ -271,7 +271,7 @@ class CustomAuthentication extends MLAAPI {
 					$success = groups_demote_member( $userId, $groupId );
 					 // if ( $success ) _log( 'Great success!' ); else _log( 'Couldn\'t demote user!' );
 				}
-			} elseif ( ! $this->is_forum_group( $customOid ) ) {
+			} elseif ( ! $this->is_prospective_forum_group( $customOid ) ) {
 				// Remove the user from the group.
 				groups_leave_group( $groupId, $userId );
 			}
@@ -698,7 +698,7 @@ class CustomAuthentication extends MLAAPI {
 		$user_id = bp_loggedin_user_id();
 
 		// Render as normal if it's not an MLA group or it's a division or discussion group and user is not admin of group
-		if ( empty( $group_custom_oid ) || $this->is_forum_group( $group_custom_oid ) || ( $group_custom_oid && $this->is_division_or_discussion_group( $group_custom_oid ) && ! groups_is_user_admin( $user_id, $group->id ) ) ) {
+		if ( empty( $group_custom_oid ) || $this->is_prospective_forum_group( $group_custom_oid ) || ( $group_custom_oid && $this->is_division_or_discussion_group( $group_custom_oid ) && ! groups_is_user_admin( $user_id, $group->id ) ) ) {
 			return bp_group_join_button( $group );
 		}
 
@@ -747,7 +747,7 @@ class CustomAuthentication extends MLAAPI {
 	 * @param string $group_custom_oid
 	 * @return bool
 	 */
-	protected function is_forum_group( $group_custom_oid ) {
+	protected function is_prospective_forum_group( $group_custom_oid ) {
 		$flag = substr( $group_custom_oid, 0, 1 );
 		if ( 'F' !== $flag ) {
 			return false;

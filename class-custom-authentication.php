@@ -459,10 +459,10 @@ class CustomAuthentication extends MLAAPI {
 	}
 
 	/**
-	 * Turns member xml data from the membership API
+	 * Turns member json data from the membership API
 	 * into a readable array.
 	 *
-	 * @param $xml
+	 * @param $json
 	 * @param $password
 	 * @return array
 	 */
@@ -510,8 +510,6 @@ class CustomAuthentication extends MLAAPI {
 			'id' => $json['id'],
 			'user_name' => $json['authentication']['username'],
 			'status' => $json['authentication']['membership_status'],
-			// ???
-			// 'type' => trim( $xml->member->type ),
 			'password' => $password,
 			'email' => trim( $json['general']['email'] ),
 			'first_name' => trim( $json['general']['first_name'] ),
@@ -524,24 +522,6 @@ class CustomAuthentication extends MLAAPI {
 			'role' => 'subscriber',
 		 );
 		return $return;
-	}
-
-	/**
-	 * Pulls group info from the xml element
-	 *
-	 * @param array      $groups
-	 * @param $xmlElement
-	 */
-	private function extract_groups( array &$groups, $xmlElement ) {
-		foreach ( $xmlElement as $item ) {
-			$attrs = $item->attributes();
-			$groups[] = array(
-				'oid' => (string) $attrs['oid'],
-				'role' => (string) $attrs['role'],
-				'name' => (string) $item[0],
-				'status' => $this->is_forum_group( $attrs['oid'] ) ? 'public' : 'private',
-			 );
-		}
 	}
 
 	/**

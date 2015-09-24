@@ -154,9 +154,9 @@ class MLAAPIRequest {
 			return;
 		}
 
-		// Only division and discussion groups should be reflected in the MLA database
-		if ( ! $this->is_division_or_discussion_group( $group_custom_oid ) ) {
-			_log( 'not a division or discussion group!' );
+		// Only forum groups should be reflected in the MLA database
+		if ( ! $this->is_forum_group( $group_custom_oid ) ) {
+			_log( 'not a forum group!' );
 			return;
 		}
 

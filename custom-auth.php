@@ -26,7 +26,7 @@ add_action( 'wp_ajax_nopriv_validate_preferred_username', array( $myCustomAuthen
 // We're completely ignoring the WP authentication process.
 remove_filter( 'authenticate', 'wp_authenticate_username_password', 20, 3 );
 
-// Reflect changes in division and discussion groups in the MLA database.
+// Reflect changes in forum groups in the MLA database.
 add_action( 'groups_leave_group', array( $myCustomAuthentication, 'remove_user_from_group' ) );
 add_action( 'groups_join_group',  array( $myCustomAuthentication, 'add_user_to_group' ) );
 

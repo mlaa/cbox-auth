@@ -538,7 +538,7 @@ class CustomAuthentication extends MLAAPI {
 				'oid' => (string) $attrs['oid'],
 				'role' => (string) $attrs['role'],
 				'name' => (string) $item[0],
-				'status' => $this->is_division_or_discussion_group( $attrs['oid'] ) ? 'public' : 'private',
+				'status' => $this->is_forum_group( $attrs['oid'] ) ? 'public' : 'private',
 			 );
 		}
 	}
@@ -582,7 +582,7 @@ class CustomAuthentication extends MLAAPI {
 			if ( empty( $group_custom_oid ) ) {
 				continue;
 			}
-			if ( $this->is_division_or_discussion_group( $group_custom_oid ) ) {
+			if ( $this->is_forum_group( $group_custom_oid ) ) {
 				$this->change_group_status( $group, 'public' );
 				continue;
 			}
@@ -608,7 +608,7 @@ class CustomAuthentication extends MLAAPI {
 	}
 
 	/**
-	 * A filter to hide the request membership tab for committee groups
+	 * A filter to hide the request membership tab for MLA groups
 	 *
 	 * @param $string
 	 */
@@ -620,7 +620,7 @@ class CustomAuthentication extends MLAAPI {
 		$group_custom_oid = groups_get_groupmeta( $group->id, 'mla_oid', true );
 
 		// Don't show request membership if it's an MLA group ( probably a committee, since only committees are private )
-		if ( ! empty( $group_custom_oid ) && ( $this->is_division_or_discussion_group( $group_custom_oid ) || $this->is_committee_group( $group_custom_oid ) ) ) {
+		if ( ! empty( $group_custom_oid ) && ( $this->is_forum_group( $group_custom_oid ) || $this->is_committee_group( $group_custom_oid ) ) ) {
 			return;
 		}
 
@@ -661,7 +661,7 @@ class CustomAuthentication extends MLAAPI {
 		$group_custom_oid = groups_get_groupmeta( $group->id, 'mla_oid', true );
 
 		// Don't show privacy or invitation settings if it's an MLA group
-		if ( ! empty( $group_custom_oid ) && ( $this->is_division_or_discussion_group( $group_custom_oid ) || $this->is_committee_group( $group_custom_oid ) ) ) {
+		if ( ! empty( $group_custom_oid ) && ( $this->is_forum_group( $group_custom_oid ) || $this->is_committee_group( $group_custom_oid ) ) ) {
 			return;
 		}
 
@@ -674,8 +674,7 @@ class CustomAuthentication extends MLAAPI {
 
 	/**
 	 * Only show the join/login button if the group is not a committee
-	 * and the member is not an administrator of the
-	 * division or discussion group.
+	 * and the member is not an administrator of the forum group.
 	 *
 	 * @param bool $group
 	 */
@@ -697,8 +696,8 @@ class CustomAuthentication extends MLAAPI {
 		// Get user id
 		$user_id = bp_loggedin_user_id();
 
-		// Render as normal if it's not an MLA group or it's a division or discussion group and user is not admin of group
-		if ( empty( $group_custom_oid ) || $this->is_prospective_forum_group( $group_custom_oid ) || ( $group_custom_oid && $this->is_division_or_discussion_group( $group_custom_oid ) && ! groups_is_user_admin( $user_id, $group->id ) ) ) {
+		// Render as normal if it's not an MLA group or it's a forum group and user is not admin of group
+		if ( empty( $group_custom_oid ) || $this->is_prospective_forum_group( $group_custom_oid ) || ( $group_custom_oid && $this->is_forum_group( $group_custom_oid ) && ! groups_is_user_admin( $user_id, $group->id ) ) ) {
 			return bp_group_join_button( $group );
 		}
 
@@ -714,12 +713,12 @@ class CustomAuthentication extends MLAAPI {
 	// UTILITY FUNCTIONS
 	//
 	/**
-	 * Determine if the group is a division or discussion
+	 * Determine if the group is a forum
 	 *
 	 * @param string $group_custom_oid
 	 * @return bool
 	 */
-	protected function is_division_or_discussion_group( $group_custom_oid ) {
+	protected function is_forum_group( $group_custom_oid ) {
 		$flag = substr( $group_custom_oid, 0, 1 );
 		if ( 'D' !== $flag && 'G' !== $flag ) {
 			return false;

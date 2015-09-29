@@ -13,11 +13,11 @@
       "exclude_from_commons": "",
       "members": [
         {
-	  "id": "999999",
-          "username": "exampleuser",
+          "id": "999999",
+          "username": "ExampleUser",
           "position": "Chair"
         }
       ]
     }
   ]
-} 
+}

@@ -124,7 +124,7 @@ class MLAMember extends MLAAPI {
 			}
 
 			// have to translate the roles so that we can diff this array later
-			$this->mla_groups_list[ $group_id ] = $this->translate_mla_role( strtolower( $group->position ) );
+			$this->mla_groups_list[ $group_id ] = $this->translate_mla_role( $group->position );
 		}
 
 		_log( 'groups are:', $this->mla_groups_list );

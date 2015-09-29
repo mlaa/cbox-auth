@@ -137,7 +137,7 @@ class MLAGroup extends MLAAPI {
 		// and translate roles into something BuddyPress can understand.
 		$members_list_translated = array();
 		foreach ( $members_list as $member ) {
-			$members_list_translated[ $member->username ] = $this->translate_mla_role( strtolower( $member->position ) );
+			$members_list_translated[ strtolower( $member->username ) ] = $this->translate_mla_role( $member->position );
 		}
 		$members_list_translated_count = count( $members_list_translated );
 		_log( "Translated members list from MLA API has $members_list_translated_count members." );
@@ -172,7 +172,7 @@ class MLAGroup extends MLAAPI {
 		foreach ( $this->bp_members['members'] as $member_obj ) {
 			$role = ( 1 === $member_obj->is_mod ) ? 'mod' : 'member';
 			$role = ( 1 === $member_obj->is_admin ) ? 'admin' : 'member';
-			$bp_members_list[ $member_obj->user_nicename ] = $role;
+			$bp_members_list[ strtolower( $member_obj->user_nicename ) ] = strtolower( $role );
 		}
 		$bp_members_list_count = count( $bp_members_list );
 		_log( "BP members list has $bp_members_list_count members." );

@@ -81,16 +81,7 @@ class MLAAPI extends MLAAPIRequest {
 			$group = groups_get_group( array( 'group_id' => $group_id ) );
 		} else { 			$group = $bp->groups->current_group; }
 
-		// Record this in activity streams.
-		groups_record_activity( array(
-			'type'    => 'joined_group',
-			'item_id' => $group_id,
-			'user_id' => $user_id,
-		) );
-
-		// Modify group meta.
-		groups_update_groupmeta( $group_id, 'last_activity', bp_core_current_time() );
-
+		// Return without recording activity - too much noise.
 		return true;
 	}
 

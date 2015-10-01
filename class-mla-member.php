@@ -39,7 +39,7 @@ class MLAMember extends MLAAPI {
 		$last_updated = (integer) get_user_meta( $this->user_id, 'last_updated', true );
 
 		// never skip updating while debugging
-		// if ( $this->debug ) return true;
+		if ( $this->debug ) return true;
 		if ( ! $last_updated ) {
 			_log( 'This member has never been updated. Updating.' );
 			return true; /* never updated, so, it's too old. */
@@ -238,7 +238,8 @@ class MLAMember extends MLAAPI {
 	public function sync() {
 		// don't sync unless the data is already too old
 		if ( ! $this->is_too_old() ) {
-			return;
+			_log( 'This member has been recently synced. Not syncing.');
+			return true;
 		}
 
 		// get all the data
@@ -283,6 +284,9 @@ class MLAMember extends MLAAPI {
 			if ( $success instanceof WP_Error ) { _log( 'Couldn\'t update user email address!' );
 			} else { _log( 'Successfully updated user email address.' ); }
 		}
+
+		// Update last updated date.
+		update_user_meta( $this->user_id, 'last_updated', time() );
 
 		// Now sync member groups. Loop through MLA groups and add new ones to BP.
 		$diff = array_diff_assoc( $this->mla_groups_list, $this->bp_groups_list );

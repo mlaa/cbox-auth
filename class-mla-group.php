@@ -60,7 +60,7 @@ class MLAGroup extends MLAAPI {
 		$last_updated = (integer) groups_get_groupmeta( $this->group_bp_id, 'last_updated', true );
 
 		// never skip updating while debugging
-		// if ( $this->debug ) return true;
+		if ( $this->debug ) return true;
 		if ( ! $last_updated ) {
 			_log( 'This group has never been updated. Updating.' );
 			return true; /* never updated, so, it's too old. */
@@ -189,8 +189,8 @@ class MLAGroup extends MLAAPI {
 	public function sync() {
 
 		if ( ! $this->is_too_old() ) {
-			// _log( 'No need to sync this group, since it\'s apparently been synced within the last hour.' );
-			return false;
+			_log( 'This group has been recently synced. Not syncing.' );
+			return true;
 		}
 
 		if ( ! $this->group_mla_api_id || empty( $this->group_mla_api_id ) ) {
@@ -310,6 +310,9 @@ class MLAGroup extends MLAAPI {
 				_log( 'Successfully removed member from BP group!' );
 			}
 		}
+
+		// Update last updated date.
+		groups_update_groupmeta( $this->group_bp_id, 'last_updated', time() );
 
 		return true;
 	}

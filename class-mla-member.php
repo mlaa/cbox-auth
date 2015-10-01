@@ -91,7 +91,9 @@ class MLAMember extends MLAAPI {
 		// parse raw affiliations
 		$this->affiliations = array();
 		foreach ( $decoded->addresses as $address ) {
-			$this->affiliations[] = $address->affiliation;
+			if ( property_exists ( $address, 'affiliation' ) ) {
+				$this->affiliations[] = $address->affiliation;
+			}
 		}
 
 		// parse raw groups

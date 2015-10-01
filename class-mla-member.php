@@ -95,7 +95,7 @@ class MLAMember extends MLAAPI {
 		}
 
 		// parse raw groups
-		$mla_groups_list = array();
+		$this->mla_groups_list = array();
 		foreach ( $raw_groups as $group ) {
 			_log( 'now looking at group: ', $group );
 			// groups array is in the form 'group_id' => role

@@ -4,22 +4,37 @@
  * Used for testing purposes.
  */
 class MLAAPIRequest {
-	public function get_member() {
-		$member_json = file_get_contents( 'tests/data/mock-member.json' );
-		$member_data = array(
+	/**
+	 * utility function for DRYing other test methods
+	 * might want to extend this in the future to allow setting different response codes etc.
+	 *
+	 * @param $filename name of mock data file (must exist in tests/data)
+	 */
+	private function get_mock_data( $filename ) {
+		$json = file_get_contents( "tests/data/$filename" );
+		$data = array(
 			'code' => 200,
-			'body' => $member_json,
+			'body' => $json,
 		);
-		//$member_data = json_decode( $member_json, true )['data'][0];
-		return $member_data;
+		return $data;
 	}
-	public function get_mla_group_data_from_api() {
-		$group_json = file_get_contents( 'tests/data/mock-group.json' );
-		$group_data = array(
-			'code' => 200,
-			'body' => $group_json,
-		);
-		return $group_data;
 
+	public function get_member() {
+		return $this->get_mock_data( 'mock-member.json' );
+	}
+
+	public function get_mla_group_data_from_api() {
+		return $this->get_mock_data( 'mock-group.json' );
+	}
+
+	/**
+	 * for now, only using true response
+	 * TODO good way to test/mock both true and false responses?
+	 *
+	 * @param $username
+	 * @return array
+	 */
+	public function is_username_duplicate( $username ) {
+		return $this->get_mock_data( 'mock-member-duplicate-check-false.json' );
 	}
 }

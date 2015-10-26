@@ -1,0 +1,14 @@
+{
+  "meta": {
+    "status": "success",
+    "code": "API-1000",
+    "message": ""
+  },
+  "data": [
+    {
+      "username": {
+        "duplicate": true
+      }
+    }
+  ]
+}

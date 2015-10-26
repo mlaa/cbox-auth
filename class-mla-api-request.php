@@ -224,4 +224,39 @@ class MLAAPIRequest {
 
 		return true;
 	}
+
+	/**
+	 * Query MLA API to check if username exists
+	 *
+	 * @param string $username
+	 * @return bool
+	 */
+	protected function is_username_duplicate( $username ) {
+		$base_url = $this->api_url . 'members';
+		$query = json_encode(
+			array(
+				'type' => 'duplicate',
+				'username' => $username,
+			)
+		);
+
+		$response = $this->send_request( 'GET', $base_url, $query );
+
+		// TODO can this error handling be DRYer?
+		if ( ( ! is_array( $response ) ) || ( ! array_key_exists( 'code', $response ) ) ) {
+			// This only happens if we can't access the API server.
+			error_log( 'Authentication Plugin: is API server down?' );
+			_log( 'On checking for duplicate usernames, API gave a non-array response. Something is terribly wrong!' );
+			return new WP_Error( 'server_error', __( '<strong>Error (' . __LINE__ . '):</strong> There was a problem checking for duplicate usernames. Please try again later.' ) );
+		}
+
+		if ( 200 !== $response['code'] ) {
+			_log( "Username '$username' is a duplicate." );
+			_log( 'Response: ', $response );
+			return new WP_Error( 'server_error', __( '<strong>Error (' . __LINE__ . '):</strong> There was a problem checking for duplicate usernames. Please try again later.' ) );
+		}
+
+		return $response;
+	}
+
 }

@@ -33,7 +33,7 @@ require_once 'class-custom-authentication.php';
  * of concept.
  */
 
-abstract class Base extends WP_UnitTestCase {
+abstract class Base extends WP_Ajax_UnitTestCase {
 
 	protected $test_class;
 	protected $reflection;
@@ -294,6 +294,48 @@ class CustomAuthenticationTest extends Base {
 		// groups_is_user_admin() returns membership ID (int) if user is admin,
 		// and returns 0 or NULL, it seems, if user is not.
 		$this->assertFalse( ( is_int( $is_admin ) && $is_admin > 0 ) );
+	}
+
+	public function provider_validate_preferred_username() {
+		// use string 'true' and 'false' to match json response
+		return array(
+			array( '123a', 'true' ),
+			array( '123', 'false' ),                   // too short
+			array( '12345678901234567890a', 'false' ), // too long
+			array( '1234567890', 'false' ),            // contains no letters
+			array( 'abcD', 'false' ),                  // contains uppercase
+			array( 'abc-', 'false' ),                  // contains a non-alphanumeric character other than underscore
+
+			// TODO it would be nice to be able to test duplicate checking here, but that's probably a job for testing against the MLAApiRequest class
+			//array( 'czarate', 'false' ),               // duplicate
+		);
+	}
+
+	/**
+	 * @group ajax
+	 * @dataProvider provider_validate_preferred_username
+	 *
+	 * @param string $username username to test
+	 * @param string $expected_result either "true" or "false"
+	 */
+	public function test_validate_preferred_username( $username, $expected_result ) {
+		// we need this to make wp_die() throw a WPAjaxDieStopException and Base::setup() does not call it
+		WP_Ajax_UnitTestCase::setUp();
+
+		$_POST['preferred'] = $username;
+		$_POST['username'] = $username;
+		$_POST['password'] = '';
+
+		// expect an exception with a message containing the json response
+		try {
+			$this->_handleAjax( 'nopriv_validate_preferred_username' );
+		} catch ( WPAjaxDieStopException $e ) {
+			$response = json_decode($e->getMessage());
+			$this->assertInternalType( 'object', $response );
+			$this->assertObjectHasAttribute( 'result', $response );
+			$this->assertObjectHasAttribute( 'message', $response );
+			$this->assertEquals( $expected_result, $response->result );
+		}
 	}
 
 }

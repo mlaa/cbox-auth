@@ -43,6 +43,11 @@ function _manually_load_plugin() {
 	// to test them individually we feed them mock data above.
 	require_once $_tests_dir . '/../class-custom-authentication.php';
 	require_once $_tests_dir . '/../class-mla-group.php';
+
+	// since we're not loading the whole plugin, manually add ajax actions to be tested
+	// TODO ...why aren't we loading the whole plugin?
+	$myCustomAuthentication = new CustomAuthentication();
+	add_action( 'wp_ajax_nopriv_validate_preferred_username', array( $myCustomAuthentication, 'ajax_validate_preferred_username' ) );
 }
 tests_add_filter( 'muplugins_loaded', '_manually_load_plugin' );
 

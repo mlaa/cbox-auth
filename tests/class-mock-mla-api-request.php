@@ -28,7 +28,6 @@ class MLAAPIRequest {
 	}
 
 	/**
-	 * for now, only using true response
 	 * TODO good way to test/mock both true and false responses?
 	 *
 	 * @param $username

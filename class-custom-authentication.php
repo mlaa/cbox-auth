@@ -180,21 +180,22 @@ class CustomAuthentication extends MLAAPI {
 		$username = $_POST['username'];
 		$password = $_POST['password']; // not used since switch from change_custom_username() to is_username_duplicate()
 		$message = '';
-		$error_message = 'User names must be between four and twenty characters in length and must contain at least one letter. Only lowercase letters, numbers, and underscores are allowed.';
+		$error_message_constraints = 'User names must be between four and twenty characters in length and must contain at least one letter. Only lowercase letters, numbers, and underscores are allowed.';
+		$error_message_duplicate = 'That user name already exists.';
 		$result = false;
 		if ( validate_username( $preferred ) ) {
-			if ( username_exists( $preferred ) ) { // check for duplicate in WordPress
-				$message = 'That user name already exists.';
-			} else if ( ! preg_match( '/[a-z]/', $preferred ) ) {
-				// must contain at least one letter
-				$message = $error_message;
-			} else if ( ! preg_match( '/^[a-z0-9_]{4,20}$/', $preferred ) ) {
-				// don't allow characters that aren't lowercase letters, numbers, underscores
-				$message = $error_message;
+			if ( $preferred === $username ) {
+				$result = true;
+			} else if ( username_exists( $preferred ) ) { // check for duplicate in WordPress
+				$message = $error_message_duplicate;
+			} else if ( ! preg_match( '/[a-z]/', $preferred ) ) { // must contain at least one letter
+				$message = $error_message_constraints;
+			} else if ( ! preg_match( '/^[a-z0-9_]{4,20}$/', $preferred ) ) { // don't allow characters that aren't lowercase letters, numbers, underscores
+				$message = $error_message_constraints;
 			} else {
 				$res = $this->is_username_duplicate( $username ); // check for duplicate in MLA API
 				if ( $res instanceof WP_Error ) {
-					$message = $res->get_error_message( 'name_change_error' );
+					$message = $error_message_duplicate;
 				} else {
 					$decoded = json_decode( $res['body'], true );
 					if ( ! $decoded['data'][0]['username']['duplicate'] ) {
@@ -203,7 +204,7 @@ class CustomAuthentication extends MLAAPI {
 				}
 			}
 		} else {
-			$message = $error_message;
+			$message = $error_message_constraints;
 		}
 		wp_die( wp_json_encode( array( 'result' => ( $result ? 'true' : 'false' ), 'message' => $message ) ) );
 	}

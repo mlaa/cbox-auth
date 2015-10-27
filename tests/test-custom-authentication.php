@@ -299,15 +299,16 @@ class CustomAuthenticationTest extends Base {
 	public function provider_validate_preferred_username() {
 		// use string 'true' and 'false' to match json response
 		return array(
-			array( '123a', 'true' ),
-			array( '123', 'false' ),                   // too short
-			array( '12345678901234567890a', 'false' ), // too long
-			array( '1234567890', 'false' ),            // contains no letters
-			array( 'abcD', 'false' ),                  // contains uppercase
-			array( 'abc-', 'false' ),                  // contains a non-alphanumeric character other than underscore
+			array( '', '123a', 'true' ),
+			array( '', '123', 'false' ),                   // too short
+			array( '', '12345678901234567890a', 'false' ), // too long
+			array( '', '1234567890', 'false' ),            // contains no letters
+			array( '', 'abcD', 'false' ),                  // contains uppercase
+			array( '', 'abc-', 'false' ),                  // contains a non-alphanumeric character other than underscore
+			array( 'abcd', 'abcd', 'true' ),               // username === preferred (short-circuit, considered valid)
 
 			// TODO it would be nice to be able to test duplicate checking here, but that's probably a job for testing against the MLAApiRequest class
-			//array( 'czarate', 'false' ),               // duplicate
+			//array( '', 'czarate', 'false' ),             // duplicate
 		);
 	}
 
@@ -318,11 +319,11 @@ class CustomAuthenticationTest extends Base {
 	 * @param string $username username to test
 	 * @param string $expected_result either "true" or "false"
 	 */
-	public function test_validate_preferred_username( $username, $expected_result ) {
+	public function test_validate_preferred_username( $username, $preferred, $expected_result ) {
 		// we need this to make wp_die() throw a WPAjaxDieStopException and Base::setup() does not call it
 		WP_Ajax_UnitTestCase::setUp();
 
-		$_POST['preferred'] = $username;
+		$_POST['preferred'] = $preferred;
 		$_POST['username'] = $username;
 		$_POST['password'] = '';
 
@@ -331,9 +332,16 @@ class CustomAuthenticationTest extends Base {
 			$this->_handleAjax( 'nopriv_validate_preferred_username' );
 		} catch ( WPAjaxDieStopException $e ) {
 			$response = json_decode($e->getMessage());
+
 			$this->assertInternalType( 'object', $response );
 			$this->assertObjectHasAttribute( 'result', $response );
 			$this->assertObjectHasAttribute( 'message', $response );
+
+			// expect non-empty error message if $preferred did not validate for any reason
+			if ($response->result === 'false') {
+				$this->assertNotEmpty($response->message);
+			}
+
 			$this->assertEquals( $expected_result, $response->result );
 		}
 	}

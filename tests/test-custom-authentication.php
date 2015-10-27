@@ -331,7 +331,7 @@ class CustomAuthenticationTest extends Base {
 		try {
 			$this->_handleAjax( 'nopriv_validate_preferred_username' );
 		} catch ( WPAjaxDieStopException $e ) {
-			$response = json_decode($e->getMessage());
+			$response = json_decode( $e->getMessage() );
 
 			$this->assertInternalType( 'object', $response );
 			$this->assertObjectHasAttribute( 'result', $response );
@@ -339,7 +339,7 @@ class CustomAuthenticationTest extends Base {
 
 			// expect non-empty error message if $preferred did not validate for any reason
 			if ($response->result === 'false') {
-				$this->assertNotEmpty($response->message);
+				$this->assertNotEmpty( $response->message );
 			}
 
 			$this->assertEquals( $expected_result, $response->result );

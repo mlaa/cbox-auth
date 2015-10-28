@@ -67,6 +67,11 @@ jQuery(document).ready(function($) {
           $('#user_login_preferred').val(response.guess.toLowerCase());
           return preferredVisible = true;
         case "false":
+          if (response.message.length > 0) {
+            $('#wp-submit').removeClass('busy');
+            error = $('<div id="login_error">' + response.message + '</div>');
+            return $('#login form').before(error);
+          }
           needsPreferred = false;
           return $('#login form').submit();
       }

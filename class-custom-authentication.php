@@ -193,7 +193,7 @@ class CustomAuthentication extends MLAAPI {
 			} else if ( ! preg_match( '/^[a-z0-9_]{4,20}$/', $preferred ) ) { // don't allow characters that aren't lowercase letters, numbers, underscores
 				$message = $error_message_constraints;
 			} else {
-				$res = $this->is_username_duplicate( $username ); // check for duplicate in MLA API
+				$res = $this->is_username_duplicate( $preferred ); // check for duplicate in MLA API
 				if ( $res instanceof WP_Error ) {
 					$message = $error_message_duplicate;
 				} else {

@@ -233,11 +233,9 @@ class MLAAPIRequest {
 	 */
 	protected function is_username_duplicate( $username ) {
 		$base_url = $this->api_url . 'members';
-		$query = json_encode(
-			array(
-				'type' => 'duplicate',
-				'username' => $username,
-			)
+		$query = array(
+			'type' => 'duplicate',
+			'username' => $username,
 		);
 
 		$response = $this->send_request( 'GET', $base_url, $query );

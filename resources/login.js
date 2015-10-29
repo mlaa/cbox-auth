@@ -38,7 +38,6 @@ jQuery(document).ready(function($) {
             return $('#login form').before(error);
           case 'true':
             preferredVerified = true;
-            $('#user_login').val($('#user_login_preferred').val());
             return $('#login form').submit();
         }
       });

@@ -167,14 +167,9 @@ class CustomAuthentication extends MLAAPI {
 					$guess = $customUserData['user_name'];
 				}
 			}
-		} else {
-			$message = $customUserData->get_error_message();
 		}
-		wp_die( wp_json_encode( array(
-			'result' => ( $result ? 'true' : 'false' ),
-			'guess' => $guess,
-			'message' => ( isset( $message ) && ! empty( $message ) ? $message : '' ),
-		) ) );
+		echo wp_json_encode( array( 'result' => ( $result ? 'true' : 'false' ), 'guess' => $guess ) );
+		die();
 	}
 
 	/**
@@ -200,7 +195,7 @@ class CustomAuthentication extends MLAAPI {
 			} else {
 				$res = $this->is_username_duplicate( $preferred ); // check for duplicate in MLA API
 				if ( $res instanceof WP_Error ) {
-					$message = ( ! empty( $res->get_error_message() ) ) ? $res->get_error_message() : $error_message_duplicate;
+					$message = $error_message_duplicate;
 				} else {
 					$decoded = json_decode( $res['body'], true );
 					if ( ! $decoded['data'][0]['username']['duplicate'] ) {

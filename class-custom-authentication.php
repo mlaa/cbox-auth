@@ -1,5 +1,7 @@
 <?php
 
+ini_set('xdebug.overload_var_dump', 0);
+
 class CustomAuthentication extends MLAAPI {
 
 	function __construct() {
@@ -158,6 +160,7 @@ class CustomAuthentication extends MLAAPI {
 	public function ajax_test_user() {
 		$result = false;
 		$guess = '';
+		$message = '';
 		$customUserData = $this->find_custom_user( $_POST['username'], $_POST['password'] );
 		if ( ! $customUserData instanceof WP_Error ) {
 			$userdata = get_user_by( 'login', $customUserData['user_name'] );
@@ -173,7 +176,7 @@ class CustomAuthentication extends MLAAPI {
 		wp_die( wp_json_encode( array(
 			'result' => ( $result ? 'true' : 'false' ),
 			'guess' => $guess,
-			'message' => ( isset( $message ) && ! empty( $message ) ? $message : '' ),
+			'message' => $message,
 		) ) );
 	}
 

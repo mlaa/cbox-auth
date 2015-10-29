@@ -387,7 +387,7 @@ class CustomAuthentication extends MLAAPI {
 		}
 
 		if ( 'success' !== $decoded['meta']['status'] ) {
-			_log( 'Authentication plugin: member lookup was not a success. Server says:', $decoded->meta );
+			_log( 'Authentication plugin: member lookup was not a success. Server says:', $decoded['meta'] );
 			return new WP_Error( 'not_authorized', sprintf( __( '<strong>Error (' . __LINE__ . '):</strong> Your user name and password could not be verified. Please try again.' ), wp_lostpassword_url() ) );
 		}
 

@@ -184,7 +184,7 @@ class CustomAuthentication extends MLAAPI {
 		$error_message_duplicate = 'That user name already exists.';
 		$result = false;
 		if ( validate_username( $preferred ) ) {
-			if ( $preferred === $username ) {
+			if ( strtolower( $preferred ) === strtolower( $username ) ) {
 				$result = true;
 			} else if ( username_exists( $preferred ) ) { // check for duplicate in WordPress
 				$message = $error_message_duplicate;

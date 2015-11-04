@@ -186,10 +186,6 @@ class MLAAPIRequest {
 
 	protected function change_custom_username( $username, $password, $newname ) {
 
-		// If the new username is the same as the old, we can save ourselves
-		// a little bit of effort.
-		if ( $newname === $username ) { return true; }
-
 		// First we need to get the user ID from the MLA API,
 		// because the API can't look up users by username,
 		// and we don't have the user's ID now.

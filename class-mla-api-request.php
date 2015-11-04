@@ -193,6 +193,11 @@ class MLAAPIRequest {
 		// that calls this one doesn't have access to it.
 		$customUserData = $this->find_custom_user( $username, $password );
 
+		if ( $customUserData instanceof WP_Error ) {
+			_log( "find_custom_user threw a WP_Error, we're not going to be able to change this username." );
+			return new WP_Error( 'server_error', __( '<strong>Error (' . __LINE__ . '):</strong> There was a problem changing your username. Please try again later.' ) );
+		}
+
 		$user_id = $customUserData['id'];
 
 		// now we change the username

@@ -20,11 +20,11 @@ class MLAAPIRequest {
 	}
 
 	public function get_member() {
-		return $this->get_mock_data( 'mock-member.json' );
+		return $this->get_mock_data( 'members/exampleuser.json' );
 	}
 
 	public function get_mla_group_data_from_api() {
-		return $this->get_mock_data( 'mock-group.json' );
+		return $this->get_mock_data( 'organizations/157.json' );
 	}
 
 	/**

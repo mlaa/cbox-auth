@@ -1,7 +1,12 @@
 <?php
 
-// Set a flag so that certain functions know we're running tests.
+// this only serves to avoid calling setcookie()
 define( 'RUNNING_TESTS', true );
+
+// we're using mock data but we need to define these to avoid errors
+define( 'CBOX_AUTH_API_KEY', '' );
+define( 'CBOX_AUTH_API_SECRET', '' );
+define( 'CBOX_AUTH_API_URL', '' );
 
 // Get codebase versions.
 $wp_version = ( getenv( 'WP_VERSION' ) ) ? getenv( 'WP_VERSION' ) : 'latest';
@@ -30,6 +35,7 @@ function _manually_load_plugin() {
 	require_once getenv( 'BP_TESTS_DIR' ) . '/includes/loader.php';
 
 	// We'll need this so that we can use `_log()`.
+	// TODO find a way to avoid duplicating this file from mu-plugins
 	require_once $_tests_dir . '/debug.php';
 
 	// Override API communications to insert mock data.
@@ -45,7 +51,6 @@ function _manually_load_plugin() {
 	require_once $_tests_dir . '/../class-mla-group.php';
 
 	// since we're not loading the whole plugin, manually add ajax actions to be tested
-	// TODO ...why aren't we loading the whole plugin?
 	$myCustomAuthentication = new CustomAuthentication();
 	add_action( 'wp_ajax_nopriv_test_user', array( $myCustomAuthentication, 'ajax_test_user' ) );
 	add_action( 'wp_ajax_nopriv_validate_preferred_username', array( $myCustomAuthentication, 'ajax_validate_preferred_username' ) );

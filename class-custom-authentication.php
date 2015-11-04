@@ -1,7 +1,5 @@
 <?php
 
-ini_set('xdebug.overload_var_dump', 0);
-
 class CustomAuthentication extends MLAAPI {
 
 	function __construct() {

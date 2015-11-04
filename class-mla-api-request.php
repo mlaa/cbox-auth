@@ -186,16 +186,17 @@ class MLAAPIRequest {
 
 	protected function change_custom_username( $username, $password, $newname ) {
 
-		// If the new username is the same as the old, we can save ourselves
-		// a little bit of effort.
-		if ( $newname === $username ) { return true; }
-
 		// First we need to get the user ID from the MLA API,
 		// because the API can't look up users by username,
 		// and we don't have the user's ID now.
 		// It sucks that we can't pass the User ID, but an AJAX function
 		// that calls this one doesn't have access to it.
 		$customUserData = $this->find_custom_user( $username, $password );
+
+		if ( $customUserData instanceof WP_Error ) {
+			_log( "find_custom_user threw a WP_Error, we're not going to be able to change this username." );
+			return new WP_Error( 'server_error', __( '<strong>Error (' . __LINE__ . '):</strong> There was a problem changing your username. Please try again later.' ) );
+		}
 
 		$user_id = $customUserData['id'];
 

@@ -541,8 +541,7 @@ class CustomAuthentication extends MLAAPI {
 	 * @return bool
 	 */
 	protected function validate_custom_user( $member, $id, &$error = null ) {
-
-		if ( $id !== $member['id'] && urlencode( strtolower( $member['user_name'] ) ) !== $id ) {
+		if ( $id !== $member['id'] && urlencode( strtolower( $member['user_name'] ) ) !== urlencode( strtolower( $id ) ) ) {
 			// This should not happen since the API gives us the member based on the ID or Username. Nonetheless, it's worth checking.
 			$error = new WP_Error( 'server_error', __( '<strong>Error (' . __LINE__ . '):</strong> There was a problem verifying your member credentials. Please try again later.' ) );
 			return false;

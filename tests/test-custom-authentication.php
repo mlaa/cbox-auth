@@ -2,26 +2,6 @@
 
 ini_set('xdebug.overload_var_dump', 0);
 
-/**
- * PHPUnit tests
- *
- * Download:
- *   wget https://phar.phpunit.de/phpunit.phar
- *
- * Run:
- *   php phpunit.phar test-MLAAPI.php
- *
- * OR...
- *
- * Download:
- *   sudo apt-get install phpunit
- *
- * Run:
- *   cd /path/to/cbox-auth
- *   phpunit
- *
- */
-
 require_once 'class-custom-authentication.php';
 
 /**
@@ -86,24 +66,6 @@ class CustomAuthenticationTest extends WP_Ajax_UnitTestCase {
 		foreach ( $required_fields as $required_field ) {
 			$this->assertArrayHasKey( $required_field, $member_array );
 		}
-	}
-
-	/**
-	 * @covers ::authenticate_username_password
-	 * @dataProvider provider_member_json
-	 */
-	public function test_authenticate_username_password( $member_json, $username, $password ) {
-		$_POST['preferred'] = ''; // the function expects this to be set
-		$_POST['acceptance'] = false; // the function expects this to be set, too
-		$_SERVER['SERVER_PORT'] = 0; // the function expects this to be set, too
-
-		$method = $this->get_method( 'authenticate_username_password' );
-		$retval = $method->invoke( new CustomAuthentication, null, $username, $password );
-
-		// this tests if the valid user (returned as valid from the API)
-		// is correctly added to the database, which should return an instance
-		// of WP_User from the function AuthenticateUsernamePassword.
-		$this->assertInstanceOf( 'WP_User', $retval );
 	}
 
 	/**
@@ -357,11 +319,10 @@ class CustomAuthenticationTest extends WP_Ajax_UnitTestCase {
 	 */
 	public function provider_test_ajax_test_user() {
 		// use string 'true' and 'false' to match json response
-		//TODO valid matches not working
 		return [
-			//[ '999999', 'test', 'true' ],
+			[ '999999', 'test', 'true' ],
 			[ '999999', '', 'false' ],
-			//[ 'exampleuser', 'test', 'true' ],
+			[ 'exampleuser', 'test', 'true' ],
 			[ 'exampleuser', '', 'false' ],
 		];
 	}
@@ -375,7 +336,7 @@ class CustomAuthenticationTest extends WP_Ajax_UnitTestCase {
 	 * @param string $password
 	 * @param string $expected_result either "true" or "false"
 	 */
-	public function test_ajax_test_user( $username_or_member_number, $password, $expected_result) {
+	public function test_ajax_test_user( $username_or_member_number, $password, $expected_result ) {
 		// we need this to make wp_die() throw a WPAjaxDieStopException and Base::setup() does not call it
 		WP_Ajax_UnitTestCase::setUp();
 
@@ -402,6 +363,26 @@ class CustomAuthenticationTest extends WP_Ajax_UnitTestCase {
 
 			$this->assertEquals( $expected_result, $response->result );
 		}
+	}
+
+	/**
+	 * This must run after test_ajax_test_user since it actually creates a WP user and changes the behavior of that function.
+	 *
+	 * @covers ::authenticate_username_password
+	 * @dataProvider provider_member_json
+	 */
+	public function test_authenticate_username_password( $member_json, $username, $password ) {
+		$_POST['preferred'] = ''; // the function expects this to be set
+		$_POST['acceptance'] = false; // the function expects this to be set, too
+		$_SERVER['SERVER_PORT'] = 0; // the function expects this to be set, too
+
+		$method = $this->get_method( 'authenticate_username_password' );
+		$retval = $method->invoke( new CustomAuthentication, null, $username, $password );
+
+		// this tests if the valid user (returned as valid from the API)
+		// is correctly added to the database, which should return an instance
+		// of WP_User from the function AuthenticateUsernamePassword.
+		$this->assertInstanceOf( 'WP_User', $retval );
 	}
 
 }

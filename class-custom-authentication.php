@@ -158,6 +158,7 @@ class CustomAuthentication extends MLAAPI {
 	public function ajax_test_user() {
 		$result = false;
 		$guess = '';
+		$message = '';
 		$customUserData = $this->find_custom_user( $_POST['username'], $_POST['password'] );
 		if ( ! $customUserData instanceof WP_Error ) {
 			$userdata = get_user_by( 'login', $customUserData['user_name'] );
@@ -167,9 +168,14 @@ class CustomAuthentication extends MLAAPI {
 					$guess = $customUserData['user_name'];
 				}
 			}
+		} else {
+			$message = $customUserData->get_error_message();
 		}
-		echo wp_json_encode( array( 'result' => ( $result ? 'true' : 'false' ), 'guess' => $guess ) );
-		die();
+		wp_die( wp_json_encode( array(
+			'result' => ( $result ? 'true' : 'false' ),
+			'guess' => $guess,
+			'message' => $message,
+		) ) );
 	}
 
 	/**
@@ -195,7 +201,7 @@ class CustomAuthentication extends MLAAPI {
 			} else {
 				$res = $this->is_username_duplicate( $preferred ); // check for duplicate in MLA API
 				if ( $res instanceof WP_Error ) {
-					$message = $error_message_duplicate;
+					$message = ( ! empty( $res->get_error_message() ) ) ? $res->get_error_message() : $error_message_duplicate;
 				} else {
 					$decoded = json_decode( $res['body'], true );
 					if ( ! $decoded['data'][0]['username']['duplicate'] ) {

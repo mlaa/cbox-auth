@@ -252,12 +252,13 @@ class MLAMember extends MLAAPI {
 		// since they're already the names of their associates
 		$fields_to_sync = array( 'first_name', 'last_name', 'nickname', 'affiliations', 'title' );
 		foreach ( $fields_to_sync as $field ) {
-			if ( ! empty( $this->field ) ) {
+			if ( ! empty( $this->$field ) ) {
 				update_user_meta( $this->user_id, $field, $this->$field );
 				_log( 'Setting user meta:', $field );
 				_log( 'with data:', $this->$field );
 			}
 		}
+
 
 		// Map of fields to sync. Key is incoming MLA field;
 		// value is Xprofile field name.

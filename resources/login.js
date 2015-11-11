@@ -1,5 +1,3 @@
-var readCookie;
-
 jQuery(document).ready(function($) {
   var needsPreferred, preferredVerified, preferredVisible;
   $('#input-preferred').hide();
@@ -44,9 +42,6 @@ jQuery(document).ready(function($) {
       return false;
     }
     $('#wp-submit').addClass('busy');
-    if (hex_md5($('#user_login').val()) === readCookie('MLABeenHereBefore')) {
-      return true;
-    }
     data = {
       username: $('#user_login').val(),
       password: $('#user_pass').val(),
@@ -78,21 +73,3 @@ jQuery(document).ready(function($) {
     return false;
   });
 });
-
-readCookie = function(name) {
-  var c, ca, i, nameEQ;
-  nameEQ = name + "=";
-  ca = document.cookie.split(";");
-  i = 0;
-  while (i < ca.length) {
-    c = ca[i];
-    while (c.charAt(0) === " ") {
-      c = c.substring(1, c.length);
-    }
-    if (c.indexOf(nameEQ) === 0) {
-      return c.substring(nameEQ.length, c.length);
-    }
-    i++;
-  }
-  return null;
-};

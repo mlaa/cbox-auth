@@ -117,17 +117,12 @@ class CustomAuthentication extends MLAAPI {
 				if ( wp_check_password( $password, $userdata->user_pass, $userdata->ID )
 					&& ( 'yes' === get_user_meta( $userdata->ID, 'mla_nonmember', $single = true )
 					|| is_super_admin( $userdata->ID ) ) ) {
-					// Add a cookie to speed up the login process for non-first-time users
-					$this->set_remember_cookie( $username );
 					return $userdata;
 				} else {
 					return $customLoginError;
 				}
 			}
 		}
-
-		// Add a cookie to speed up the login process for non-first-time users
-		$this->set_remember_cookie( $username );
 
 		// At this point $userdata is a WP_User
 		$this->merge_wp_user( $userdata->ID, $customUserData );
@@ -139,17 +134,6 @@ class CustomAuthentication extends MLAAPI {
 		$this->special_cases( $userdata->ID, $customUserData['id'] );
 
 		return $userdata;
-	}
-
-	private function set_remember_cookie( $value ) {
-		if ( ! empty( $_SERVER['HTTPS'] ) && 'off' !== $_SERVER['HTTPS'] || 443 === $_SERVER['SERVER_PORT'] ) {
-			$secure_connection = true;
-		} else {
-			$secure_connection = false;
-		}
-		if ( ! defined( 'RUNNING_TESTS' ) ) {
-			setcookie( 'MLABeenHereBefore', md5( $value ), time() + ( 20 * 365 * 24 * 60 * 60 ), null, null, $secure_connection );
-		}
 	}
 
 	/**

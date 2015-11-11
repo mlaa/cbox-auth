@@ -1,8 +1,5 @@
 <?php
 
-// this only serves to avoid calling setcookie()
-define( 'RUNNING_TESTS', true );
-
 // we're using mock data but we need to define these to avoid errors
 define( 'CBOX_AUTH_API_KEY', '' );
 define( 'CBOX_AUTH_API_SECRET', '' );

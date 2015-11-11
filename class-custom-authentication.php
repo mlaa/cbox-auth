@@ -159,17 +159,21 @@ class CustomAuthentication extends MLAAPI {
 		$result = false;
 		$guess = '';
 		$message = '';
-		$customUserData = $this->find_custom_user( $_POST['username'], $_POST['password'] );
-		if ( ! $customUserData instanceof WP_Error ) {
-			$userdata = get_user_by( 'login', $customUserData['user_name'] );
-			if ( ! $userdata ) {
-				$result = true;
-				if ( $customUserData['id'] !== $customUserData['user_name'] ) {
-					$guess = $customUserData['user_name'];
+		$userdata = get_user_by( 'login', $_POST['username'] );
+
+		if ( ! $userdata ) {
+			$customUserData = $this->find_custom_user( $_POST['username'], $_POST['password'] );
+			if ( ! $customUserData instanceof WP_Error ) {
+				$userdata = get_user_by( 'login', $customUserData['user_name'] );
+				if ( ! $userdata ) {
+					$result = true;
+					if ( $customUserData['id'] !== $customUserData['user_name'] ) {
+						$guess = $customUserData['user_name'];
+					}
 				}
+			} else {
+				$message = $customUserData->get_error_message();
 			}
-		} else {
-			$message = $customUserData->get_error_message();
 		}
 		wp_die( wp_json_encode( array(
 			'result' => ( $result ? 'true' : 'false' ),

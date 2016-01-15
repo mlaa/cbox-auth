@@ -172,7 +172,9 @@ class MLAMember extends MLAAPI {
 		$this->mla_groups_join_group( $group_id, $this->user_id );
 
 		if ( 'admin' === translate_mla_role( $group_data['position'] ) ) {
-			groups_promote_member( $user_id, $group_id, 'admin' );
+			do_action( 'groups_promote_member', $group_id, $this->user_id, 'admin' );
+			$member = new BP_Groups_Member( $this->user_id, $group_id );
+			$member->promote( 'admin' );
 		}
 
 		return true;
@@ -308,7 +310,9 @@ class MLAMember extends MLAAPI {
 				// Now promote user if user is chair or equivalent.
 				// Should user be a BP admin according to the MLA API?
 				if ( in_array( $member_role, $bp_admins ) ) {
-					groups_promote_member( $this->user_id, $group_id, 'admin' );
+					do_action( 'groups_promote_member', $group_id, $this->user_id, 'admin' );
+					$member = new BP_Groups_Member( $this->user_id, $group_id );
+					$member->promote( 'admin' );
 				}
 				continue; // Nothing more to do here.
 			} else {
@@ -317,7 +321,9 @@ class MLAMember extends MLAAPI {
 				// Now demote member if member isn't an admin according to the MLA API records.
 				// Is user a BP admin or mod, but shouldn't be?
 				if ( in_array( $this->bp_groups_list[ $group_id ], $bp_admins ) ) {
-					groups_demote_member( $this->user_id, $group_id );
+					do_action( 'groups_demote_member', $group_id, $this->user_id );
+					$member = new BP_Groups_Member( $this->user_id, $group_id );
+					$member->demote();
 				}
 			}
 		}

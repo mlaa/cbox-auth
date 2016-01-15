@@ -276,15 +276,22 @@ class MLAGroup extends MLAAPI {
 			}
 
 			if ( 'admin' === $mla_role && 'member' === $bp_role ) {
-				// User has been promoted at MLA, but not on BP.
-				// Promote them on BP.
-				groups_promote_member( $member_id, $group_id, 'admin' );
+				// User has been promoted at MLA, but not on BP. Promote them on BP.
+				// Instead of using groups_promote_member, which checks to see if the
+				// current user is a group admin, make the change manually.
+				_log( 'Promoting member ' . $member_username );
+				do_action( 'groups_promote_member', $group_id, $member_id, 'admin' );
+				$member = new BP_Groups_Member( $member_id, $group_id );
+				$member->promote( 'admin' );
 			}
 
 			if ( 'member' === $mla_role && 'admin' === $bp_role ) {
 				// User has been demoted at MLA, but not on BP.
 				// Demote them on BP.
-				groups_demote_member( $member_id, $group_id );
+				_log( 'Demoting member ' . $member_username );
+				do_action( 'groups_demote_member', $group_id, $member_id );
+				$member = new BP_Groups_Member( $member_id, $group_id );
+				$member->demote();
 			}
 		}
 

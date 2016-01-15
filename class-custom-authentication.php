@@ -253,7 +253,7 @@ class CustomAuthentication extends MLAAPI {
 			$user_groups[ $groupData['oid'] ] = $groupData;
 		}
 
-		// Loop through each BP group and add/remove/promote/demote the user as needed.
+		// Loop through each BP group and add/remove the user as needed.
 		// @todo: I should probably be instantiating MLAMember here instead of doing all this stuff,
 		// just to keep it all in one place, but I'm keeping this here for the moment,
 		// because I suspect that it might be more efficient than instantiating the class.
@@ -272,21 +272,6 @@ class CustomAuthentication extends MLAAPI {
 				// No-Op if user is already a member
 				groups_join_group( $groupId, $userId );
 
-				// _log( 'User role appears to be:', $groupData['role'] );
-				// First we need to tell BP we're an admin.
-				bp_update_is_item_admin( true, 'groups' );
-
-				// If a user is a chair, liaison, etc, promote them.
-				// If not, demote them.
-				if ( 'admin' === $this->translate_mla_role( $groupData['role'] ) ) {
-					// _log( "User is admin! Promoting user $userId in group $groupId." );
-					$success = groups_promote_member( $userId, $groupId, 'admin' );
-					 // if ( $success ) _log( 'Great success!' ); else _log( 'Couldn\'t promote user!' );
-				} else {
-					// _log( "User is regular member! Demoting user $userId in group $groupId." );
-					$success = groups_demote_member( $userId, $groupId );
-					 // if ( $success ) _log( 'Great success!' ); else _log( 'Couldn\'t demote user!' );
-				}
 			} elseif ( ! $this->is_prospective_forum_group( $customOid ) ) {
 				// Remove the user from the group.
 				groups_leave_group( $groupId, $userId );
@@ -327,14 +312,6 @@ class CustomAuthentication extends MLAAPI {
 			$sync_obj = new MLAGroup( $debug = true, $id = $groupId );
 			$sync_obj->sync();
 
-			// If a user has the role 'chair', 'liaison', 'liason' [sic],
-			// 'secretary', 'executive', or 'program-chair', then promote
-			// the user to admin. Otherwise, demote the user.
-			if ( isset( $groupData['role'] ) ) {
-				if ( 'admin' === $this->translate_mla_role( $groupData['role'] ) ) {
-					groups_promote_member( $userId, $groupId, 'admin' );
-				}
-			}
 		}
 
 		return null;

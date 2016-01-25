@@ -1,133 +1,272 @@
 <?php
 /**
- * Class MLAAPI
- * @package cbox-auth
- * This class that contains methods common to the classes MLAGroup
- * and MLAMember.
+ * MLA API
+ *
+ * @package CustomAuth
  */
 
-class MLAAPI extends MLAAPIRequest {
+namespace MLA\Commons\Plugin\CustomAuth;
+
+use \MLA\Commons\Plugin\Logging\Logger;
+
+/**
+ * Implementation of the RESTful MLA API.
+ *
+ * @package CustomAuth
+ * @subpackage MLAAPI
+ * @class MLAAPI
+ */
+class MLAAPI extends Base {
 
 	/**
-	 * Gets a BuddyPress group ID if given the group's MLA OID.
-	 * @param $mla_oid str, the MLA OID, i.e. D086
-	 * @return int BuddyPress group ID, i.e. 86
+	 * Dependency: HttpDriver
+	 *
+	 * @var object
 	 */
-	public function get_group_id_from_mla_oid( $mla_oid ) {
-		global $wpdb;
-		$sql = "SELECT group_id FROM wp_bp_groups_groupmeta WHERE meta_key = 'mla_oid' AND meta_value = '$mla_oid'";
-		// @todo use wp_cache_get or some other caching method
-		$result = $wpdb->get_results( $sql );
-		if ( count( $result ) > 0 ) {
-			return $result[0]->group_id;
-		} else {
-			return false;
-		}
+	private $http_driver;
+
+	/**
+	 * Dependency: Logger
+	 *
+	 * @var object
+	 */
+	private $logger;
+
+	/**
+	 * Constructor
+	 *
+	 * @param HttpDriver $http_driver Dependency: HttpDriver.
+	 * @param Logger     $logger      Dependency: Logger.
+	 */
+	public function __construct( HttpDriver $http_driver, Logger $logger ) {
+		$this->http_driver = $http_driver;
+		$this->logger = $logger;
 	}
 
 	/**
-	 * Gets a BP user ID if given that user's MLA OID.
-	 * @param $mla_oid str, the user's MLA OID
-	 * @return $bp_user_id str, that user's BP User ID
+	 * Get a member from the API.
+	 *
+	 * @param string $member_id Either MLA member ID number or username.
+	 * @return object API response object
 	 */
-	public function get_bp_user_id_from_mla_oid( $mla_oid ) {
-		global $wpdb;
-		$sql = "SELECT user_id FROM wp_usermeta WHERE meta_key = 'mla_oid' AND meta_value = '$mla_oid'";
-		// @todo use wp_cache_get or some other caching method
-		$result = $wpdb->get_results( $sql );
-		if ( count( $result ) > 0 ) {
-			return $result[0]->user_id;
-		} else {
-			return false;
-		}
-	}
+	public function get_member( $member_id ) {
 
-	/**
-	 * We can't use the normal groups_join_group() function, since we're hooking into it
-	 * in customAuth.php, so we roll our own, based on `groups_join_group()`.
-	 * @param int $group_id ID of the group.
-	 * @param int $user_id Optional. ID of the user.
-	 * @return bool True on success, false on failure.
-	 */
-	function mla_groups_join_group( $group_id, $user_id ) {
+		// Fetch member data from MLA API.
+		$request_path = 'members/' . urlencode( $member_id );
+		$response = $this->http_driver->get( $request_path );
 
-		global $bp;
+		// Validate and extract API response.
+		$response = $this->extract_api_response_data( $response, 'organizations' );
 
-		// Check if the user has an outstanding invite. If so, delete it.
-		if ( groups_check_user_has_invite( $user_id, $group_id ) ) {
-			groups_delete_invite( $user_id, $group_id ); }
-
-		// Check if the user has an outstanding request. If so, delete it.
-		if ( groups_check_for_membership_request( $user_id, $group_id ) ) {
-			groups_delete_membership_request( $user_id, $group_id ); }
-
-		// User is already a member, just return true.
-		if ( groups_is_user_member( $user_id, $group_id ) ) {
-			return true; }
-
-		$new_member                = new BP_Groups_Member;
-		$new_member->group_id      = $group_id;
-		$new_member->user_id       = $user_id;
-		$new_member->inviter_id    = 0;
-		$new_member->is_admin      = 0;
-		$new_member->user_title    = '';
-		$new_member->date_modified = bp_core_current_time();
-		$new_member->is_confirmed  = 1;
-
-		if ( ! $new_member->save() ) {
-			return false; }
-
-		if ( ! isset( $bp->groups->current_group ) || ! $bp->groups->current_group || $group_id !== $bp->groups->current_group->id ) {
-			$group = groups_get_group( array( 'group_id' => $group_id ) );
-		} else { 			$group = $bp->groups->current_group; }
-
-		// Return without recording activity - too much noise.
-		return true;
-	}
-
-	/**
-	 * We also can't use `groups_leave_group()`, since we've hooked into
-	 * that action in customAuth.php. But no problem, we'll just do that
-	 * sort of thing ourselves.
-	 */
-	public function mla_groups_leave_group( $group_id, $user_id ) {
-		global $bp;
-
-		// Don't let single admins leave the group.
-		if ( count( groups_get_group_admins( $group_id ) ) < 2 ) {
-			if ( groups_is_user_admin( $user_id, $group_id ) ) {
-				bp_core_add_message( __( 'As the only admin, you cannot leave the group.', 'buddypress' ), 'error' );
-				return false;
+		// Put the groups list into a standardized form and translate roles into
+		// something BuddyPress can understand.
+		$groups_list = array();
+		foreach ( $response->organizations as $group ) {
+			$bp_role = $this->validate_group_membership( $group );
+			if ( $bp_role ) {
+				$groups_list[ $group->id ] = array(
+					'name' => $group->name,
+					'role' => $bp_role,
+					'type' => strtolower( $group->type ),
+				);
 			}
 		}
 
-		// This is exactly the same as deleting an invite, just is_confirmed = 1 NOT 0.
-		if ( ! groups_uninvite_user( $user_id, $group_id ) ) {
+		$response->organizations = $groups_list;
+
+		return $response;
+
+	}
+
+	/**
+	 * Get a group from the API.
+	 *
+	 * @param string $group_id MLA group ID.
+	 * @return object API response object.
+	 * @throws \Exception Describes API error.
+	 */
+	public function get_group( $group_id ) {
+
+		// Fetch group data from MLA API.
+		$request_path = 'organizations/' . $group_id;
+		$request_params = array( 'joined_commons' => 'Y' );
+		$response = $this->http_driver->get( $request_path, $request_params );
+
+		// Validate and extract API response.
+		$response = $this->extract_api_response_data( $response, 'members' );
+
+		// Make sure group should not be excluded.
+		$should_exclude = strtolower( $this->get_object_property( $response, 'exclude_from_commons', null ) );
+		if ( 'y' === $should_exclude ) {
+			throw new \Exception( 'Attempt to sync excluded group: ' . $response->id, 410 );
+		}
+
+		// Put the members list into a standardized form and translate roles into
+		// something BuddyPress can understand.
+		$members_list = array();
+		foreach ( $response->members as $member ) {
+			$member->type = $response->type;
+			$bp_role = $this->validate_group_membership( $member );
+			if ( $bp_role ) {
+				$members_list[ strtolower( $member->username ) ] = $bp_role;
+			}
+		}
+		$response->members = $members_list;
+
+		return $response;
+
+	}
+
+	/**
+	 * Validate API raw response.
+	 *
+	 * @param object $response Response object (decoded JSON) from MLA API.
+	 * @return bool True if response self-reports as successful.
+	 * @throws \Exception Describes API error.
+	 */
+	private function validate_api_response( $response ) {
+
+		// Check that response has the expected properties.
+		if ( $response && isset( $response->meta, $response->meta->status, $response->meta->code ) ) {
+
+			if ( 'success' !== strtolower( $response->meta->status ) ) {
+				throw new \Exception( 'API returned non-success ' . $response->meta->status . ': ' . $response->meta->code, 510 );
+			}
+
+			if ( 'api-1000' !== strtolower( $response->meta->code ) ) {
+				throw new \Exception( 'API returned error code: ' . $response->meta->code, 520 );
+			}
+
+			return true;
+
+		}
+
+		throw new \Exception( 'API returned malformed response: ' . serialize( $response ), 530 );
+
+	}
+
+	/**
+	 * Validate API raw response and extract data.
+	 *
+	 * @param object $response Response object (decoded JSON) from MLA API.
+	 * @param string $property Property name to validate (as array).
+	 * @param bool   $singular Whether the API response should contain only one item.
+	 * @return object Validated API response data.
+	 * @throws \Exception Describes API error.
+	 */
+	private function extract_api_response_data( $response, $property, $singular = false ) {
+
+		$this->validate_api_response( $response );
+
+		if ( ! isset( $response->data ) || ! is_array( $response->data ) || count( $response->data ) < 1 ) {
+			throw new \Exception( 'API returned no data.', 540 );
+		}
+
+		if ( $singular && count( $response->data ) > 1 ) {
+			throw new \Exception( 'API response returned more than one item: ' . serialize( $response->data ), 550 );
+		}
+
+		if ( ! property_exists( $response->data[0], $property ) ) {
+			throw new \Exception( 'API response did not contain property: ' . $property, 560 );
+		}
+
+		return $response->data[0];
+
+	}
+
+	/**
+	 * Validate group membership.
+	 *
+	 * @param array $group MLA group associative array.
+	 * @return mixed False if we ignore the membership; otherwise a BP role.
+	 */
+	private function validate_group_membership( $group ) {
+
+		$group_type = strtolower( $this->get_object_property( $group, 'type',                 null ) );
+		$position   = strtolower( $this->get_object_property( $group, 'position',             null ) );
+		$primary    = strtolower( $this->get_object_property( $group, 'primary',              null ) );
+		$exclude    = strtolower( $this->get_object_property( $group, 'exclude_from_commons', null ) );
+
+		// Some groups have an exclude flag.
+		if ( 'y' === $exclude ) {
 			return false;
 		}
 
-		// bp_core_add_message( __( 'You successfully left the group.', 'buddypress' ) );
-		return true;
+		// Committees: interested in all members.
+		if ( 'mla organization' === $group_type ) {
+			return $this->translate_mla_role( $position );
+		}
+
+		// Forums: only interested in executive committees and primary affiliations.
+		if ( 'forum' === $group_type && ( 'member' !== $position || 'y' === $primary ) ) {
+			return $this->translate_mla_role( $position );
+		}
+
+		// All other groups: not interested at all.
+		return false;
+
+	}
+
+	/**
+	 * Change member's username via API.
+	 *
+	 * @param string $user_id      Member ID number.
+	 * @param string $new_username Requested new username.
+	 * @return bool True if response indicates success.
+	 */
+	public function change_username( $user_id, $new_username ) {
+
+		// Send request to API.
+		$request_path = 'members/' . $user_id . '/username';
+		$request_body = '{"username":"' . $new_username . '"}';
+		$response = $this->http_driver->put( $request_path, array(), $request_body );
+
+		return ( $this->validate_api_response( $response ) );
+
+	}
+
+	/**
+	 * Query API to check if username already exists.
+	 *
+	 * @param string $username WordPress username/nicename.
+	 * @return bool True if username is duplicate.
+	 * @throws \Exception Describes API error.
+	 */
+	public function is_duplicate_username( $username ) {
+
+		// Query API.
+		$request_path = 'members';
+		$request_params = array(
+			'type' => 'duplicate',
+			'username' => $username,
+		);
+		$response = $this->http_driver->get( $request_path, $request_params );
+
+		// Validate and extract API response.
+		$response = $this->extract_api_response_data( $response, 'username' );
+		$is_duplicate = $this->get_object_property( $response->username, 'duplicate', null );
+
+		if ( is_bool( $is_duplicate ) ) {
+			return $is_duplicate;
+		}
+
+		throw new \Exception( 'API did not return boolean for duplicate status of username ' . $username . '.', 570 );
+
 	}
 
 	/**
 	 * Translate MLA roles like 'chair', 'liaison,' 'mla staff', into
-	 * the corresponding BP role, like 'admin', member.
+	 * the corresponding BP role, like 'admin', 'member'.
 	 *
-	 * @param $mla_role str the MLA role, like 'chair', 'mla staff.'
-	 * @return $bp_role str the BP role, like 'admin', 'member.'
+	 * @param string $mla_role MLA role, like 'chair', 'secretary'.
+	 * @return string $bp_role BP role, like 'admin', 'member'.
 	 */
-	public function translate_mla_role( $mla_role ) {
+	public static function translate_mla_role( $mla_role ) {
 
-		$mla_role = strtolower( $mla_role );
+		// List of MLA group roles that count we want to promote to group admin.
+		$mla_admin_roles = array( 'chair', 'liaison', 'liason', 'secretary', 'executive' );
 
-		// List of MLA group roles that count as admins; see class-CustomAuthentication.php.
-		$mla_admin_roles = array( 'chair', 'liaison', 'liason', 'secretary', 'executive', 'program-chair' );
-		if ( in_array( $mla_role, $mla_admin_roles ) ) {
-			$bp_role = 'admin';
-		} else {
-			$bp_role = 'member';
-		}
-		return $bp_role;
+		return ( in_array( strtolower( $mla_role ), $mla_admin_roles, true ) ) ? 'admin' : 'member';
+
 	}
 }

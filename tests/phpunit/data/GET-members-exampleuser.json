@@ -6,7 +6,7 @@
   },
   "data": [
     {
-      "id": "999999",
+      "id": "900000",
       "authentication": {
         "username": "exampleuser",
         "password": "$2a$10$qlENatXA3e3HHFRrdq3sTe8235lOq/0ADDPNlEYen3bdx7i4hELK2",
@@ -17,8 +17,8 @@
         "first_name": "Jennifer",
         "last_name": "Smith",
         "suffix": "",
-        "email": "jsmith@example.com", 
-	"web_site": "http://www.example.com", 
+        "email": "jsmith@example.com",
+	"web_site": "http://www.example.com",
 	"joined_commons": "Y"
       },
       "addresses": [
@@ -32,8 +32,8 @@
           "department_other": "",
           "rank": "Drone",
           "line1": "",
-          "line2": "3rd Floor",
-          "line3": "26 Broadway",
+          "line2": "Suite 500",
+          "line3": "85 Broad St",
           "city": "New York",
           "state": "NY",
           "zip": "10004",
@@ -42,47 +42,223 @@
       ],
       "organizations": [
         {
-          "id": "156",
-          "name": "Hebrew",
-          "convention_code": "G015",
+          "id": "101",
+          "name": "Test Forum 1",
+          "convention_code": "D001",
+          "position": "Executive",
+          "type": "Forum",
+          "exclude_from_commons": "",
+          "primary": "Y"
+        },
+        {
+          "id": "102",
+          "name": "Test Forum 2",
+          "convention_code": "D002",
+          "position": "Executive",
+          "type": "Forum",
+          "exclude_from_commons": "",
+          "primary": ""
+        },
+        {
+          "id": "103",
+          "name": "Test Forum 3",
+          "convention_code": "D003",
+          "position": "Chair",
+          "type": "Forum",
+          "exclude_from_commons": "",
+          "primary": "Y"
+        },
+        {
+          "id": "104",
+          "name": "Test Forum 4",
+          "convention_code": "D004",
+          "position": "Chair",
+          "type": "Forum",
+          "exclude_from_commons": "",
+          "primary": ""
+        },
+        {
+          "id": "105",
+          "name": "Test Forum 5",
+          "convention_code": "D005",
           "position": "Member",
           "type": "Forum",
-          "exclude_from_commons": ""
+          "exclude_from_commons": "",
+          "primary": "Y"
         },
         {
-          "id": "157",
-          "name": "Hungarian",
-          "convention_code": "G016",
+          "id": "106",
+          "name": "Test Forum 6",
+          "convention_code": "D006",
           "position": "Member",
           "type": "Forum",
-          "exclude_from_commons": ""
+          "exclude_from_commons": "",
+          "primary": "Y"
         },
         {
-          "id": "177",
-          "name": "Travel Writing",
-          "convention_code": "G045",
+          "id": "107",
+          "name": "Test Forum 7",
+          "convention_code": "D007",
           "position": "Member",
           "type": "Forum",
-          "exclude_from_commons": ""
+          "exclude_from_commons": "",
+          "primary": "Y"
         },
         {
-          "id": "332",
-          "name": "Advisory Comm. on Foreign Lang. Programs",
-          "convention_code": "H012",
+          "id": "108",
+          "name": "Test Forum 8",
+          "convention_code": "D008",
           "position": "Member",
-          "type": "Historical Entity",
-          "exclude_from_commons": ""
+          "type": "Forum",
+          "exclude_from_commons": "",
+          "primary": "Y"
         },
         {
-          "id": "181",
-          "name": "Committee on the Status of Women in the Profession",
+          "id": "109",
+          "name": "Test Forum 9",
+          "convention_code": "D009",
+          "position": "Member",
+          "type": "Forum",
+          "exclude_from_commons": "",
+          "primary": ""
+        },
+        {
+          "id": "110",
+          "name": "Test Forum 10",
+          "convention_code": "D010",
+          "position": "Member",
+          "type": "Forum",
+          "exclude_from_commons": "",
+          "primary": ""
+        },
+        {
+          "id": "111",
+          "name": "Test Forum 11",
+          "convention_code": "D011",
+          "position": "Member",
+          "type": "Forum",
+          "exclude_from_commons": "",
+          "primary": ""
+        },
+        {
+          "id": "112",
+          "name": "Test Forum 12",
+          "convention_code": "D012",
+          "position": "Member",
+          "type": "Forum",
+          "exclude_from_commons": "",
+          "primary": ""
+        },
+        {
+          "id": "201",
+          "name": "Test Committee 1",
+          "convention_code": "M001",
+          "position": "Chair",
+          "type": "MLA Organization",
+          "exclude_from_commons": "",
+          "primary": "Y"
+        },
+        {
+          "id": "202",
+          "name": "Test Committee 2",
+          "convention_code": "M002",
+          "position": "Secretary",
+          "type": "MLA Organization",
+          "exclude_from_commons": "",
+          "primary": ""
+        },
+        {
+          "id": "203",
+          "name": "Test Committee 3",
+          "convention_code": "M003",
+          "position": "Chair",
+          "type": "MLA Organization",
+          "exclude_from_commons": "",
+          "primary": "Y"
+        },
+        {
+          "id": "204",
+          "name": "Test Committee 4",
           "convention_code": "M004",
           "position": "Chair",
           "type": "MLA Organization",
-          "exclude_from_commons": ""
+          "exclude_from_commons": "",
+          "primary": ""
         },
         {
-          "id": "182",
+          "id": "205",
+          "name": "Test Committee 5",
+          "convention_code": "M005",
+          "position": "Member",
+          "type": "MLA Organization",
+          "exclude_from_commons": "",
+          "primary": "Y"
+        },
+        {
+          "id": "206",
+          "name": "Test Committee 6",
+          "convention_code": "M006",
+          "position": "Member",
+          "type": "MLA Organization",
+          "exclude_from_commons": "",
+          "primary": "Y"
+        },
+        {
+          "id": "207",
+          "name": "Test Committee 7",
+          "convention_code": "M007",
+          "position": "Member",
+          "type": "MLA Organization",
+          "exclude_from_commons": "",
+          "primary": "Y"
+        },
+        {
+          "id": "208",
+          "name": "Test Committee 8",
+          "convention_code": "M008",
+          "position": "Member",
+          "type": "MLA Organization",
+          "exclude_from_commons": "",
+          "primary": "Y"
+        },
+        {
+          "id": "209",
+          "name": "Test Committee 9",
+          "convention_code": "M009",
+          "position": "Member",
+          "type": "MLA Organization",
+          "exclude_from_commons": "",
+          "primary": ""
+        },
+        {
+          "id": "210",
+          "name": "Test Committee 10",
+          "convention_code": "M010",
+          "position": "Member",
+          "type": "MLA Organization",
+          "exclude_from_commons": "",
+          "primary": ""
+        },
+        {
+          "id": "211",
+          "name": "Test Committee 11",
+          "convention_code": "M011",
+          "position": "Member",
+          "type": "MLA Organization",
+          "exclude_from_commons": "",
+          "primary": ""
+        },
+        {
+          "id": "212",
+          "name": "Test Committee 12",
+          "convention_code": "M012",
+          "position": "Member",
+          "type": "MLA Organization",
+          "exclude_from_commons": "",
+          "primary": ""
+        },
+        {
+          "id": "300",
           "name": "Office of Research",
           "convention_code": "M050",
           "position": "Member",
@@ -90,12 +266,12 @@
           "exclude_from_commons": "Y"
         },
         {
-          "id": "349",
-          "name": "Very Good Literature",
-          "convention_code": "A022",
-          "position": "Head",
-          "type": "Allied Organization",
-          "exclude_from_commons": ""
+          "id": "400",
+          "name": "Hebrew",
+          "convention_code": "G000",
+          "position": "Member",
+          "type": "Forum",
+          "exclude_from_commons": "Y"
         }
       ],
       "languages": [
@@ -104,7 +280,7 @@
           "name": "Other languages",
           "primary": "Y"
         }
-      ] 
+      ]
     }
   ]
 }

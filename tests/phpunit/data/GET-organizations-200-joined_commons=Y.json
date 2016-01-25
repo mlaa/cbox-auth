@@ -6,10 +6,10 @@
   },
   "data": [
     {
-      "id": "100",
-      "name": "Hungarian",
-      "type": "Forum",
-      "convention_code": "D000",
+      "id": "200",
+      "name": "Committee on the Status of Women in the Profession",
+      "type": "MLA Organization",
+      "convention_code": "M000",
       "exclude_from_commons": "",
       "members": [
         {

@@ -1,28 +1,72 @@
 <?php
 /**
- * This is the base layer, which contains functions for directly communicating
- * with the MLA API. It's abstracted away from the MLAAPI class, so that MLAAPI
- * class can handle functions that are common to MLAGroup and MLAMember, but that
- * the functions for actually communicating are here. This way, we can rewrite
- * MLAAPIRequest in our tests and fill it with mock data, and not also have to
- * rewrite MLAAPI.
+ * CURL Driver
+ *
+ * @package CustomAuth
  */
-class MLAAPIRequest {
 
+namespace MLA\Commons\Plugin\CustomAuth;
+
+use \MLA\Commons\Plugin\Logging\Logger;
+
+/**
+ * Creates HTTP requests for the MLA API.
+ *
+ * @package CustomAuth
+ * @subpackage CurlDriver
+ * @class CurlDriver
+ */
+class CurlDriver implements HttpDriver {
+
+	/**
+	 * API base URL
+	 *
+	 * @var string
+	 */
 	private $api_url = CBOX_AUTH_API_URL;
 
-	/*
-	 * sendRequest
-	 * -----------
-	 * Send a RESTful request to the API.
+	/**
+	 * API key
+	 *
+	 * @var string
 	 */
-	public function send_request( $http_method, $base_url, $parameters = array(), $request_body = '' ) {
+	private $api_key = CBOX_AUTH_API_KEY;
 
-		$api_key = CBOX_AUTH_API_KEY;
-		$api_secret = CBOX_AUTH_API_SECRET;
+	/**
+	 * API shared secret
+	 *
+	 * @var string
+	 */
+	private $api_secret = CBOX_AUTH_API_SECRET;
+
+	/**
+	 * Dependency: Logger
+	 *
+	 * @var object
+	 */
+	private $logger;
+
+	/**
+	 * Constructor
+	 *
+	 * @param Logger $logger Dependency: Logger.
+	 */
+	public function __construct( Logger $logger ) {
+		$this->logger = $logger;
+	}
+
+	/**
+	 * Build request URL according to MLA API specifications.
+	 *
+	 * @param string $http_method  HTTP request method, e.g., 'GET'.
+	 * @param string $request_path HTTP request path, e.g., 'members/123'.
+	 * @param array  $parameters   HTTP request parameters in key=>value array.
+	 * @return string Final request URL.
+	 */
+	private function build_request_url( $http_method, $request_path, $parameters ) {
 
 		// Append current time to request parameters (seconds from UNIX epoch).
-		$parameters['key'] = $api_key;
+		$parameters['key'] = $this->api_key;
 		$parameters['timestamp'] = time();
 
 		// Sort the request parameters.
@@ -32,230 +76,166 @@ class MLAAPIRequest {
 		$query_string = http_build_query( $parameters, '', '&' );
 
 		// Add the request parameters to the base URL.
-		$request_url = $base_url . '?' . $query_string;
+		$request_url = $this->api_url . $request_path . '?' . $query_string;
 
 		// Compute the request signature (see specification).
 		$hash_input = $http_method . '&' . rawurlencode( $request_url );
-		$api_signature = hash_hmac( 'sha256', $hash_input, $api_secret );
+		$api_signature = hash_hmac( 'sha256', $hash_input, $this->api_secret );
 
 		// Append the signature to the request.
-		$request_url = $request_url . '&signature=' . $api_signature;
+		return $request_url . '&signature=' . $api_signature;
 
-		// Initialize a cURL session.
-		$ch = curl_init();
-		$headers = array( 'Accept: application/json' );
+	}
 
-		// Set cURL options.
-		curl_setopt( $ch, CURLOPT_URL, $request_url );
-		curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
-		curl_setopt( $ch, CURLOPT_FAILONERROR, false );
-		curl_setopt( $ch, CURLOPT_SSL_VERIFYPEER, true );
-		curl_setopt( $ch, CURLOPT_SSL_VERIFYHOST, 2 );
+	/**
+	 * Create handler and set cURL options.
+	 *
+	 * @param string $http_method  HTTP method, e.g., 'GET'.
+	 * @param string $request_url  HTTP request URL.
+	 * @param string $request_body HTTP request body as stringifed JSON.
+	 * @return object cURL handler.
+	 */
+	private function create_request( $http_method, $request_url, $request_body ) {
+
+		// @codingStandardsIgnoreStart WordPress.VIP.cURL
+		$handler = curl_init();
+
+		curl_setopt( $handler, CURLOPT_RETURNTRANSFER, true );
+		curl_setopt( $handler, CURLOPT_FAILONERROR, false );
+		curl_setopt( $handler, CURLOPT_SSL_VERIFYPEER, true );
+		curl_setopt( $handler, CURLOPT_SSL_VERIFYHOST, 2 );
 
 		// Set HTTP method.
 		if ( 'PUT' === $http_method || 'DELETE' === $http_method ) {
-			curl_setopt( $ch, CURLOPT_CUSTOMREQUEST, $http_method );
+			curl_setopt( $handler, CURLOPT_CUSTOMREQUEST, $http_method );
 		} elseif ( 'POST' === $http_method ) {
-			curl_setopt( $ch, CURLOPT_POST, 1 );
+			curl_setopt( $handler, CURLOPT_POST, 1 );
 		}
+
+		// Set HTTP headers.
+		$headers = array( 'Accept: application/json' );
 
 		// Add request body.
 		if ( strlen( $request_body ) ) {
 			$headers[] = 'Content-Length: ' . strlen( $request_body );
-			curl_setopt( $ch, CURLOPT_POSTFIELDS, $request_body );
+			curl_setopt( $handler, CURLOPT_POSTFIELDS, $request_body );
 		}
 
-		// Add HTTP headers.
-		curl_setopt( $ch, CURLOPT_HTTPHEADER, $headers );
+		curl_setopt( $handler, CURLOPT_HTTPHEADER, $headers );
+
+		// Set final request URL.
+		curl_setopt( $handler, CURLOPT_URL, $request_url );
+		// @codingStandardsIgnoreEnd
+
+		return $handler;
+
+	}
+
+	/**
+	 * Send request.
+	 *
+	 * @param object $handler cURL handler.
+	 * @return string Response text.
+	 * @throws \Exception Describes HTTP error.
+	 */
+	private function send_request( $handler ) {
 
 		// Send request.
-		$response_text = curl_exec( $ch );
+		// @codingStandardsIgnoreStart WordPress.VIP.cURL
+		$response_text = curl_exec( $handler );
+		$response_code = curl_getinfo( $handler, CURLINFO_HTTP_CODE );
+		// @codingStandardsIgnoreEnd
 
-		// Describe error if request failed.
-		if ( ! $response_text ) {
-			$response = array(
-				'code' => '500',
-				'body' => curl_error( $ch ),
-			);
-		} else {
-			$response = array(
-				'code' => curl_getinfo( $ch, CURLINFO_HTTP_CODE ),
-				'body' => $response_text,
-			);
+		// Get cURL error if response is false.
+		if ( false === $response_text || 200 !== $response_code ) {
+			$this->logger->addDebug( serialize( curl_error( $handler ) ) ); // @codingStandardsIgnoreLine WordPress.VIP.cURL
+			throw new \Exception( 'HTTP response code ' . $response_code );
 		}
-		// Close cURL session.
-		curl_close( $ch );
-		return $response;
+
+		return $response_text;
+
 	}
 
 	/**
-	 * Get a member from the member database API.
-	 * @param $username can be either ID number (e.g. 168880)
-	 * or username (e.g. commonstest).
-	 * @return response. Can be false, blank, or a member.
-	 * @todo: put this in MLAMember? Factor out base URL to make it easier to switch to production?
-	 */
-	public function get_member( $username ) {
-		$username = urlencode( $username );
-		$response = $this->send_request( 'GET', $this->api_url . 'members/' . $username );
-		return $response;
-	}
-
-	public function get_mla_group_data_from_api() {
-		$http_method = 'GET';
-		$simple_query = 'organizations/' . $this->group_mla_api_id;
-		$request_url = $this->api_url . $simple_query;
-		$params = array( 'joined_commons' => 'Y' );
-		$response = $this->send_request( $http_method, $request_url, $params );
-
-		return $response;
-	}
-
-	/**
-	 * Remove user from the group in the MLA database
+	 * Close request.
 	 *
-	 * @param int $group_id
-	 * @param int $user_id
+	 * @param object $handler cURL handler.
 	 */
-	public function remove_user_from_group( $group_id, $user_id = 0 ) {
-		$this->send_group_action( 'DELETE', $group_id, $user_id );
+	private function close_request( $handler ) {
+		curl_close( $handler ); // @codingStandardsIgnoreLine WordPress.VIP.cURL
 	}
 
 	/**
-	 * Add the user to the group in the MLA database
+	 * Process request for various HTTP verbs.
 	 *
-	 * @param int $group_id
-	 * @param int $user_id
+	 * @param string $http_method  HTTP request method.
+	 * @param string $request_path HTTP request path.
+	 * @param array  $parameters   HTTP request parameters.
+	 * @param string $request_body HTTP request body as stringifed JSON.
+	 * @return object cURL handler.
 	 */
-	public function add_user_to_group( $group_id, $user_id = 0 ) {
-		$this->send_group_action( 'POST', $group_id, $user_id );
+	private function process_request( $http_method, $request_path, $parameters, $request_body ) {
+
+		// Build request URL.
+		$request_url = $this->build_request_url( $http_method, $request_path, $parameters );
+
+		// Create cURL handler and set options.
+		$curl_handler = $this->create_request( $http_method, $request_url, $request_body );
+
+		// Send HTTP request.
+		$response_text = $this->send_request( $curl_handler );
+		$this->close_request( $curl_handler );
+
+		// Parse response.
+		$this->logger->addDebug( $response_text );
+		return json_decode( $response_text );
+
 	}
 
 	/**
-	 * Sends post data to the API to manage group memberships
+	 * GET API request.
 	 *
-	 * @param string $method
-	 * @param int    $group_id
-	 * @param int    $user_id
+	 * @param string $request_path HTTP request path.
+	 * @param array  $parameters   HTTP request parameters.
+	 * @return object Parsed response object.
 	 */
-	protected function send_group_action( $method, $group_id, $user_id = 0 ) {
-		// Get user and group info
-		if ( empty( $user_id ) ) {
-			$user_id = bp_loggedin_user_id();
-		}
-		$user_custom_oid = get_user_meta( $user_id, 'mla_oid', true );
-		$group_custom_oid = groups_get_groupmeta( $group_id, 'mla_oid', true );
-
-		// Can't do anything if the user or group isn't in the MLA database
-		if ( empty( $group_custom_oid ) || empty( $user_custom_oid ) ) {
-			_log( 'no group MLA OID or user OID! Can\'t perform this request. ' );
-			_log( 'user_custom_oid is:', $user_custom_oid );
-			_log( 'group_custom_oid is:', $group_custom_oid );
-			return;
-		}
-
-		// Only forum groups should be reflected in the MLA database
-		if ( ! $this->is_forum_group( $group_custom_oid ) ) {
-			_log( 'not a forum group!' );
-			return;
-		}
-
-		// Don't try to do anything that uses a method we're not prepared for.
-		if ( ( 'POST' !== $method ) && ( 'DELETE' !== $method ) ) {
-			_log( 'not a recognized HTTP method!' );
-			_log( 'method is:', $method );
-			return;
-		}
-
-		// New API Endpoints
-		$query_domain = 'members';
-		// this is for queries that come directly after the query domain,
-		// like https://apidev.mla.org/1/members/168880
-		$simple_query = '/' . $user_custom_oid . '/organizations';
-		$query = array( 'items' => $group_custom_oid );
-		$base_url = $this->api_url . $query_domain . $simple_query;
-		// There needs to be a request body for POSTs to work.
-		if ( 'POST' === $method ) {
-			$body = '{"":""}';
-		} else {
-			$body = '';
-		}
-
-		$response = $this->send_request( $method, $base_url, $query, $body );
-	}
-
-	protected function change_custom_username( $username, $password, $newname ) {
-
-		// First we need to get the user ID from the MLA API,
-		// because the API can't look up users by username,
-		// and we don't have the user's ID now.
-		// It sucks that we can't pass the User ID, but an AJAX function
-		// that calls this one doesn't have access to it.
-		$customUserData = $this->find_custom_user( $username, $password );
-
-		if ( $customUserData instanceof WP_Error ) {
-			_log( "find_custom_user threw a WP_Error, we're not going to be able to change this username." );
-			return new WP_Error( 'server_error', __( '<strong>Error (' . __LINE__ . '):</strong> There was a problem changing your username. Please try again later.' ) );
-		}
-
-		$user_id = $customUserData['id'];
-
-		// now we change the username
-		// @todo refactor this.
-		$request_method = 'PUT';
-		$query_domain = 'members';
-		$simple_query = '/' . $user_id . '/username';
-		$base_url = $this->api_url . $query_domain . $simple_query;
-		$request_body = "{ \"username\": \"$newname\" }";
-
-		$response = $this->send_request( $request_method, $base_url, '', $request_body );
-
-		if ( ( ! is_array( $response ) ) || ( ! array_key_exists( 'code', $response ) ) ) {
-			// This only happens if we can't access the API server.
-			error_log( 'Authentication Plugin: is API server down?' );
-			_log( 'On changing username, API gave a non-array response. Something is terribly wrong!' );
-			return new WP_Error( 'server_error', __( '<strong>Error (' . __LINE__ . '):</strong> There was a problem changing your username. Please try again later.' ) );
-		}
-
-		if ( 200 !== $response['code'] ) {
-			_log( 'On changing username, API gave a non-200 response. Something is kind of wrong!' );
-			_log( 'Response: ', $response );
-			return new WP_Error( 'server_error', __( '<strong>Error (' . __LINE__ . '):</strong> There was a problem changing your username. Please try again later.' ) );
-		}
-
-		return true;
+	public function get( $request_path, $parameters = array() ) {
+		return $this->process_request( 'GET', $request_path, $parameters );
 	}
 
 	/**
-	 * Query MLA API to check if username exists
+	 * PUT API request.
 	 *
-	 * @param string $username
-	 * @return bool
+	 * @param string $request_path HTTP request path.
+	 * @param array  $parameters   HTTP request parameters.
+	 * @param string $request_body HTTP request body as stringifed JSON.
+	 * @return object Parsed response object.
 	 */
-	protected function is_username_duplicate( $username ) {
-		$base_url = $this->api_url . 'members';
-		$query = array(
-			'type' => 'duplicate',
-			'username' => $username,
-		);
-
-		$response = $this->send_request( 'GET', $base_url, $query );
-
-		// TODO can this error handling be DRYer?
-		if ( ( ! is_array( $response ) ) || ( ! array_key_exists( 'code', $response ) ) ) {
-			// This only happens if we can't access the API server.
-			error_log( 'Authentication Plugin: is API server down?' );
-			_log( 'On checking for duplicate usernames, API gave a non-array response. Something is terribly wrong!' );
-			return new WP_Error( 'server_error', __( '<strong>Error (' . __LINE__ . '):</strong> There was a problem checking for duplicate usernames. Please try again later.' ) );
-		}
-
-		if ( 200 !== $response['code'] ) {
-			_log( "Username '$username' is a duplicate." );
-			_log( 'Response: ', $response );
-			return new WP_Error( 'server_error', __( '<strong>Error (' . __LINE__ . '):</strong> There was a problem checking for duplicate usernames. Please try again later.' ) );
-		}
-
-		return $response;
+	public function put( $request_path, $parameters = array(), $request_body = '' ) {
+		return $this->process_request( 'PUT', $request_path, $parameters, $request_body );
 	}
 
+	/**
+	 * POST API request.
+	 *
+	 * @param string $request_path HTTP request path.
+	 * @param array  $parameters   HTTP request parameters.
+	 * @param string $request_body HTTP request body as stringifed JSON.
+	 * @return object Parsed response object.
+	 */
+	public function post( $request_path, $parameters = array(), $request_body = '' ) {
+		return $this->process_request( 'POST', $request_path, $parameters, $request_body );
+	}
+
+	/**
+	 * DELETE API request.
+	 *
+	 * @param string $request_path HTTP request path.
+	 * @param array  $parameters   HTTP request parameters.
+	 * @param string $request_body HTTP request body as stringifed JSON.
+	 * @return object Parsed response object.
+	 */
+	public function delete( $request_path, $parameters = array(), $request_body = '' ) {
+		return $this->process_request( 'DELETE', $request_path, $parameters, $request_body );
+	}
 }

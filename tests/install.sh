@@ -2,7 +2,9 @@
 
 set -ex
 
+# WordPress >= 4.0
 WP_VERSION=${1-latest}
+# BuddyPress >= 2.1
 BP_VERSION=${2-latest}
 
 WP_DIR=/tmp/wordpress
@@ -17,7 +19,7 @@ MYSQLI_PLUGIN_URL=https://raw.github.com/markoheijnen/wp-mysqli/master/db.php
 DB_NAME=youremptytestdbnamehere
 DB_USER=yourusernamehere
 DB_PASS=yourpasswordhere
-DB_HOST=localhost
+DB_HOST="127.0.0.1"
 
 # Set SVN paths.
 if [ "$WP_VERSION" = "latest" ]; then
@@ -42,9 +44,9 @@ mkdir -p $WP_DIR $BP_DIR
 # that we will supply in our bootstrap.php.
 if [ ! -f $WP_DIR/src/wp-content/db.php ]; then
   svn co --quiet $WP_SVN $WP_DIR
-  sed "s:'ABSPATH', *dirname( __FILE__ ) . '/src/':'ABSPATH', getenv('WP_ABSPATH'):" $WP_DIR/wp-tests-config-sample.php > $WP_DIR/wp-tests-config.php
   wget -nv -O $WP_DIR/src/wp-content/db.php $MYSQLI_PLUGIN_URL
 fi
+sed -e "s:'ABSPATH', *dirname( __FILE__ ) . '/src/':'ABSPATH', getenv('WP_ABSPATH'):" -e "s:localhost:127.0.0.1:" $WP_DIR/wp-tests-config-sample.php > $WP_DIR/wp-tests-config.php
 
 # Install BuddyPress and test suite.
 if [ ! -d $BP_DIR/src ]; then

@@ -1,0 +1,24 @@
+{
+  "meta": {
+    "status": "success",
+    "code": "API-1000",
+    "message": ""
+  },
+  "data": [
+    {
+      "id": "400",
+      "name": "Office of Research",
+      "type": "MLA Organization",
+      "convention_code": "M050",
+      "exclude_from_commons": "Y",
+      "members": [
+        {
+          "id": "900000",
+          "username": "ExampleUser",
+          "position": "Member",
+          "primary": ""
+        }
+      ]
+    }
+  ]
+}

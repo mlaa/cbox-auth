@@ -1,0 +1,63 @@
+{
+  "meta": {
+    "status": "success",
+    "code": "API-1000",
+    "message": ""
+  },
+  "data": [
+    {
+      "id": "900000",
+      "authentication": {
+        "username": "inactiveuser",
+        "password": "$2a$10$qlENatXA3e3HHFRrdq3sTe8235lOq/0ADDPNlEYen3bdx7i4hELK2",
+        "membership_status": "inactive"
+      },
+      "general": {
+        "title": "Ms",
+        "first_name": "Jennifer",
+        "last_name": "Smith",
+        "suffix": "",
+        "email": "jsmith@example.com",
+	"web_site": "http://www.example.com",
+	"joined_commons": "Y"
+      },
+      "addresses": [
+        {
+          "id": "16",
+          "type": "primary",
+          "hidden": "",
+          "send_mail": "Y",
+          "affiliation": "Mod Lang Association",
+          "department": "1912",
+          "department_other": "",
+          "rank": "Drone",
+          "line1": "",
+          "line2": "3rd Floor",
+          "line3": "26 Broadway",
+          "city": "New York",
+          "state": "NY",
+          "zip": "10004",
+          "country_code": ""
+        }
+      ],
+      "organizations": [
+        {
+          "id": "100",
+          "name": "Hungarian",
+          "convention_code": "D000",
+          "position": "Executive",
+          "type": "Forum",
+          "exclude_from_commons": "",
+          "primary": ""
+        }
+      ],
+      "languages": [
+        {
+          "code": "400",
+          "name": "Other languages",
+          "primary": "Y"
+        }
+      ]
+    }
+  ]
+}

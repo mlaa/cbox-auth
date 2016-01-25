@@ -1,53 +1,114 @@
 <?php
 /**
  * Plugin Name: CBOX Authentication
+ * Plugin URI:  https://github.com/mlaa/cbox-auth
+ * Description: Augments the WordPress login process to verify credentials against an external RESTful API. Additionally uses that API to sync BuddyPress group memberships with an external source.
+ *
  * @link https://github.com/mlaa/cbox-auth
- * @package cbox-auth
- * This plugin verifies the WordPress login process against
- * a remote database via an HTTPS API.
+ * @package CustomAuth
  */
 
-require_once plugin_dir_path( __FILE__ ).'class-mla-api-request.php';
-require_once plugin_dir_path( __FILE__ ).'class-mla-api.php';
-require_once plugin_dir_path( __FILE__ ).'class-custom-authentication.php';
-require_once plugin_dir_path( __FILE__ ).'class-mla-member.php';
-require_once plugin_dir_path( __FILE__ ).'class-mla-group.php';
+namespace MLA\Commons\Plugin\CustomAuth;
 
-$myCustomAuthentication = new CustomAuthentication();
+require_once plugin_dir_path( __FILE__ ) . 'includes/loader.php';
 
-// Do one-time stuff on activation.
-register_activation_hook( __FILE__, 'activate_custom_authentication' );
-
-// Hook into the 'authenticate' filter. This is where everything begins.
-add_filter( 'authenticate', array( $myCustomAuthentication, 'authenticate_username_password' ), 1, 3 );
-add_action( 'wp_ajax_nopriv_test_user', array( $myCustomAuthentication, 'ajax_test_user' ) );
-add_action( 'wp_ajax_nopriv_validate_preferred_username', array( $myCustomAuthentication, 'ajax_validate_preferred_username' ) );
-
-// We're completely ignoring the WP authentication process.
-remove_filter( 'authenticate', 'wp_authenticate_username_password', 20, 3 );
-
-// Reflect changes in forum groups in the MLA database.
-add_action( 'groups_leave_group', array( $myCustomAuthentication, 'remove_user_from_group' ) );
-add_action( 'groups_join_group',  array( $myCustomAuthentication, 'add_user_to_group' ) );
-
-// Hide join/leave buttons where necessary.
-add_action( 'bp_directory_groups_actions', array( $myCustomAuthentication, 'hide_join_button' ), 1 );
-add_action( 'bp_group_header_actions', array( $myCustomAuthentication, 'hide_join_button' ), 1 );
-
-// Only show some group settings.
-add_filter( 'bp_group_settings_allowed_sections', array( $myCustomAuthentication, 'determine_group_settings_sections' ) );
-
-// Don't show the request membership tab for committee groups.
-add_filter( 'bp_get_options_nav_request-membership', array( $myCustomAuthentication, 'hide_request_membership_tab' ) );
-add_filter( 'bp_get_options_nav_invite', array( $myCustomAuthentication, 'hide_send_invites_tab' ) );
-
-// Set up the custom profile and login fields.
-require plugin_dir_path( __FILE__ ).'fields.php';
+use MLA\Commons\Plugin\Logging\Logger;
 
 /**
- * Instatiate and activate plugin code.
+ * Plugin Loader class
+ *
+ * @package CustomAuth
+ * @subpackage PluginLoader
  */
-function activate_custom_authentication() {
-	$myCustomAuthentication = new CustomAuthentication();
-	$myCustomAuthentication->activate();
+class PluginLoader extends Base {
+
+	/**
+	 * Login form
+	 *
+	 * @var object
+	 */
+	private $login_form;
+
+	/**
+	 * Login processor
+	 *
+	 * @var object
+	 */
+	private $login_procesor;
+
+	/**
+	 * Dependency: MLAAPI
+	 *
+	 * @var object
+	 */
+	private $mla_api;
+
+	/**
+	 * Dependency: Logger
+	 *
+	 * @var object
+	 */
+	private $logger;
+
+	/**
+	 * Constructor
+	 */
+	function __construct() {
+
+		// Create logging interface.
+		$this->logger = new Logger( 'cbox-auth' );
+		$this->logger->createLog( 'cbox-auth' );
+
+		// Create MLA API interface.
+		$http_driver = new CurlDriver( $this->logger );
+		$this->mla_api = new MLAAPI( $http_driver, $this->logger );
+
+		// Hook into WP authentication.
+		$this->login_form = new LoginForm( $this->mla_api, $this->logger );
+		$this->login_processor = new LoginProcessor( $this->mla_api, $this->logger );
+		$this->inject_superglobals();
+
+		new GroupBehavior( $this->mla_api, $this->logger );
+		new MemberBehavior( $this->mla_api, $this->logger );
+		new ProfileFields();
+
+		// BuddyPress functionality should wait for BuddyPress.
+		$this->add_action( 'bp_include', $this, 'init_ui_changes' );
+		$this->run();
+
+	}
+
+	/**
+	 * Make adjustments to WP and BP UI.
+	 */
+	public function init_ui_changes() {
+	}
+
+	/**
+	 * Inject data from superglobals.
+	 */
+	public function inject_superglobals() {
+
+		$login_form_data = array(
+			'username' => $this->get_superglobal( INPUT_POST, 'username' ),
+			'password' => $this->get_superglobal( INPUT_POST, 'password' ),
+			'preferred' => $this->get_superglobal( INPUT_POST, 'preferred' ),
+		);
+		foreach ( $login_form_data as $key => $value ) {
+			$this->login_form->set_cache( $key, $value );
+		}
+
+		$login_processor_data = array(
+			'server_port' => $this->get_superglobal( INPUT_SERVER, 'SERVER_PORT' ),
+			'preferred' => $this->get_superglobal( INPUT_POST, 'preferred' ),
+			'accepted' => $this->get_superglobal( INPUT_POST, 'acceptance' ),
+		);
+		foreach ( $login_processor_data as $key => $value ) {
+			$this->login_processor->set_cache( $key, $value );
+		}
+
+	}
 }
+
+// GO!
+new PluginLoader();

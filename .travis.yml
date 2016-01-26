@@ -7,10 +7,14 @@ php:
   - 7.0
 
 env:
-  - WP_VERSION=latest WP_MULTISITE=0
-  - WP_VERSION=latest WP_MULTISITE=1
-  - WP_VERSION=4.2 WP_MULTISITE=0
-  - WP_VERSION=4.2 WP_MULTISITE=1
+  - WP_VERSION=latest
+  - WP_VERSION=4.3
+  - WP_VERSION=4.2
+
+matrix:
+  exclude:
+    - php: 7.0
+      env: WP_VERSION=4.2
 
 before_script:
   - bash tests/install.sh $WP_VERSION

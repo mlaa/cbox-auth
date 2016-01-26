@@ -70,7 +70,8 @@ class Test_MLAGroup_Creation extends \BP_UnitTestCase {
 	public function test_create_bp_group() {
 
 		// No groups should already exist.
-		$this->assertEquals( 0, count( \groups_get_groups()['groups'] ) );
+		$groups = \groups_get_groups();
+		$this->assertEquals( 0, count( $groups['groups'] ) );
 
 		// Create the group.
 		$this->mla_group->create_bp_group( 'Hungarian', 'Forum', 100 );

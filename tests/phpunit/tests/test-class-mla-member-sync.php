@@ -228,9 +228,11 @@ class Test_MLAMember_Sync extends \BP_UnitTestCase {
 
 		// Assert that the member's metadata was updated.
 		// @codingStandardsIgnoreStart WordPress.VIP.UserMeta
+		$affiliations = \get_user_meta( $user_id, 'affiliations', true );
+		$languages = \get_user_meta( $user_id, 'languages', true );
 		$this->assertEquals( '900000', \get_user_meta( $user_id, 'mla_oid', true ) );
-		$this->assertEquals( 'Mod Lang Association', \get_user_meta( $user_id, 'affiliations', true )[0] );
-		$this->assertEquals( 'Other languages', \get_user_meta( $user_id, 'languages', true )[0]['name'] );
+		$this->assertEquals( 'Mod Lang Association', $affiliations[0] );
+		$this->assertEquals( 'Other languages', $languages[0]['name'] );
 		// @codingStandardsIgnoreEnd
 
 		// Get the user's group memberships after syncing.
@@ -303,7 +305,8 @@ class Test_MLAMember_Sync extends \BP_UnitTestCase {
 	public function test_update_sync() {
 
 		// No groups should already exist.
-		$this->assertEquals( 0, count( \groups_get_groups()['groups'] ) );
+		$groups = \groups_get_groups();
+		$this->assertEquals( 0, count( $groups['groups'] ) );
 
 		// The user should not exist.
 		$this->assertFalse( \get_user_by( 'login', 'exampleuser' ) );

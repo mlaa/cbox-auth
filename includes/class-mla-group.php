@@ -250,7 +250,7 @@ class MLAGroup extends Base {
 				continue;
 			}
 
-			if ( 'admin' === $mla_role ) {
+			if ( 'admin' === $mla_role && 'admin' !== $bp_role ) {
 				// User has been promoted at MLA, but not on BP. Promote.
 				$this->promote_user( $user_id, $this->bp_id );
 			}

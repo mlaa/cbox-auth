@@ -162,4 +162,23 @@ class Test_LoginProcessor extends \BP_UnitTestCase {
 		$this->assertInstanceOf( '\WP_User', \get_user_by( 'login', 'exampleuser' ) );
 
 	}
+
+	/**
+	 * Test authenticating and creating the user with a new username.
+	 */
+	public function test_authenticate_user_new_username() {
+
+		// The user should not exist before we start.
+		$this->assertFalse( \get_user_by( 'login', 'exampleuser' ) );
+
+		// Create user.
+		$this->login_processor->set_cache( 'preferred', 'exampleuser3' );
+		$this->login_processor->set_cache( 'accepted', 'Yes' );
+		$wp_user = $this->login_processor->authenticate_user( null, 'exampleuser', 'test' );
+
+		// The user should now exist.
+		$this->assertInstanceOf( '\WP_User', $wp_user );
+		$this->assertInstanceOf( '\WP_User', \get_user_by( 'login', 'exampleuser3' ) );
+
+	}
 }

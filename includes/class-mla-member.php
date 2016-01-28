@@ -541,7 +541,7 @@ class MLAMember extends Base {
 
 		$new_user_data = array(
 			'user_pass'    => 'blank',
-			'user_login'   => $this->api_data->authentication->username,
+			'user_login'   => $preferred,
 			'user_url'     => $this->api_data->general->web_site,
 			'user_email'   => $this->api_data->general->email,
 			'display_name' => $this->api_data->general->first_name . ' ' . $this->api_data->general->last_name,
@@ -560,7 +560,7 @@ class MLAMember extends Base {
 
 		// Save reference to WP user id.
 		$this->user_id = $new_user;
-		$this->user_names[ $this->user_id ] = $this->api_data->authentication->username;
+		$this->user_names[ $this->user_id ] = $preferred;
 
 		// Log event.
 		$user_ref = $this->describe_user( $this->user_id );

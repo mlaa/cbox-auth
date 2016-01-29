@@ -116,7 +116,7 @@ class CurlDriver implements HttpDriver {
 		$headers = array( 'Accept: application/json' );
 
 		// Add request body.
-		if ( strlen( $request_body ) ) {
+		if ( is_string( $request_body ) && strlen( $request_body ) ) {
 			$headers[] = 'Content-Length: ' . strlen( $request_body );
 			curl_setopt( $handler, CURLOPT_POSTFIELDS, $request_body );
 		}
@@ -200,7 +200,7 @@ class CurlDriver implements HttpDriver {
 	 * @return object Parsed response object.
 	 */
 	public function get( $request_path, $parameters = array() ) {
-		return $this->process_request( 'GET', $request_path, $parameters );
+		return $this->process_request( 'GET', $request_path, $parameters, '' );
 	}
 
 	/**

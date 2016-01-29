@@ -202,7 +202,7 @@ class MLAMember extends Base {
 		$results = $wpdb->get_results(
 			"
 			SELECT meta_value,group_id
-			FROM {$wpdb->prefix}bp_groups_groupmeta
+			FROM {$wpdb->base_prefix}bp_groups_groupmeta
 			WHERE meta_key = 'mla_api_id'
 			"
 		); // WPCS: db call ok.

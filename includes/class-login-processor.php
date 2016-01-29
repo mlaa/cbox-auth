@@ -152,7 +152,7 @@ class LoginProcessor extends Base {
 
 		} catch ( \Exception $e ) {
 
-			$this->logger->addDebug( $e->getMessage() );
+			$this->logger->addInfo( $e->getMessage() );
 			$message = '<strong>Error (' . $e->getCode() . '):</strong> ';
 
 			switch ( $e->getCode() ) {

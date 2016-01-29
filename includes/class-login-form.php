@@ -154,7 +154,7 @@ class LoginForm extends Base {
 			}
 		} catch ( \Exception $e ) {
 
-			$this->logger->addDebug( $e->getMessage() );
+			$this->logger->addInfo( $e->getMessage() );
 
 			switch ( $e->getCode() ) {
 				case 400:
@@ -193,7 +193,7 @@ class LoginForm extends Base {
 			$result = 'valid';
 		} catch ( \Exception $e ) {
 
-			$this->logger->addDebug( $e->getMessage() );
+			$this->logger->addInfo( $e->getMessage() );
 
 			switch ( $e->getCode() ) {
 				case 450:

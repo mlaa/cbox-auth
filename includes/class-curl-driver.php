@@ -152,7 +152,7 @@ class CurlDriver implements HttpDriver {
 
 		// Get cURL error if response is false.
 		if ( false === $response_text || 200 !== $response_code ) {
-			$this->logger->addDebug( serialize( curl_error( $handler ) ) ); // @codingStandardsIgnoreLine WordPress.VIP.cURL
+			$this->logger->addError( 'HTTP response code ' . $response_code . ': ' . $response_text );
 			throw new \Exception( 'HTTP response code ' . $response_code );
 		}
 

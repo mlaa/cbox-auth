@@ -59,8 +59,15 @@ class PluginLoader extends Base {
 		$this->logger = new Logger( 'cbox-auth' );
 		$this->logger->createLog( 'cbox-auth' );
 
+		// Expect API credentials to be defined as constants.
+		$credentials = array(
+			'api_url' => CBOX_AUTH_API_URL,
+			'api_key' => CBOX_AUTH_API_KEY,
+			'api_secret' => CBOX_AUTH_API_SECRET,
+		);
+
 		// Create MLA API interface.
-		$http_driver = new CurlDriver( $this->logger );
+		$http_driver = new CurlDriver( $credentials, $this->logger );
 		$this->mla_api = new MLAAPI( $http_driver, $this->logger );
 
 		// Hook into WP authentication.

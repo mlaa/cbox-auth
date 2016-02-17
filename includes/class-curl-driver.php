@@ -23,21 +23,21 @@ class CurlDriver implements HttpDriver {
 	 *
 	 * @var string
 	 */
-	private $api_url = CBOX_AUTH_API_URL;
+	private $api_url;
 
 	/**
 	 * API key
 	 *
 	 * @var string
 	 */
-	private $api_key = CBOX_AUTH_API_KEY;
+	private $api_key;
 
 	/**
 	 * API shared secret
 	 *
 	 * @var string
 	 */
-	private $api_secret = CBOX_AUTH_API_SECRET;
+	private $api_secret;
 
 	/**
 	 * Dependency: Logger
@@ -49,9 +49,13 @@ class CurlDriver implements HttpDriver {
 	/**
 	 * Constructor
 	 *
+	 * @param array  $credentials API credentials.
 	 * @param Logger $logger Dependency: Logger.
 	 */
-	public function __construct( Logger $logger ) {
+	public function __construct( $credentials, Logger $logger ) {
+		$this->api_url = $credentials['api_url'];
+		$this->api_key = $credentials['api_key'];
+		$this->api_secret = $credentials['api_secret'];
 		$this->logger = $logger;
 	}
 

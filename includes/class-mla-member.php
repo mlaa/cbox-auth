@@ -264,7 +264,6 @@ class MLAMember extends Base {
 			'Institutional or Other Affiliation' => $affiliations[0],
 			'Title' => $this->api_data->addresses[0]->rank,
 		);
-/* Turn off user updates
 		// Update WP user metadata.
 		foreach ( $wp_meta as $meta_key => $meta_value ) {
 			if ( ! isset( $this->wp_meta[ $meta_key ] ) || $meta_value !== $this->wp_meta[ $meta_key ][0] ) {
@@ -281,6 +280,7 @@ class MLAMember extends Base {
 			}
 		}
 
+/* Turn off user profile and email updates
 		// Update XProfile fields (if they exist).
 		foreach ( $bp_xprofile as $meta_key => $meta_value ) {
 			if ( ! isset( $this->bp_xprofile[ $meta_key ] ) || $meta_value !== $this->bp_xprofile[ $meta_key ]['field_data'] ) {

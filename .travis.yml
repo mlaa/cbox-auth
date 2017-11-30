@@ -14,8 +14,7 @@ env:
 
 matrix:
   exclude:
-    - php: 7.0
-      env: WP_VERSION=4.2
+    - env: WP_VERSION=4.2
 
 before_script:
   - bash tests/install.sh $WP_VERSION

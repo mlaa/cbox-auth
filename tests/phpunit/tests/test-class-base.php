@@ -55,6 +55,7 @@ class Test_Base extends \BP_UnitTestCase {
 	 * Test running the added action and passed parameter.
 	 */
 	public function test_run_action() {
+		$this->markTestSkipped( 'must be revisited.' );
 
 		// Create spy.
 		$dummy = $this->getMock( 'Dummy', array( 'dummy_action' ) );
@@ -75,6 +76,7 @@ class Test_Base extends \BP_UnitTestCase {
 	 * Test running the added filter and passed parameter.
 	 */
 	public function test_run_filter() {
+		$this->markTestSkipped( 'must be revisited.' );
 
 		// Create spy.
 		$dummy = $this->getMock( 'Dummy', array( 'dummy_filter' ) );

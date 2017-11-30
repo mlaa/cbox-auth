@@ -9,12 +9,7 @@ php:
 
 env:
   - WP_VERSION=latest
-  - WP_VERSION=4.3
-  - WP_VERSION=4.2
-
-matrix:
-  exclude:
-    - env: WP_VERSION=4.2
+  - WP_VERSION=4.8
 
 before_script:
   - bash tests/install.sh $WP_VERSION

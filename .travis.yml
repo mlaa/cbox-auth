@@ -18,11 +18,6 @@ matrix:
 
 before_script:
   - bash tests/install.sh $WP_VERSION
-  - |
-    if [[ ${TRAVIS_PHP_VERSION:0:2} == "5." ]]; then
-      composer global require "phpunit/phpunit=4.8.*"
-    else
-      composer global require "phpunit/phpunit=5.7.*"
-    fi
+  - composer global require "phpunit/phpunit=5.7.*"
 
 script: phpunit

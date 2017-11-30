@@ -13,6 +13,6 @@ env:
 
 before_script:
   - bash tests/install.sh $WP_VERSION
-  - composer global require "phpunit/phpunit=5.7.*"
+  - composer global require "phpunit/phpunit=5.*"
 
 script: phpunit

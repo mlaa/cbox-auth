@@ -77,7 +77,7 @@ class GroupBehavior extends Base {
 
 		if ( $groups_template && $this->get_object_property( $groups_template, 'group', false ) ) {
 			$bp_id = $groups_template->group->id;
-			return strtolower( \groups_get_groupmeta( $bp_id, 'mla_group_type', true ) );
+			return strtolower( \groups_get_groupmeta( $bp_id, 'society_group_type', true ) );
 		}
 
 		return 0;
@@ -104,7 +104,7 @@ class GroupBehavior extends Base {
 	 * @param string $string Unchanged filter string.
 	 */
 	public function hide_request_membership_tab( $string ) {
-		return ( 'mla organization' === $this->get_group_type() ) ? null : $string;
+		return ( 'committee' === $this->get_group_type() ) ? null : $string;
 	}
 
 	/**
@@ -113,7 +113,7 @@ class GroupBehavior extends Base {
 	 * @param string $string Unchanged filter string.
 	 */
 	public function hide_send_invites_tab( $string ) {
-		return ( 'mla organization' === $this->get_group_type() ) ? null : $string;
+		return ( 'committee' === $this->get_group_type() ) ? null : $string;
 	}
 
 	/**
@@ -146,7 +146,7 @@ class GroupBehavior extends Base {
 		$user_id = \bp_loggedin_user_id();
 		$group_type = $this->get_group_type();
 
-		$is_committee   = ( 'mla organization' === $group_type );
+		$is_committee   = ( 'committee' === $group_type );
 		$is_forum_admin = ( 'forum' === $group_type && \groups_is_user_admin( $user_id, \bp_get_group_id() ) );
 
 		if ( $is_committee || $is_forum_admin ) {
